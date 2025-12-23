@@ -1,0 +1,19 @@
+# requirements.txt - VERSION COMPATIBLE WINDOWS
+
+# FastAPI et serveur
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+
+# Data processing (versions plus récentes = meilleurs wheels Windows)
+pandas>=2.2.0
+numpy>=1.26.0
+
+# File handling
+python-multipart==0.0.6
+
+# Validation
+pydantic>=2.5.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
