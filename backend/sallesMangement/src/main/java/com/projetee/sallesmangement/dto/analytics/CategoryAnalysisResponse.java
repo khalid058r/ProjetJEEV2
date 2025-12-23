@@ -3,16 +3,16 @@ package com.projetee.sallesmangement.dto.analytics;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CategoryStatsResponse {
+public class CategoryAnalysisResponse {
     private Long categoryId;
     private String categoryName;
-    private Double totalRevenue;
-    private Long totalSold;
     private Double averagePrice;
-    private Long bestSellerProductId;
-    private String bestSellerProductTitle;
+    private TopProductDTO bestRatedProduct;
+    private TopProductDTO bestSellerProduct;
+    private List<RatingDistribution> ratingDistribution;
 }

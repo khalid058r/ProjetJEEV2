@@ -8,6 +8,8 @@ import com.projetee.sallesmangement.exception.ResourceNotFoundException;
 import com.projetee.sallesmangement.mapper.UserMapper;
 import com.projetee.sallesmangement.repository.UserRepository;
 import com.projetee.sallesmangement.service.UserService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -22,6 +24,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository repo;
     private final UserMapper mapper;
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     @Override
     public UserResponse create(UserRequest request) {
@@ -81,7 +84,8 @@ public class UserServiceImpl implements UserService {
 
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword()); // en clair pour l'instant
+//        user.setPassword(request.getPassword()); // en clair pour l'instant
+        user.setPassword(encoder.encode(request.getPassword()));
         user.setRole(request.getRole());
 
         return mapper.toResponse(repo.save(user));

@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SalesEvolutionResponse {
-    private Double currentMonthRevenue;
-    private Double previousMonthRevenue;
-    private Double growthRate;
+public class RatingDistribution {
+    private Double rating;
+    private Long count;
 }

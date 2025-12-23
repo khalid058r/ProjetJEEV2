@@ -57,7 +57,7 @@ const PerformerCard = ({ title, data, icon: Icon }) => (
       <h3 className="text-lg font-semibold tracking-wide">{title}</h3>
     </div>
 
-    {data ? (
+    {data ?  (
       <>
         <p className="text-3xl font-bold">{data.name}</p>
         <p className="opacity-90 text-sm">{data.value} sales</p>
@@ -98,12 +98,18 @@ export default function Dashboard() {
         getUsers(),
       ]);
 
-      setSales(s.data || []);
-      setProducts(p.data || []);
-      setCategories(c.data || []);
-      setUsers(u.data || []);
+      // ✅ Sécuriser les données
+      setSales(Array.isArray(s?. data) ? s.data : []);
+      setProducts(Array. isArray(p?.data) ? p.data : []);
+      setCategories(Array.isArray(c?.data) ? c.data : []);
+      setUsers(Array.isArray(u?. data) ? u.data : []);
     } catch (e) {
-      console.error(e);
+      console.error("Dashboard loading error:", e);
+      // ✅ Définir des valeurs par défaut en cas d'erreur
+      setSales([]);
+      setProducts([]);
+      setCategories([]);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -133,9 +139,9 @@ export default function Dashboard() {
      KPI METRICS
   ======================================================= */
 
-  const totalRevenue = filteredSales.reduce((sum, v) => sum + v.totalAmount, 0);
+  const totalRevenue = filteredSales.reduce((sum, v) => sum + (v.totalAmount || 0), 0);
   const totalSales = filteredSales.length;
-  const avgOrder = totalSales ? totalRevenue / totalSales : 0;
+  const avgOrder = totalSales ?  totalRevenue / totalSales :  0;
 
   const lowStock = products.filter((p) => p.stock < 5).length;
   const totalProducts = products.length;
@@ -148,7 +154,7 @@ export default function Dashboard() {
 
   const productCounter = {};
   filteredSales.forEach((s) =>
-    s.lignes?.forEach((l) => {
+    s.lignes?. forEach((l) => {
       productCounter[l.productTitle] =
         (productCounter[l.productTitle] || 0) + l.quantity;
     })
@@ -189,7 +195,7 @@ export default function Dashboard() {
   filteredSales.forEach((s) =>
     s.lignes?.forEach((l) => {
       const p = products.find((x) => x.id === l.productId);
-      const c = categories.find((x) => x.id === p?.categoryId);
+      const c = categories.find((x) => x.id === p?. categoryId);
       if (!c) return;
 
       catMap[c.name] = (catMap[c.name] || 0) + l.quantity * l.unitPrice;
@@ -205,7 +211,7 @@ export default function Dashboard() {
   const startOfWeek = new Date(now);
   startOfWeek.setDate(now.getDate() - now.getDay());
   const lastWeekStart = new Date(startOfWeek);
-  lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+  lastWeekStart.setDate(lastWeekStart. getDate() - 7);
 
   const weekSales = sales.filter((s) => new Date(s.saleDate) >= startOfWeek);
   const lastWeekSales = sales.filter((s) => {
@@ -213,20 +219,20 @@ export default function Dashboard() {
     return d >= lastWeekStart && d < startOfWeek;
   });
 
-  const weekRevenue = weekSales.reduce((sum, s) => sum + s.totalAmount, 0);
-  const lastWeekRevenue = lastWeekSales.reduce((sum, s) => sum + s.totalAmount, 0);
+  const weekRevenue = weekSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
+  const lastWeekRevenue = lastWeekSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
 
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfMonth = new Date(now. getFullYear(), now.getMonth(), 1);
   const startLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-  const monthSales = sales.filter((s) => new Date(s.saleDate) >= startOfMonth);
+  const monthSales = sales. filter((s) => new Date(s.saleDate) >= startOfMonth);
   const lastMonthSales = sales.filter((s) => {
     const d = new Date(s.saleDate);
     return d >= startLastMonth && d < startOfMonth;
   });
 
-  const monthRevenue = monthSales.reduce((s, v) => s + v.totalAmount, 0);
-  const lastMonthRevenue = lastMonthSales.reduce((s, v) => s + v.totalAmount, 0);
+  const monthRevenue = monthSales.reduce((s, v) => s + (v.totalAmount || 0), 0);
+  const lastMonthRevenue = lastMonthSales.reduce((s, v) => s + (v.totalAmount || 0), 0);
 
   /* =======================================================
      ⭐ UI RENDER (IMPROVED)
@@ -267,14 +273,14 @@ export default function Dashboard() {
         </div>
 
         {/* ADMIN KPI */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md: grid-cols-3 gap-6">
           <StatsCard title="Total Products" value={totalProducts} icon={Package} color="purple" />
           <StatsCard title="Total Categories" value={totalCategories} icon={Tag} color="yellow" />
           <StatsCard title="Total Users" value={totalUsers} icon={Users} color="indigo" />
         </div>
 
         {/* TOP PRODUCT & SELLER */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md: grid-cols-2 gap-6">
           <PerformerCard title="Top Product" data={topProduct} icon={Award} />
           <PerformerCard title="Best Seller" data={bestSeller} icon={User} />
         </div>
@@ -286,9 +292,9 @@ export default function Dashboard() {
           <div className="bg-white p-6 rounded-2xl shadow-sm border hover:shadow-lg transition">
             <h3 className="font-semibold mb-4 text-lg">Revenue Trend</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={filteredSales.map(s => ({
+              <AreaChart data={filteredSales. map(s => ({
                 date: s.saleDate,
-                revenue: s.totalAmount,
+                revenue: s.totalAmount || 0,
               }))}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
@@ -361,8 +367,10 @@ export default function Dashboard() {
             const daily = {};
 
             sales.forEach((s) => {
-              const d = s.saleDate.split("T")[0];
-              daily[d] = (daily[d] || 0) + s.totalAmount;
+              const d = s.saleDate?. split("T")[0];
+              if (d) {
+                daily[d] = (daily[d] || 0) + (s.totalAmount || 0);
+              }
             });
 
             const dailyArr = Object.entries(daily).map(([date, revenue]) => ({
@@ -372,6 +380,15 @@ export default function Dashboard() {
 
             dailyArr.sort((a, b) => new Date(a.date) - new Date(b.date));
 
+            // ✅ Vérifier si on a des données
+            if (dailyArr. length === 0) {
+              return (
+                <div className="p-8 text-center text-gray-500">
+                  No sales data available for analysis
+                </div>
+              );
+            }
+
             // MOVING AVERAGE
             const movingAvg = dailyArr.map((item, i) => {
               const window = dailyArr.slice(Math.max(0, i - 6), i + 1);
@@ -380,13 +397,24 @@ export default function Dashboard() {
             });
 
             const values = dailyArr.map((d) => d.revenue);
-            const mean = values.reduce((a, b) => a + b, 0) / values.length;
-            const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length;
+            
+            // ✅ Éviter la division par zéro
+            const mean = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+            const variance = values.length > 0 
+              ? values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length 
+              : 0;
             const stdDev = Math.sqrt(variance);
-            const stability = Math.max(0, 100 - (stdDev / mean) * 100);
+            const stability = mean > 0 ? Math.max(0, 100 - (stdDev / mean) * 100) : 0;
 
-            const bestDay = dailyArr.reduce((a, b) => (a.revenue > b.revenue ? a : b));
-            const worstDay = dailyArr.reduce((a, b) => (a.revenue < b.revenue ? a : b));
+            // ✅ Sécuriser reduce avec valeur initiale
+            const bestDay = dailyArr.reduce(
+              (a, b) => (a.revenue > b.revenue ? a : b),
+              dailyArr[0] // Valeur initiale
+            );
+            const worstDay = dailyArr.reduce(
+              (a, b) => (a.revenue < b.revenue ? a : b),
+              dailyArr[0] // Valeur initiale
+            );
 
             return (
               <>
@@ -436,8 +464,8 @@ export default function Dashboard() {
                     <p className="text-gray-600 text-sm">
                       {stability > 70
                         ? "Stable Revenue"
-                        : stability > 40
-                        ? "Moderate Variability"
+                        :  stability > 40
+                        ?  "Moderate Variability"
                         : "High Volatility"}
                     </p>
                   </div>

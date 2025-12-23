@@ -1,3 +1,4 @@
+import axios from "axios";
 // src/services/authService.js
 
 const API_URL = "http://localhost:8080/api/auth";
@@ -30,5 +31,4 @@ export async function registerUser(data) {
 
   return await res.json();
 }
-import axios from "axios";
 

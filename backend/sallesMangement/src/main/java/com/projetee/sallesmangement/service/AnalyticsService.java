@@ -7,22 +7,24 @@ import java.util.List;
 
 public interface AnalyticsService {
 
+    DashboardResponse getDashboard();
     KPIResponse getGlobalKPI();
 
+    ProductFilterResponse filterProducts(ProductFilterRequest request);
+
+    CategoryAnalysisResponse analyzeCategoryById(Long categoryId);
+
+    byte[] exportToCSV(ProductFilterRequest filters);
+
+    GlobalStatisticsResponse getGlobalStatistics();
+
     MonthlySalesResponse getMonthlySales();
-
     List<DailySalesResponse> getDailySales(LocalDate startDate, LocalDate endDate);
-
     List<TopProductResponse> getBestSellers(int limit);
-
     List<SlowMoverResponse> getSlowMovers(long maxSoldThreshold, int limit);
-
     List<LowStockResponse> getLowStockProducts(int stockThreshold);
-
     List<CategoryStatsResponse> getCategoryStats();
-
     SalesEvolutionResponse getCurrentMonthEvolution();
-
     BasketStatsResponse getBasketStats();
 
     KPIResponse getVendeurKPI(Long userId);

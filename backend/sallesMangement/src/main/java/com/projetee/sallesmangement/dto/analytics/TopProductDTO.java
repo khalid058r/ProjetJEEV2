@@ -7,12 +7,15 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TopProductResponse {
-    private Long productId;
+public class TopProductDTO {
+    private Long id;
+    private String asin;
     private String title;
     private String categoryName;
     private Double price;
     private Double rating;
-    private Long quantitySold;
-    private Double revenue;
+    private Integer reviewCount;
+    private Integer rank;
+    private Integer stock;
+    private String imageUrl;
 }

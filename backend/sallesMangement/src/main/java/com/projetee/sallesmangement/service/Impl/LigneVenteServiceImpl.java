@@ -82,26 +82,34 @@ public class LigneVenteServiceImpl implements LigneVenteService {
             throw new BadRequestException("Quantity must be > 0");
         }
 
-        product.setStock(product.getStock() + lv.getQuantity());
+        // ✅ CORRECTION: Calculer delta au lieu de restaurer/re-diminuer
+        int oldQuantity = lv.getQuantity();
+        int newQuantity = request.getQuantity();
+        int delta = newQuantity - oldQuantity;
 
-        if (product.getStock() < request.getQuantity()) {
-            throw new BadRequestException("Not enough stock to update");
+        // Si on augmente la quantité, vérifier stock disponible
+        if (delta > 0 && product.getStock() < delta) {
+            throw new BadRequestException("Not enough stock to update (need " + delta + " more)");
         }
 
-        product.setStock(product.getStock() - request.getQuantity());
+        // Appliquer le delta au stock
+        product.setStock(product.getStock() - delta);
         productRepo.save(product);
 
-        sale.setTotalAmount(sale.getTotalAmount() - lv.getLineTotal());
+        // Mettre à jour le montant total de la vente
+        double oldLineTotal = lv.getLineTotal();
+        lv.setQuantity(newQuantity);
+        lv.setLineTotal(product.getPrice() * newQuantity);
+        double newLineTotal = lv.getLineTotal();
 
-        lv.setQuantity(request.getQuantity());
-        lv.setLineTotal(product.getPrice() * request.getQuantity());
-
-        sale.setTotalAmount(sale.getTotalAmount() + lv.getLineTotal());
-
+        sale.setTotalAmount(sale.getTotalAmount() - oldLineTotal + newLineTotal);
         saleRepo.save(sale);
 
         return mapper.toResponse(lv);
     }
+
+
+
 
     @Override
     @Transactional
