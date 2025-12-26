@@ -16,7 +16,7 @@ export async function generateInvoicePDF(sale) {
   doc.text("SALES INVOICE", 105, 20, { align: "center" });
 
   doc.setFontSize(10);
-  doc.text("SalleManager", 14, 30);
+  doc.text("SaleManager", 14, 30);
   doc.text("Casablanca, Morocco", 14, 35);
   doc.text("+212 6XX XX XX XX", 14, 40);
 

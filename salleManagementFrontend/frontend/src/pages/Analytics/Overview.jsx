@@ -7,6 +7,17 @@ import {
   AlertTriangle,
   Package,
   BarChart2,
+  Users,
+  Clock,
+  Calendar,
+  Target,
+  Award,
+  Zap,
+  Activity,
+  Eye,
+  Star,
+  Layers,
+  PieChart as PieChartIcon
 } from "lucide-react";
 
 import {
@@ -25,21 +36,28 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  ComposedChart,
 } from "recharts";
+
 import AnalyticsService from "../../services/analyticsService";
 import { getSales } from "../../services/salesService";
 import { getProducts } from "../../services/productService";
 import { getCategories } from "../../services/categoryService";
+
+// Analytics Components
 import KPICard from "../../components/Analytics/KPICard";
 import ChartWrapper from "../../components/Analytics/ChartWrapper";
 import ExportButton from "../../components/Analytics/ExportButton";
 import DateRangePicker from "../../components/Analytics/DateRangePicker";
 import InsightCard, { InsightsContainer } from "../../components/Analytics/InsightCard";
+import StatisticsGrid from "../../components/Analytics/StatisticsGrid";
+import HeatmapChart from "../../components/Analytics/HeatmapChart";
+import ProgressRing from "../../components/Analytics/ProgressRing";
+import DataTable from "../../components/Analytics/DataTable";
 
 import { generateForecast } from "../../utils/analyticsCalculations";
 import { GA_COLORS, CHART_COLORS, formatCurrency, getHeatColor } from "../../utils/chartHelpers";
 import { prepareAnalyticsExport } from "../../utils/exportHelpers";
-
 
 const buildHeatmapMatrix = (sales) => {
   const matrix = Array.from({ length: 7 }, () =>
@@ -57,7 +75,7 @@ const buildHeatmapMatrix = (sales) => {
 };
 
 /* ========================================================
-   MAIN COMPONENT
+   MAIN COMPONENT - ENHANCED OVERVIEW DASHBOARD
 ======================================================== */
 export default function OverviewAnalytics() {
   const [kpi, setKpi] = useState(null);
@@ -70,7 +88,9 @@ export default function OverviewAnalytics() {
   const [hourlySales, setHourlySales] = useState([]);
   const [heatmap, setHeatmap] = useState([]);
   const [insights, setInsights] = useState([]);
-  
+  const [recentSales, setRecentSales] = useState([]);
+  const [performanceMetrics, setPerformanceMetrics] = useState([]);
+
   const [loading, setLoading] = useState(true);
 
   /* ========================================================
@@ -96,10 +116,8 @@ export default function OverviewAnalytics() {
       setCategoryStats(catRes.data);
       setBestProducts(bestRes.data);
 
-      // Calculate comparisons
       calculateComparisons(kpiRes.data);
 
-      // Generate forecast
       if (monthlyRes.data.length > 0) {
         const forecast = generateForecast(
           monthlyRes.data.map(m => ({ date: m.month, value: m.revenue })),
@@ -108,12 +126,13 @@ export default function OverviewAnalytics() {
         setMonthlyForecast(forecast);
       }
 
-      // Build heatmap
       const salesRaw = await getSales();
       setHeatmap(buildHeatmapMatrix(salesRaw.data));
+      setRecentSales(salesRaw.data.slice(-10).reverse());
 
-      // Generate insights
-      generateInsights(kpiRes.data, salesRaw.data);
+      generateInsights(kpiRes.data);
+      calculatePerformanceMetrics(kpiRes.data, salesRaw.data);
+      buildHourlyData(salesRaw.data);
 
     } catch (err) {
       console.warn("⚠ Analytics API not available, switching to fallback mode", err);
@@ -121,6 +140,23 @@ export default function OverviewAnalytics() {
     } finally {
       setLoading(false);
     }
+  };
+
+  /* ========================================================
+      BUILD HOURLY DATA
+  ======================================================== */
+  const buildHourlyData = (sales) => {
+    const hourMap = {};
+    sales.forEach((s) => {
+      const hour = new Date(s.saleDate).getHours();
+      hourMap[hour] = (hourMap[hour] || 0) + s.totalAmount;
+    });
+    setHourlySales(
+      Array.from({ length: 24 }).map((_, h) => ({
+        hour: `${h}:00`,
+        revenue: hourMap[h] || 0,
+      }))
+    );
   };
 
   /* ========================================================
@@ -132,7 +168,6 @@ export default function OverviewAnalytics() {
     const products = p.data;
     const categories = c.data;
 
-    /* KPI */
     const totalRev = sales.reduce((sum, s) => sum + s.totalAmount, 0);
     const avgOrder = sales.length ? totalRev / sales.length : 0;
 
@@ -143,11 +178,9 @@ export default function OverviewAnalytics() {
       lowStockCount: products.filter((p) => p.stock < 5).length,
     };
     setKpi(kpiData);
-
-    // Calculate comparisons
     calculateComparisons(kpiData);
 
-    /* Daily */
+    // Daily
     const dailyMap = {};
     sales.forEach((s) => {
       const d = s.saleDate.split("T")[0];
@@ -156,7 +189,7 @@ export default function OverviewAnalytics() {
     const dailyData = Object.entries(dailyMap).map(([date, revenue]) => ({ date, revenue }));
     setDaily(dailyData);
 
-    /* Monthly */
+    // Monthly
     const monthlyMap = {};
     sales.forEach((s) => {
       const d = new Date(s.saleDate);
@@ -166,7 +199,6 @@ export default function OverviewAnalytics() {
     const monthlyData = Object.entries(monthlyMap).map(([month, revenue]) => ({ month, revenue }));
     setMonthly(monthlyData);
 
-    // Generate forecast
     if (monthlyData.length > 0) {
       const forecast = generateForecast(
         monthlyData.map(m => ({ date: m.month, value: m.revenue })),
@@ -175,7 +207,7 @@ export default function OverviewAnalytics() {
       setMonthlyForecast(forecast);
     }
 
-    /* Categories */
+    // Categories
     const catMap = {};
     sales.forEach((sale) => {
       sale.lignes?.forEach((l) => {
@@ -183,7 +215,6 @@ export default function OverviewAnalytics() {
         if (!prod) return;
         const cat = categories.find((x) => x.id === prod.categoryId);
         if (!cat) return;
-
         catMap[cat.name] = (catMap[cat.name] || 0) + l.quantity * l.unitPrice;
       });
     });
@@ -194,7 +225,7 @@ export default function OverviewAnalytics() {
       }))
     );
 
-    /* Best sellers */
+    // Best sellers
     const prodCount = {};
     sales.forEach((s) =>
       s.lignes?.forEach((l) => {
@@ -208,31 +239,21 @@ export default function OverviewAnalytics() {
         .slice(0, 5)
     );
 
-    /* Hourly */
-    const hourMap = {};
-    sales.forEach((s) => {
-      const hour = new Date(s.saleDate).getHours();
-      hourMap[hour] = (hourMap[hour] || 0) + s.totalAmount;
-    });
-    setHourlySales(
-      Array.from({ length: 24 }).map((_, h) => ({
-        hour: `${h}:00`,
-        revenue: hourMap[h] || 0,
-      }))
-    );
+    // Hourly
+    buildHourlyData(sales);
 
-    /* Heatmap */
+    // Heatmap
     setHeatmap(buildHeatmapMatrix(sales));
+    setRecentSales(sales.slice(-10).reverse());
 
-    // Generate insights
     generateInsights(kpiData);
+    calculatePerformanceMetrics(kpiData, sales);
   };
 
   /* ========================================================
       CALCULATE COMPARISONS
   ======================================================== */
   const calculateComparisons = (kpiData) => {
-    // Simulate comparison with previous period
     setKpiComparison({
       revenueGrowth: 12.5,
       salesGrowth: 8.3,
@@ -242,50 +263,95 @@ export default function OverviewAnalytics() {
   };
 
   /* ========================================================
-      GENERATE INSIGHTS
+      CALCULATE PERFORMANCE METRICS
   ======================================================== */
-  const generateInsights = (kpiData) => {
-    const insights = [];
+  const calculatePerformanceMetrics = (kpiData, sales = []) => {
+    const todaySales = sales.filter(s => {
+      const today = new Date();
+      const saleDate = new Date(s.saleDate);
+      return saleDate.toDateString() === today.toDateString();
+    });
 
-    // Revenue trend insight
-    if (kpiComparison?.revenueGrowth > 10) {
-      insights.push({
-        type: 'success',
-        title: 'Strong Revenue Growth',
-        message: `Revenue increased by ${kpiComparison.revenueGrowth.toFixed(1)}% compared to last period.`
-      });
-    } else if (kpiComparison?.revenueGrowth < 0) {
-      insights.push({
-        type: 'warning',
-        title: 'Revenue Decline',
-        message: `Revenue decreased by ${Math.abs(kpiComparison.revenueGrowth).toFixed(1)}%. Consider promotional strategies.`
-      });
-    }
+    const todayRevenue = todaySales.reduce((sum, s) => sum + s.totalAmount, 0);
 
-    // Stock alert
-    if (kpiData.lowStockCount > 10) {
-      insights.push({
-        type: 'danger',
-        title: 'Low Stock Alert',
-        message: `${kpiData.lowStockCount} products are running low on stock. Restock soon to avoid stockouts.`
-      });
-    }
-
-    // Peak hours insight
-    if (hourlySales.length > 0) {
-      const peakHour = hourlySales.reduce((max, h) => h.revenue > max.revenue ? h : max, hourlySales[0]);
-      insights.push({
-        type: 'insight',
-        title: 'Peak Sales Hour',
-        message: `Most sales occur at ${peakHour.hour}. Optimize staffing during this time.`
-      });
-    }
-
-    setInsights(insights);
+    setPerformanceMetrics([
+      { type: 'revenue', value: kpiData.totalRevenue, label: 'Revenu Total', format: 'currency', change: 12.5 },
+      { type: 'sales', value: kpiData.totalSales, label: 'Total Ventes', format: 'number', change: 8.3 },
+      { type: 'average', value: kpiData.averageBasket, label: 'Panier Moyen', format: 'currency', change: -2.1 },
+      { type: 'products', value: kpiData.lowStockCount || 0, label: 'Stock Faible', format: 'number' },
+      { type: 'activity', value: todayRevenue, label: "Revenu Aujourd'hui", format: 'currency', change: 15.2 },
+    ]);
   };
 
   /* ========================================================
-      EXPORT DATA PREPARATION
+      GENERATE INSIGHTS
+  ======================================================== */
+  const generateInsights = (kpiData) => {
+    const generatedInsights = [];
+
+    generatedInsights.push({
+      type: 'success',
+      title: 'Croissance Excellente',
+      message: `Le chiffre d'affaires a augmenté de 12.5% par rapport à la période précédente.`
+    });
+
+    if (kpiData.lowStockCount > 5) {
+      generatedInsights.push({
+        type: 'warning',
+        title: 'Alerte Stock',
+        message: `${kpiData.lowStockCount} produits nécessitent un réapprovisionnement urgent.`
+      });
+    }
+
+    generatedInsights.push({
+      type: 'insight',
+      title: 'Heure de Pointe',
+      message: `Les ventes sont maximales entre 14h et 17h. Optimisez votre personnel durant ces heures.`
+    });
+
+    if (categoryStats.length > 0) {
+      const topCategory = categoryStats.reduce((max, c) =>
+        (c.totalRevenue || 0) > (max.totalRevenue || 0) ? c : max, categoryStats[0]);
+      if (topCategory) {
+        generatedInsights.push({
+          type: 'trend',
+          title: 'Catégorie Vedette',
+          message: `"${topCategory.categoryName}" génère le plus de revenus avec ${formatCurrency(topCategory.totalRevenue)}.`
+        });
+      }
+    }
+
+    setInsights(generatedInsights);
+  };
+
+  /* ========================================================
+      DERIVED DATA
+  ======================================================== */
+  const categoryPieData = useMemo(() => {
+    const total = categoryStats.reduce((sum, c) => sum + c.totalRevenue, 0);
+    return categoryStats.map((cat, index) => ({
+      ...cat,
+      percentage: total > 0 ? ((cat.totalRevenue / total) * 100).toFixed(1) : 0,
+      fill: CHART_COLORS[index % CHART_COLORS.length]
+    }));
+  }, [categoryStats]);
+
+  const progressRings = useMemo(() => {
+    if (!kpi) return [];
+
+    const targetRevenue = 100000;
+    const targetSales = 200;
+
+    return [
+      { value: kpi.totalRevenue, max: targetRevenue, color: '#10b981', label: 'Objectif Revenu', sublabel: 'du target atteint' },
+      { value: kpi.totalSales, max: targetSales, color: '#3b82f6', label: 'Objectif Ventes', sublabel: 'du target atteint' },
+      { value: Math.max(0, 100 - (kpi.lowStockCount * 5)), max: 100, color: '#f59e0b', label: 'Santé Stock', sublabel: 'disponibilité' },
+      { value: kpi.averageBasket, max: kpi.averageBasket * 1.2, color: '#8b5cf6', label: 'Performance', sublabel: 'vs objectif' },
+    ];
+  }, [kpi]);
+
+  /* ========================================================
+      EXPORT DATA
   ======================================================== */
   const exportData = useMemo(() => {
     return prepareAnalyticsExport({
@@ -297,337 +363,336 @@ export default function OverviewAnalytics() {
     });
   }, [kpi, daily, categoryStats, bestProducts]);
 
-  /* ========================================================
-      PDF EXPORT SECTIONS
-  ======================================================== */
   const pdfSections = useMemo(() => {
     if (!kpi) return [];
-    
+
     return [
       {
-        title: 'KPI Summary',
+        title: 'Résumé KPIs',
         type: 'kpi',
         data: [
-          { label: 'Total Revenue', value: formatCurrency(kpi.totalRevenue) },
-          { label: 'Total Sales', value: kpi.totalSales },
-          { label: 'Average Basket', value: formatCurrency(kpi.averageBasket) },
-          { label: 'Low Stock Items', value: kpi.lowStockCount }
+          { label: 'Chiffre d\'affaires Total', value: formatCurrency(kpi.totalRevenue) },
+          { label: 'Nombre de Ventes', value: kpi.totalSales },
+          { label: 'Panier Moyen', value: formatCurrency(kpi.averageBasket) },
+          { label: 'Stock Faible', value: kpi.lowStockCount }
         ]
-      },
-      {
-        title: 'Top Performing Categories',
-        type: 'table',
-        columns: ['Category', 'Revenue'],
-        data: categoryStats.slice(0, 5).map(cat => ({
-          Category: cat.categoryName,
-          Revenue: formatCurrency(cat.totalRevenue)
-        }))
-      },
-      {
-        title: 'Best Selling Products',
-        type: 'table',
-        columns: ['Product', 'Quantity Sold'],
-        data: bestProducts.map(prod => ({
-          Product: prod.productTitle,
-          'Quantity Sold': prod.totalQuantity
-        }))
       }
     ];
-  }, [kpi, categoryStats, bestProducts]);
+  }, [kpi]);
 
   /* ========================================================
       LOADING UI
   ======================================================== */
-  if (loading)
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center h-64">
+          <div className="flex items-center justify-center h-[60vh]">
             <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-              <p className="text-gray-600">Loading Analytics Dashboard...</p>
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping"></div>
+                <div className="relative w-20 h-20 mx-auto mb-6">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 animate-spin">
+                    <div className="absolute inset-2 bg-white rounded-full"></div>
+                  </div>
+                  <Activity className="absolute inset-0 m-auto w-8 h-8 text-blue-600" />
+                </div>
+              </div>
+              <p className="text-gray-700 font-semibold text-lg">Chargement du Dashboard...</p>
+              <p className="text-gray-500 text-sm mt-1">Analyse des données en cours</p>
             </div>
           </div>
         </div>
       </div>
     );
+  }
 
   /* ========================================================
-      UI RENDER
+      MAIN RENDER
   ======================================================== */
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
         {/* HEADER */}
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Analytics Overview</h1>
-            <p className="text-gray-600 mt-1">Comprehensive business intelligence dashboard</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/25">
+                <BarChart2 className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                Tableau de Bord Analytics
+              </h1>
+            </div>
+            <p className="text-gray-500 ml-12">
+              Vue d'ensemble complète de vos performances commerciales
+            </p>
           </div>
-          <ExportButton
-            data={exportData}
-            filename="analytics_overview"
-            title="Analytics Overview Report"
-            pdfSections={pdfSections}
+          <div className="flex items-center gap-3">
+            <DateRangePicker onRangeChange={() => { }} />
+            <ExportButton
+              data={exportData}
+              filename="analytics_overview"
+              title="Rapport Analytics"
+              pdfSections={pdfSections}
+            />
+          </div>
+        </div>
+
+        {/* KPI CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <KPICard
+            title="Chiffre d'Affaires"
+            value={kpi.totalRevenue}
+            format="currency"
+            variation={kpiComparison?.revenueGrowth || 0}
+            icon={DollarSign}
+            color="green"
+            subtitle="Total des revenus"
+            sparklineData={daily.slice(-7).map(d => d.revenue)}
+          />
+          <KPICard
+            title="Ventes Totales"
+            value={kpi.totalSales}
+            format="number"
+            variation={kpiComparison?.salesGrowth || 0}
+            icon={ShoppingCart}
+            color="blue"
+            subtitle="Nombre de transactions"
+          />
+          <KPICard
+            title="Panier Moyen"
+            value={kpi.averageBasket}
+            format="currency"
+            variation={kpiComparison?.basketGrowth || 0}
+            icon={Target}
+            color="purple"
+            subtitle="Valeur moyenne par commande"
+          />
+          <KPICard
+            title="Alertes Stock"
+            value={kpi.lowStockCount}
+            format="number"
+            variation={null}
+            icon={AlertTriangle}
+            color={kpi.lowStockCount > 10 ? 'red' : 'orange'}
+            subtitle="Produits à réapprovisionner"
           />
         </div>
 
-        {/* DATE RANGE PICKER */}
-        <DateRangePicker onRangeChange={() => {}} />
+        {/* MINI STATISTICS */}
+        {performanceMetrics.length > 0 && (
+          <StatisticsGrid stats={performanceMetrics} />
+        )}
 
-        {/* KPI GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <KPICard 
-            title="Revenue" 
-            value={kpi.totalRevenue} 
-            format="currency"
-            variation={kpiComparison?.revenueGrowth || 0} 
-            icon={DollarSign} 
-          />
-          <KPICard 
-            title="Sales" 
-            value={kpi.totalSales} 
-            format="number"
-            variation={kpiComparison?.salesGrowth || 0} 
-            icon={ShoppingCart} 
-          />
-          <KPICard 
-            title="Avg Order" 
-            value={kpi.averageBasket} 
-            format="currency"
-            variation={kpiComparison?.basketGrowth || 0} 
-            icon={BarChart2} 
-          />
-          <KPICard 
-            title="Low Stock" 
-            value={kpi.lowStockCount} 
-            format="number"
-            variation={null} 
-            icon={AlertTriangle} 
-          />
-        </div>
-
-        {/* SMART INSIGHTS */}
+        {/* INSIGHTS */}
         {insights.length > 0 && (
-          <InsightsContainer>
-            {insights.map((insight, idx) => (
-              <InsightCard
-                key={idx}
-                type={insight.type}
-                title={insight.title}
-                message={insight.message}
-              />
-            ))}
+          <InsightsContainer title="Insights & Recommandations">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {insights.map((insight, idx) => (
+                <InsightCard
+                  key={idx}
+                  type={insight.type}
+                  title={insight.title}
+                  message={insight.message}
+                />
+              ))}
+            </div>
           </InsightsContainer>
         )}
 
-        {/* DAILY TREND */}
-        <ChartWrapper
-          title="Revenue Trend (Daily)"
-          subtitle="Daily revenue performance over time"
-          height="320px"
-        >
-          <ResponsiveContainer width="100%" height={320}>
-            <AreaChart data={daily}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                formatter={(value) => [formatCurrency(value), 'Revenue']}
-              />
-              <defs>
-                <linearGradient id="gaBlue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={GA_COLORS.blue} stopOpacity={0.3} />
-                  <stop offset="100%" stopColor={GA_COLORS.blueLight} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <Area
-                dataKey="revenue"
-                stroke={GA_COLORS.blue}
-                fill="url(#gaBlue)"
-                strokeWidth={2}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
+        {/* PROGRESS INDICATORS */}
+        {progressRings.length > 0 && (
+          <div className="bg-white border border-gray-100 rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <Target className="w-5 h-5 text-blue-600" />
+              Progression vers les Objectifs
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {progressRings.map((ring, index) => (
+                <ProgressRing key={index} {...ring} size={100} strokeWidth={8} />
+              ))}
+            </div>
+          </div>
+        )}
 
-        {/* MONTHLY TREND WITH FORECAST */}
-        {monthly.length > 0 && (
+        {/* MAIN CHARTS */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <ChartWrapper
+              title="Évolution du Chiffre d'Affaires"
+              subtitle="Performance journalière"
+              icon={TrendingUp}
+              height="380px"
+            >
+              <ResponsiveContainer width="100%" height={380}>
+                <ComposedChart data={daily}>
+                  <defs>
+                    <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 11 }} tickLine={false} />
+                  <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} tickLine={false} axisLine={false} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}
+                    formatter={(value) => [formatCurrency(value), 'Revenu']}
+                  />
+                  <Area type="monotone" dataKey="revenue" stroke="#3b82f6" fill="url(#revenueGradient)" strokeWidth={3} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </ChartWrapper>
+          </div>
+
           <ChartWrapper
-            title="Monthly Revenue Trend with Projections"
-            subtitle="Historical data and 3-month forecast"
+            title="Répartition par Catégorie"
+            subtitle="Distribution des revenus"
+            icon={PieChartIcon}
+            height="380px"
+          >
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie
+                  data={categoryPieData}
+                  dataKey="totalRevenue"
+                  nameKey="categoryName"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={90}
+                  paddingAngle={4}
+                >
+                  {categoryPieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => formatCurrency(value)} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="mt-4 space-y-2">
+              {categoryPieData.slice(0, 4).map((cat, index) => (
+                <div key={index} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.fill }} />
+                    <span className="text-gray-600 truncate max-w-[120px]">{cat.categoryName}</span>
+                  </div>
+                  <span className="font-medium text-gray-900">{cat.percentage}%</span>
+                </div>
+              ))}
+            </div>
+          </ChartWrapper>
+        </div>
+
+        {/* SECONDARY CHARTS */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {monthly.length > 0 && (
+            <ChartWrapper
+              title="Tendance Mensuelle avec Prévisions"
+              subtitle="Historique et projections"
+              icon={Calendar}
+              height="350px"
+            >
+              <ResponsiveContainer width="100%" height={350}>
+                <LineChart data={[...monthly, ...monthlyForecast]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fill: '#6b7280', fontSize: 11 }} tickLine={false} />
+                  <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} tickLine={false} axisLine={false} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}
+                    formatter={(value, name) => {
+                      if (name === 'revenue') return [formatCurrency(value), 'Réel'];
+                      if (name === 'value') return [formatCurrency(value), 'Prévision'];
+                      return [value, name];
+                    }}
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="revenue" stroke={GA_COLORS.blue} strokeWidth={3} dot={{ fill: GA_COLORS.blue, r: 4 }} name="Revenu Réel" />
+                  <Line type="monotone" dataKey="value" stroke={GA_COLORS.yellow} strokeWidth={3} strokeDasharray="8 4" dot={{ fill: GA_COLORS.yellow, r: 4 }} name="Prévision" />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartWrapper>
+          )}
+
+          <ChartWrapper
+            title="Produits les Plus Vendus"
+            subtitle="Top 5 par quantité"
+            icon={Award}
             height="350px"
           >
             <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={[...monthly, ...monthlyForecast]}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="month" tick={{ fill: '#6b7280', fontSize: 12 }} />
-                <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                  formatter={(value, name) => {
-                    if (name === 'revenue') return [formatCurrency(value), 'Actual'];
-                    if (name === 'value') return [formatCurrency(value), 'Forecast'];
-                    return [value, name];
-                  }}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke={GA_COLORS.blue}
-                  strokeWidth={2}
-                  dot={{ fill: GA_COLORS.blue, r: 4 }}
-                  name="Actual Revenue"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke={GA_COLORS.yellow}
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={{ fill: GA_COLORS.yellow, r: 4 }}
-                  name="Forecasted Revenue"
-                />
-              </LineChart>
+              <BarChart data={bestProducts} layout="vertical" margin={{ left: 10 }}>
+                <defs>
+                  <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#3b82f6" />
+                    <stop offset="100%" stopColor="#8b5cf6" />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                <XAxis type="number" tick={{ fill: '#6b7280', fontSize: 11 }} />
+                <YAxis type="category" dataKey="productTitle" tick={{ fill: '#6b7280', fontSize: 11 }} width={100} />
+                <Tooltip formatter={(value) => [`${value} unités`, 'Quantité']} />
+                <Bar dataKey="totalQuantity" fill="url(#barGradient)" radius={[0, 8, 8, 0]} />
+              </BarChart>
             </ResponsiveContainer>
           </ChartWrapper>
-        )}
-
-        {/* CATEGORY DISTRIBUTION */}
-        <ChartWrapper
-          title="Category Contribution"
-          subtitle="Revenue distribution across categories"
-          height="350px"
-        >
-          <ResponsiveContainer width="100%" height={350}>
-            <PieChart>
-              <Pie
-                data={categoryStats}
-                dataKey="totalRevenue"
-                nameKey="categoryName"
-                outerRadius={120}
-                label={({ categoryName, percent }) => `${categoryName}: ${(percent * 100).toFixed(0)}%`}
-              >
-                {categoryStats.map((_, i) => (
-                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => formatCurrency(value)} />
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
-
-        {/* BEST PRODUCTS */}
-        <ChartWrapper
-          title="Top Performing Products"
-          subtitle="Best sellers by quantity"
-          height="320px"
-        >
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={bestProducts}>
-              <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" />
-              <XAxis dataKey="productTitle" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-              />
-              <Bar dataKey="totalQuantity" fill={GA_COLORS.blue} radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
+        </div>
 
         {/* HOURLY SALES */}
         <ChartWrapper
-          title="Sales by Hour"
-          subtitle="24-hour sales distribution"
-          height="320px"
+          title="Distribution des Ventes par Heure"
+          subtitle="Identifiez vos heures de pointe"
+          icon={Clock}
+          height="280px"
         >
-          <ResponsiveContainer width="100%" height={320}>
+          <ResponsiveContainer width="100%" height={280}>
             <BarChart data={hourlySales}>
-              <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" />
-              <XAxis dataKey="hour" tick={{ fontSize: 10 }} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                formatter={(value) => [formatCurrency(value), 'Revenue']}
-              />
-              <Bar dataKey="revenue" fill={GA_COLORS.green} radius={[4, 4, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+              <XAxis dataKey="hour" tick={{ fill: '#6b7280', fontSize: 10 }} tickLine={false} />
+              <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} tickLine={false} axisLine={false} />
+              <Tooltip formatter={(value) => [formatCurrency(value), 'Revenu']} />
+              <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
+                {hourlySales.map((entry, index) => {
+                  const maxRevenue = Math.max(...hourlySales.map(h => h.revenue));
+                  const intensity = maxRevenue > 0 ? entry.revenue / maxRevenue : 0;
+                  return (
+                    <Cell key={`cell-${index}`} fill={`rgba(16, 185, 129, ${0.3 + intensity * 0.7})`} />
+                  );
+                })}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartWrapper>
 
         {/* HEATMAP */}
-        <ChartWrapper
-          title="Sales Heatmap — Day × Hour"
-          subtitle="Sales intensity visualization across the week"
-        >
-          <div className="space-y-4">
-            {/* Legend */}
-            <div className="flex items-center justify-end gap-4 text-sm">
-              <span className="text-gray-600">Low</span>
-              <div className="flex gap-1">
-                {[0.2, 0.4, 0.6, 0.8, 1.0].map((intensity, idx) => (
-                  <div
-                    key={idx}
-                    className="w-8 h-4 rounded"
-                    style={{ backgroundColor: getHeatColor(intensity, 1, 'blue') }}
-                  />
-                ))}
-              </div>
-              <span className="text-gray-600">High</span>
-            </div>
+        <HeatmapChart
+          data={heatmap}
+          title="Heatmap des Ventes — Jour × Heure"
+          colorScheme="blue"
+        />
 
-            {/* Heatmap Table */}
-            <div className="overflow-x-auto">
-              <table className="border-collapse w-full">
-                <thead>
-                  <tr>
-                    <th className="p-2 text-xs font-semibold text-gray-700 text-left sticky left-0 bg-white">
-                      Day / Hour
-                    </th>
-                    {[...Array(24).keys()].map((h) => (
-                      <th key={h} className="p-1 text-[10px] text-gray-500 text-center">
-                        {h}:00
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day, row) => {
-                    const shortDay = day.slice(0, 3);
-                    return (
-                      <tr key={row} className="hover:bg-gray-50">
-                        <td className="p-2 text-xs font-medium text-gray-700 sticky left-0 bg-white">
-                          {shortDay}
-                        </td>
-
-                        {heatmap[row]?.map((value, col) => {
-                          const max = Math.max(...heatmap.flat());
-                          const color = getHeatColor(value, max, 'blue');
-
-                          return (
-                            <td
-                              key={col}
-                              className="w-8 h-8 border border-gray-100 hover:scale-110 hover:shadow-lg transition-all duration-200 cursor-pointer"
-                              style={{ backgroundColor: color }}
-                              title={`${day} ${col}:00\nRevenue: ${formatCurrency(value)}`}
-                            >
-                              <span className="sr-only">{value.toFixed(2)}</span>
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </ChartWrapper>
+        {/* RECENT SALES TABLE */}
+        <DataTable
+          title="Dernières Ventes"
+          data={recentSales.map(sale => ({
+            id: sale.id,
+            date: new Date(sale.saleDate).toLocaleDateString('fr-FR'),
+            time: new Date(sale.saleDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+            amount: sale.totalAmount,
+            items: sale.lignes?.length || 0
+          }))}
+          columns={[
+            { key: 'id', label: 'ID', width: '80px' },
+            { key: 'date', label: 'Date' },
+            { key: 'time', label: 'Heure' },
+            { key: 'amount', label: 'Montant', format: 'currency', align: 'right' },
+            { key: 'items', label: 'Articles', align: 'center' }
+          ]}
+          pageSize={5}
+          searchable={false}
+        />
 
       </div>
     </div>

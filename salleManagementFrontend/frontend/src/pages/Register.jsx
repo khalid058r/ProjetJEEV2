@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { registerUser } from "../services/authService";
-import { 
-  UserIcon, 
-  EnvelopeIcon, 
+import {
+  UserIcon,
+  EnvelopeIcon,
   LockClosedIcon,
-  ArrowLeftIcon 
+  ArrowLeftIcon
 } from "@heroicons/react/24/outline";
 
 export default function Register() {
@@ -22,7 +22,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) =>
-    setForm({ ...form, [e.target. name]: e.target.value });
+    setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,21 +33,21 @@ export default function Register() {
       await registerUser(form);
       navigate("/");
     } catch (err) {
-      setError(err. message || "Registration failed");
+      setError(err.message || "Registration failed");
       setLoading(false);
     }
   };
 
   const roles = [
-    { value:  "VENDEUR", label: "Vendeur", icon: "🛒" },
-    { value: "ANALYSTE", label:  "Analyste", icon: "📊" },
+    { value: "VENDEUR", label: "Vendeur", icon: "🛒" },
+    { value: "ANALYSTE", label: "Analyste", icon: "📊" },
     { value: "ACHETEUR", label: "Acheteur", icon: "🛍️" },
     { value: "INVESTISSEUR", label: "Investisseur", icon: "💼" }
   ];
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-blue-50 px-4 py-6">
-      
+
       {/* Background Decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
@@ -55,7 +55,7 @@ export default function Register() {
       </div>
 
       <div className="relative w-full max-w-lg">
-        
+
         {/* Back Button */}
         <button
           onClick={() => navigate("/")}
@@ -67,7 +67,7 @@ export default function Register() {
 
         {/* Card */}
         <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
-          
+
           {/* Header Compact */}
           <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-6 text-center">
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
@@ -76,12 +76,12 @@ export default function Register() {
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-white mb-1">Create Account</h1>
-            <p className="text-purple-100 text-sm">Join SalleManager today</p>
+            <p className="text-purple-100 text-sm">Join SaleManager today</p>
           </div>
 
           {/* Form Compact */}
           <div className="px-6 py-6">
-            
+
             {error && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 animate-fadeIn">
                 <svg className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -92,10 +92,10 @@ export default function Register() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              
+
               {/* Two Column Layout for First Row */}
               <div className="grid grid-cols-2 gap-3">
-                
+
                 {/* Username */}
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Username</label>
@@ -158,11 +158,10 @@ export default function Register() {
                   {roles.map((role) => (
                     <label
                       key={role.value}
-                      className={`relative flex flex-col items-center p-2 border-2 rounded-lg cursor-pointer transition ${
-                        form.role === role. value
+                      className={`relative flex flex-col items-center p-2 border-2 rounded-lg cursor-pointer transition ${form.role === role.value
                           ? 'border-purple-500 bg-purple-50 shadow-sm'
                           : 'border-gray-200 hover:border-purple-300'
-                      }`}
+                        }`}
                     >
                       <input
                         type="radio"
@@ -198,7 +197,7 @@ export default function Register() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Creating... 
+                    Creating...
                   </>
                 ) : (
                   <>
@@ -230,7 +229,7 @@ export default function Register() {
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-600 mt-4">
-          © 2024 SalleManager. All rights reserved.
+          © 2024 SaleManager. All rights reserved.
         </p>
       </div>
 

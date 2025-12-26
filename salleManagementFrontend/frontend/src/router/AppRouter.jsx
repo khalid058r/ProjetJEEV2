@@ -122,7 +122,7 @@
 //           <Route path="/vendeur/sales/:id" element={<VendeurSaleDetails />} />
 //           <Route path="analytics" element={<VendeurAnalytics />} />
 //         </Route>
-  
+
 //         <Route element={<AppLayout />}>
 //           <Route path="/dashboard" element={<Dashboard />} />
 //           <Route path="/products" element={<Products />} />
@@ -155,6 +155,7 @@ import Register from "../pages/Register";
 
 import AppLayout from "../layouts/AppLayout";
 import VendeurLayout from "../layouts/VendeurLayot";
+import AnalystLayout from "../layouts/AnalystLayout";
 
 // ADMIN
 import Dashboard from "../pages/Dashboard";
@@ -173,7 +174,7 @@ import ProductAnalytics from "../pages/Analytics/ProductAnalytics";
 import CategoryAnalytics from "../pages/Analytics/CategoryAnalytics";
 import SalesAnalytics from "../pages/Analytics/SalesAnalytics";
 
-// ROLES
+// VENDEUR ROLE
 import VendeurHome from "../pages/Vendeur/VendeurDashboard";
 import VendeurSales from "../pages/Vendeur/VendeurSales";
 import VendeurSaleDetails from "../pages/Vendeur/VendeurSaleDetails";
@@ -183,9 +184,18 @@ import VendeurProductDetails from "../pages/Vendeur/VendeurProductDetails";
 import VendeurCategories from "../pages/Vendeur/VendeurCategories";
 import VendeurCategoryDetails from "../pages/Vendeur/VendeurCategoryDetails";
 
+// ANALYST ROLE
+import AnalystDashboard from "../pages/analyst/AnalystDashboard";
+import AnalystSalesAnalytics from "../pages/analyst/AnalystSalesAnalytics";
+import AnalystProductAnalytics from "../pages/analyst/AnalystProductAnalytics";
+import AnalystCategoryAnalytics from "../pages/analyst/AnalystCategoryAnalytics";
+import AnalystReports from "../pages/analyst/AnalystReports";
+import AnalystWorkspace from "../pages/analyst/AnalystWorkspace";
+
 import AnalysteHome from "../pages/role-tests/AnalysteHome";
 import AcheteurHome from "../pages/role-tests/AcheteurHome";
 import InvestisseurHome from "../pages/role-tests/InvestisseurHome";
+import NotFound from "../pages/NotFound";
 
 export default function AppRouter() {
   return (
@@ -213,6 +223,16 @@ export default function AppRouter() {
           <Route path="/vendeur/analytics" element={<VendeurAnalytics />} />
         </Route>
 
+        {/* ================= ANALYST ================= */}
+        <Route path="/analyst" element={<AnalystLayout />}>
+          <Route index element={<AnalystDashboard />} />
+          <Route path="sales" element={<AnalystSalesAnalytics />} />
+          <Route path="products" element={<AnalystProductAnalytics />} />
+          <Route path="categories" element={<AnalystCategoryAnalytics />} />
+          <Route path="reports" element={<AnalystReports />} />
+          <Route path="workspace" element={<AnalystWorkspace />} />
+        </Route>
+
         {/* ================= ADMIN ================= */}
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
@@ -237,12 +257,12 @@ export default function AppRouter() {
         </Route>
 
         {/* ================= AUTRES ROLES ================= */}
-        <Route path="/analyste" element={<AnalysteHome />} />
+        <Route path="/analyste" element={<Navigate to="/analyst" replace />} />
         <Route path="/acheteur" element={<AcheteurHome />} />
         <Route path="/investisseur" element={<InvestisseurHome />} />
 
-        {/* ================= FALLBACK ================= */}
-        <Route path="*" element={<Navigate to="/login" />} />
+        {/* ================= 404 NOT FOUND ================= */}
+        <Route path="*" element={<NotFound />} />
 
       </Routes>
     </BrowserRouter>

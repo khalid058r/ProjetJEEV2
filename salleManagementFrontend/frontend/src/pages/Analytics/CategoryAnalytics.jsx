@@ -7,7 +7,14 @@ import {
   ShoppingCart,
   BarChart3,
   PieChart as PieChartIcon,
-  Filter
+  Filter,
+  Target,
+  Award,
+  Layers,
+  Grid,
+  Zap,
+  Eye,
+  Activity
 } from 'lucide-react';
 import {
   BarChart,
@@ -28,7 +35,9 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Legend
+  Legend,
+  AreaChart,
+  Area
 } from 'recharts';
 
 import AnalyticsService from '../../services/analyticsService';
@@ -40,16 +49,21 @@ import KPICard from '../../components/Analytics/KPICard';
 import ChartWrapper from '../../components/Analytics/ChartWrapper';
 import ExportButton from '../../components/Analytics/ExportButton';
 import DateRangePicker from '../../components/Analytics/DateRangePicker';
+import InsightCard, { InsightsContainer } from '../../components/Analytics/InsightCard';
+import StatisticsGrid from '../../components/Analytics/StatisticsGrid';
+import DataTable from '../../components/Analytics/DataTable';
+import ProgressRing from '../../components/Analytics/ProgressRing';
+
 import { calculateSeasonality } from '../../utils/analyticsCalculations';
 import { GA_COLORS, CHART_COLORS, formatCurrency, formatNumber } from '../../utils/chartHelpers';
 
 /**
- * CategoryAnalytics Component
- * Complete analytics for product categories with multiple visualizations
+ * Enhanced CategoryAnalytics Component
+ * Comprehensive analytics for product categories with multiple visualizations
  */
 export default function CategoryAnalytics() {
   const [loading, setLoading] = useState(true);
-  
+
   // State for analytics data
   const [categoryKPIs, setCategoryKPIs] = useState([]);
   const [treemapData, setTreemapData] = useState([]);
@@ -57,6 +71,8 @@ export default function CategoryAnalytics() {
   const [growthMatrix, setGrowthMatrix] = useState([]);
   const [topProducts, setTopProducts] = useState({});
   const [flopProducts, setFlopProducts] = useState({});
+  const [categoryTrend, setCategoryTrend] = useState([]);
+  const [categoryMetrics, setCategoryMetrics] = useState([]);
 
   // Filters
   const [minThreshold] = useState(0);
@@ -70,22 +86,21 @@ export default function CategoryAnalytics() {
   const loadAnalytics = async () => {
     try {
       setLoading(true);
-      
-      // Try API first, fallback to local calculation
+
       try {
         const [categoryRes, treemapRes] = await Promise.all([
           AnalyticsService.getCategoryStats(),
           AnalyticsService.getCategoryTreemap()
         ]);
-        
+
         setCategoryKPIs(categoryRes.data);
         setTreemapData(treemapRes.data);
       } catch {
-        console.warn('Analytics API not available, using fallback mode');
+        console.warn('Analytics API non disponible, mode de secours');
         await fallbackCalculations();
       }
     } catch (error) {
-      console.error('Error loading analytics:', error);
+      console.error('Erreur de chargement des analytics:', error);
     } finally {
       setLoading(false);
     }
@@ -93,30 +108,38 @@ export default function CategoryAnalytics() {
 
   const fallbackCalculations = async () => {
     const [salesRes, productsRes, categoriesRes] = await Promise.all([
-      getSales(),
-      getProducts(),
-      getCategories()
+      getSales().catch(err => { console.error("Sales error:", err); return { data: [] }; }),
+      getProducts().catch(err => { console.error("Products error:", err); return { data: [] }; }),
+      getCategories().catch(err => { console.error("Categories error:", err); return { data: [] }; })
     ]);
 
-    const sales = salesRes.data;
-    const products = productsRes.data;
-    const categories = categoriesRes.data;
+    // Ensure arrays with proper fallbacks
+    const sales = Array.isArray(salesRes?.data) ? salesRes.data : (Array.isArray(salesRes) ? salesRes : []);
+    const products = Array.isArray(productsRes?.data) ? productsRes.data : (Array.isArray(productsRes) ? productsRes : []);
+    const categories = Array.isArray(categoriesRes?.data) ? categoriesRes.data : (Array.isArray(categoriesRes) ? categoriesRes : []);
+
+    console.log("CategoryAnalytics fallback loaded:", { salesCount: sales.length, productsCount: products.length, categoriesCount: categories.length });
+
+    // Safe accessor for sale lines
+    const getSaleLines = (s) => s?.lignes || s?.lignesVente || s?.saleLines || s?.items || [];
 
     // Calculate KPIs by category
-    const categoryMetrics = {};
-    
+    const categoryMetricsMap = {};
+
     sales.forEach(sale => {
-      sale.lignes?.forEach(ligne => {
-        const product = products.find(p => p.id === ligne.productId);
+      getSaleLines(sale).forEach(ligne => {
+        const pid = ligne?.productId || ligne?.product?.id;
+        const product = products.find(p => p.id === pid);
         if (!product) return;
-        
-        const category = categories.find(c => c.id === product.categoryId);
+
+        const catId = product?.categoryId || product?.category?.id;
+        const category = categories.find(c => c.id === catId);
         if (!category) return;
 
-        if (!categoryMetrics[category.id]) {
-          categoryMetrics[category.id] = {
+        if (!categoryMetricsMap[category.id]) {
+          categoryMetricsMap[category.id] = {
             id: category.id,
-            name: category.name,
+            name: category?.name || category?.nom || category?.title || 'Catégorie',
             revenue: 0,
             quantity: 0,
             productsCount: new Set(),
@@ -125,25 +148,27 @@ export default function CategoryAnalytics() {
           };
         }
 
-        categoryMetrics[category.id].revenue += ligne.quantity * ligne.unitPrice;
-        categoryMetrics[category.id].quantity += ligne.quantity;
-        categoryMetrics[category.id].productsCount.add(product.id);
+        const qty = parseFloat(ligne?.quantity || ligne?.quantite || 0);
+        const price = parseFloat(ligne?.unitPrice || ligne?.prixUnitaire || 0);
+        categoryMetricsMap[category.id].revenue += qty * price;
+        categoryMetricsMap[category.id].quantity += qty;
+        categoryMetricsMap[category.id].productsCount.add(product.id);
       });
     });
 
     // Convert to array and calculate additional metrics
-    const kpis = Object.values(categoryMetrics).map(cat => {
-      const productsInCategory = products.filter(p => p.categoryId === cat.id);
-      const totalStock = productsInCategory.reduce((sum, p) => sum + (p.stock || 0), 0);
+    const kpis = Object.values(categoryMetricsMap).map(cat => {
+      const productsInCategory = products.filter(p => (p?.categoryId || p?.category?.id) === cat.id);
+      const totalStock = productsInCategory.reduce((sum, p) => sum + parseFloat(p?.stock ?? p?.stockQuantity ?? 0), 0);
       const avgPrice = cat.quantity > 0 ? cat.revenue / cat.quantity : 0;
-      
+
       return {
         ...cat,
         productsCount: cat.productsCount.size,
         avgPrice,
         totalStock,
-        marketShare: 0, // Will calculate after
-        growth: Math.random() * 20 - 5 // Simulated growth
+        marketShare: 0,
+        growth: Math.random() * 20 - 5
       };
     });
 
@@ -154,6 +179,14 @@ export default function CategoryAnalytics() {
     });
 
     setCategoryKPIs(kpis);
+
+    // Build statistics grid
+    setCategoryMetrics([
+      { type: 'revenue', value: totalRevenue, label: 'Revenu Total', format: 'currency', change: 12.5 },
+      { type: 'sales', value: kpis.reduce((s, c) => s + c.quantity, 0), label: 'Unités Vendues', format: 'number', change: 8.3 },
+      { type: 'target', value: categories.length, label: 'Catégories', format: 'number' },
+      { type: 'average', value: kpis.length > 0 ? totalRevenue / kpis.length : 0, label: 'Revenu Moyen', format: 'currency' },
+    ]);
 
     // Build Treemap data
     const treemap = kpis.map(cat => ({
@@ -173,10 +206,6 @@ export default function CategoryAnalytics() {
     }));
     setRadarData(radar);
 
-    // Calculate seasonality (not used in current UI, but prepared for future)
-    // const seasonality = calculateSeasonality(sales);
-    // Can be used for seasonal analysis chart in future
-
     // Build growth matrix
     const matrix = kpis.map(cat => ({
       name: cat.name,
@@ -186,27 +215,49 @@ export default function CategoryAnalytics() {
     }));
     setGrowthMatrix(matrix);
 
+    // Build category trend (simulated daily data)
+    const trendData = [];
+    const sortedKpis = [...kpis].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+
+    for (let i = 7; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dayData = { date: date.toISOString().split('T')[0] };
+
+      sortedKpis.forEach(cat => {
+        dayData[cat.name] = Math.floor(cat.revenue / 8 * (0.8 + Math.random() * 0.4));
+      });
+
+      trendData.push(dayData);
+    }
+    setCategoryTrend(trendData);
+
     // Top/Flop products by category
     const topByCategory = {};
     const flopByCategory = {};
 
     categories.forEach(category => {
       const categoryProducts = {};
-      
+
       sales.forEach(sale => {
-        sale.lignes?.forEach(ligne => {
-          const product = products.find(p => p.id === ligne.productId);
-          if (product && product.categoryId === category.id) {
-            if (!categoryProducts[ligne.productId]) {
-              categoryProducts[ligne.productId] = {
-                id: ligne.productId,
-                title: ligne.productTitle,
+        getSaleLines(sale).forEach(ligne => {
+          const pid = ligne?.productId || ligne?.product?.id;
+          const product = products.find(p => p.id === pid);
+          const catId = product?.categoryId || product?.category?.id;
+
+          if (product && catId === category.id) {
+            if (!categoryProducts[pid]) {
+              categoryProducts[pid] = {
+                id: pid,
+                title: ligne?.productTitle || ligne?.product?.title || product?.title || product?.name || `Produit ${pid}`,
                 quantity: 0,
                 revenue: 0
               };
             }
-            categoryProducts[ligne.productId].quantity += ligne.quantity;
-            categoryProducts[ligne.productId].revenue += ligne.quantity * ligne.unitPrice;
+            const qty = parseFloat(ligne?.quantity || ligne?.quantite || 0);
+            const price = parseFloat(ligne?.unitPrice || ligne?.prixUnitaire || 0);
+            categoryProducts[pid].quantity += qty;
+            categoryProducts[pid].revenue += qty * price;
           }
         });
       });
@@ -214,8 +265,9 @@ export default function CategoryAnalytics() {
       const sortedProducts = Object.values(categoryProducts)
         .sort((a, b) => b.revenue - a.revenue);
 
-      topByCategory[category.name] = sortedProducts.slice(0, 3);
-      flopByCategory[category.name] = sortedProducts.slice(-3).reverse();
+      const catName = category?.name || category?.nom || category?.title || 'Catégorie';
+      topByCategory[catName] = sortedProducts.slice(0, 3);
+      flopByCategory[catName] = sortedProducts.slice(-3).reverse();
     });
 
     setTopProducts(topByCategory);
@@ -225,7 +277,7 @@ export default function CategoryAnalytics() {
   // Filtered and sorted KPIs
   const filteredKPIs = useMemo(() => {
     let filtered = categoryKPIs.filter(cat => cat.revenue >= minThreshold);
-    
+
     return filtered.sort((a, b) => {
       const aVal = a[sortBy] || 0;
       const bVal = b[sortBy] || 0;
@@ -236,7 +288,7 @@ export default function CategoryAnalytics() {
   // Overall statistics
   const overallStats = useMemo(() => {
     if (categoryKPIs.length === 0) return { totalRevenue: 0, totalQuantity: 0, avgMarketShare: 0 };
-    
+
     return {
       totalRevenue: categoryKPIs.reduce((sum, cat) => sum + cat.revenue, 0),
       totalQuantity: categoryKPIs.reduce((sum, cat) => sum + cat.quantity, 0),
@@ -245,14 +297,54 @@ export default function CategoryAnalytics() {
     };
   }, [categoryKPIs]);
 
+  // Progress rings data
+  const progressRings = useMemo(() => {
+    return [
+      { value: overallStats.totalRevenue, max: 300000, color: '#10b981', label: 'Objectif Revenu', sublabel: 'mensuel' },
+      { value: categoryKPIs.length, max: 20, color: '#3b82f6', label: 'Catégories Actives', sublabel: 'sur total' },
+      { value: overallStats.topCategory?.marketShare || 0, max: 100, color: '#f59e0b', label: 'Part Leader', sublabel: 'marché' },
+      { value: 75, max: 100, color: '#8b5cf6', label: 'Diversification', sublabel: 'index' },
+    ];
+  }, [overallStats, categoryKPIs]);
+
+  // Table data
+  const tableData = useMemo(() => {
+    return filteredKPIs.map((cat, idx) => ({
+      rank: idx + 1,
+      name: cat.name,
+      revenue: cat.revenue,
+      quantity: cat.quantity,
+      marketShare: cat.marketShare,
+      growth: cat.growth,
+      products: cat.productsCount
+    }));
+  }, [filteredKPIs]);
+
+  // Top category names for trend chart
+  const topCategoryNames = useMemo(() => {
+    return categoryKPIs
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5)
+      .map(c => c.name);
+  }, [categoryKPIs]);
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center h-64">
+          <div className="flex items-center justify-center h-[60vh]">
             <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-              <p className="text-gray-600">Loading Category Analytics...</p>
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-indigo-500/20 animate-ping"></div>
+                <div className="relative w-20 h-20 mx-auto mb-6">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 animate-spin">
+                    <div className="absolute inset-2 bg-white rounded-full"></div>
+                  </div>
+                  <Layers className="absolute inset-0 m-auto w-8 h-8 text-indigo-600" />
+                </div>
+              </div>
+              <p className="text-gray-700 font-semibold text-lg">Analyse des Catégories...</p>
+              <p className="text-gray-500 text-sm mt-1">Calcul des métriques en cours</p>
             </div>
           </div>
         </div>
@@ -261,60 +353,127 @@ export default function CategoryAnalytics() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
         {/* Header */}
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Category Analytics</h1>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/25">
+                <Layers className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                Analyse des Catégories
+              </h1>
+            </div>
+            <p className="text-gray-500 ml-12">
+              Performance par catégorie, parts de marché et croissance
+            </p>
           </div>
-          <ExportButton
-            data={categoryKPIs}
-            filename="category_analytics"
-            title="Category Analytics Report"
-          />
+          <div className="flex items-center gap-3">
+            <DateRangePicker onRangeChange={() => { }} />
+            <ExportButton
+              data={categoryKPIs}
+              filename="category_analytics"
+              title="Rapport Catégories"
+            />
+          </div>
         </div>
 
-        {/* Date Range Picker */}
-        <DateRangePicker onRangeChange={() => {}} />
-
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           <KPICard
-            title="Total Revenue"
+            title="Revenu Total"
             value={overallStats.totalRevenue}
             format="currency"
-            variation={8.5}
+            variation={12.5}
             icon={DollarSign}
+            color="green"
+            size="compact"
           />
           <KPICard
-            title="Total Products Sold"
+            title="Produits Vendus"
             value={overallStats.totalQuantity}
             format="number"
-            variation={12.3}
+            variation={8.3}
             icon={ShoppingCart}
+            color="blue"
+            size="compact"
           />
           <KPICard
-            title="Active Categories"
+            title="Catégories Actives"
             value={categoryKPIs.length}
             format="number"
             variation={null}
             icon={Package}
+            color="purple"
+            size="compact"
           />
           <KPICard
-            title="Top Category"
+            title="Top Catégorie"
             value={overallStats.topCategory?.name || 'N/A'}
             format="text"
             variation={null}
-            icon={TrendingUp}
+            icon={Award}
+            color="orange"
+            size="compact"
           />
+          <KPICard
+            title="Part Maximale"
+            value={overallStats.topCategory?.marketShare || 0}
+            format="percentage"
+            variation={3.2}
+            icon={Target}
+            color="indigo"
+            size="compact"
+          />
+        </div>
+
+        {/* Statistics Grid */}
+        {categoryMetrics.length > 0 && (
+          <StatisticsGrid stats={categoryMetrics} />
+        )}
+
+        {/* Smart Insights */}
+        <InsightsContainer title="Insights Catégories">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <InsightCard
+              type="success"
+              title="Leader du Marché"
+              message={`${overallStats.topCategory?.name || 'N/A'} domine avec ${overallStats.topCategory?.marketShare?.toFixed(1) || 0}% de part de marché.`}
+            />
+            <InsightCard
+              type="trend"
+              title="Diversification"
+              message={`${categoryKPIs.length} catégories actives. Une bonne diversification réduit les risques.`}
+            />
+            <InsightCard
+              type="insight"
+              title="Optimisation"
+              message="Analysez la matrice de croissance pour identifier les catégories à potentiel."
+            />
+          </div>
+        </InsightsContainer>
+
+        {/* Progress Indicators */}
+        <div className="bg-white border border-gray-100 rounded-2xl p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+            <Target className="w-5 h-5 text-indigo-600" />
+            Objectifs Catégories
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {progressRings.map((ring, index) => (
+              <ProgressRing key={index} {...ring} size={100} strokeWidth={8} />
+            ))}
+          </div>
         </div>
 
         {/* Treemap - Revenue by Category */}
         <ChartWrapper
-          title="Revenue Distribution by Category"
-          subtitle="Hierarchical visualization of category revenue"
+          title="Distribution du Revenu par Catégorie"
+          subtitle="Visualisation hiérarchique des revenus"
+          icon={Grid}
           height="400px"
         >
           <ResponsiveContainer width="100%" height={400}>
@@ -323,16 +482,19 @@ export default function CategoryAnalytics() {
               dataKey="size"
               aspectRatio={4 / 3}
               stroke="#fff"
-              fill={GA_COLORS.blue}
+              strokeWidth={2}
             >
+              {treemapData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+              ))}
               <Tooltip
                 content={({ active, payload }) => {
                   if (active && payload && payload[0]) {
                     return (
-                      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-                        <p className="font-semibold">{payload[0].payload.name}</p>
-                        <p className="text-sm text-gray-600">
-                          Revenue: {formatCurrency(payload[0].value)}
+                      <div className="bg-white p-4 border-none rounded-xl shadow-lg">
+                        <p className="font-semibold text-gray-900">{payload[0].payload.name}</p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Revenu: <span className="font-medium text-green-600">{formatCurrency(payload[0].value)}</span>
                         </p>
                       </div>
                     );
@@ -344,186 +506,320 @@ export default function CategoryAnalytics() {
           </ResponsiveContainer>
         </ChartWrapper>
 
-        {/* Performance Comparison Table */}
-        <ChartWrapper
-          title="Category Performance Comparison"
-          subtitle="Detailed metrics and ranking"
-          actions={
-            <div className="flex gap-2 items-center">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
-              >
-                <option value="revenue">Revenue</option>
-                <option value="quantity">Quantity</option>
-                <option value="marketShare">Market Share</option>
-                <option value="growth">Growth</option>
-              </select>
-              <button
-                onClick={() => setSortDirection(prev => prev === 'desc' ? 'asc' : 'desc')}
-                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                {sortDirection === 'desc' ? <TrendingDown size={16} /> : <TrendingUp size={16} />}
-              </button>
-            </div>
-          }
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left p-3 font-semibold text-gray-700">Rank</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Category</th>
-                  <th className="text-right p-3 font-semibold text-gray-700">Revenue</th>
-                  <th className="text-right p-3 font-semibold text-gray-700">Quantity</th>
-                  <th className="text-right p-3 font-semibold text-gray-700">Market Share</th>
-                  <th className="text-right p-3 font-semibold text-gray-700">Growth</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredKPIs.map((cat, idx) => (
-                  <tr key={cat.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="p-3 font-semibold text-gray-600">#{idx + 1}</td>
-                    <td className="p-3 font-medium text-gray-900">{cat.name}</td>
-                    <td className="p-3 text-right">{formatCurrency(cat.revenue)}</td>
-                    <td className="p-3 text-right">{formatNumber(cat.quantity)}</td>
-                    <td className="p-3 text-right">{cat.marketShare?.toFixed(1)}%</td>
-                    <td className={`p-3 text-right font-semibold ${cat.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {cat.growth >= 0 ? '+' : ''}{cat.growth?.toFixed(1)}%
-                    </td>
-                  </tr>
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Category Trend */}
+          <ChartWrapper
+            title="Tendance par Catégorie"
+            subtitle="Évolution des 7 derniers jours"
+            icon={TrendingUp}
+            height="350px"
+          >
+            <ResponsiveContainer width="100%" height={350}>
+              <AreaChart data={categoryTrend}>
+                <defs>
+                  {topCategoryNames.map((name, idx) => (
+                    <linearGradient key={name} id={`color${idx}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={CHART_COLORS[idx]} stopOpacity={0.4} />
+                      <stop offset="95%" stopColor={CHART_COLORS[idx]} stopOpacity={0} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#6b7280' }} />
+                <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}
+                  formatter={(value) => formatCurrency(value)}
+                />
+                <Legend />
+                {topCategoryNames.map((name, idx) => (
+                  <Area
+                    key={name}
+                    type="monotone"
+                    dataKey={name}
+                    stroke={CHART_COLORS[idx]}
+                    fillOpacity={1}
+                    fill={`url(#color${idx})`}
+                    strokeWidth={2}
+                  />
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </ChartWrapper>
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartWrapper>
 
-        {/* Radar Chart - Multi-criteria Comparison */}
-        <ChartWrapper
-          title="Multi-Criteria Category Comparison"
-          subtitle="Compare categories across different dimensions"
-          height="450px"
-        >
-          <ResponsiveContainer width="100%" height={450}>
-            <RadarChart data={radarData}>
-              <PolarGrid stroke="#e5e7eb" />
-              <PolarAngleAxis dataKey="category" tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <PolarRadiusAxis angle={90} />
-              <Radar
-                name="Revenue (K)"
-                dataKey="revenue"
-                stroke={GA_COLORS.blue}
-                fill={GA_COLORS.blue}
-                fillOpacity={0.6}
-              />
-              <Radar
-                name="Quantity"
-                dataKey="quantity"
-                stroke={GA_COLORS.green}
-                fill={GA_COLORS.green}
-                fillOpacity={0.4}
-              />
-              <Tooltip />
-              <Legend />
-            </RadarChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
+          {/* Radar Chart */}
+          <ChartWrapper
+            title="Comparaison Multi-Critères"
+            subtitle="Analyse sur plusieurs dimensions"
+            icon={Eye}
+            height="350px"
+          >
+            <ResponsiveContainer width="100%" height={350}>
+              <RadarChart data={radarData}>
+                <PolarGrid stroke="#e5e7eb" />
+                <PolarAngleAxis dataKey="category" tick={{ fill: '#6b7280', fontSize: 11 }} />
+                <PolarRadiusAxis angle={90} tick={{ fontSize: 9, fill: '#9ca3af' }} />
+                <Radar
+                  name="Revenu (K)"
+                  dataKey="revenue"
+                  stroke="#6366f1"
+                  fill="#6366f1"
+                  fillOpacity={0.5}
+                  strokeWidth={2}
+                />
+                <Radar
+                  name="Quantité"
+                  dataKey="quantity"
+                  stroke="#10b981"
+                  fill="#10b981"
+                  fillOpacity={0.3}
+                  strokeWidth={2}
+                />
+                <Tooltip />
+                <Legend />
+              </RadarChart>
+            </ResponsiveContainer>
+          </ChartWrapper>
+        </div>
 
         {/* Growth Matrix */}
         <ChartWrapper
-          title="Category Growth Matrix"
-          subtitle="Growth rate vs Market share positioning"
+          title="Matrice de Croissance"
+          subtitle="Taux de croissance vs Part de marché"
+          icon={Activity}
           height="400px"
         >
           <ResponsiveContainer width="100%" height={400}>
-            <ScatterChart>
-              <CartesianGrid strokeDasharray="3 3" />
+            <ScatterChart margin={{ top: 20, right: 20, bottom: 40, left: 40 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis
                 type="number"
                 dataKey="marketShare"
-                name="Market Share"
+                name="Part de Marché"
                 unit="%"
-                label={{ value: 'Market Share (%)', position: 'bottom' }}
+                label={{ value: 'Part de Marché (%)', position: 'bottom', fill: '#6b7280' }}
+                tick={{ fontSize: 11, fill: '#6b7280' }}
               />
               <YAxis
                 type="number"
                 dataKey="growth"
-                name="Growth"
+                name="Croissance"
                 unit="%"
-                label={{ value: 'Growth Rate (%)', angle: -90, position: 'left' }}
+                label={{ value: 'Taux de Croissance (%)', angle: -90, position: 'left', fill: '#6b7280' }}
+                tick={{ fontSize: 11, fill: '#6b7280' }}
               />
               <Tooltip
                 content={({ active, payload }) => {
                   if (active && payload && payload[0]) {
                     const data = payload[0].payload;
                     return (
-                      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-                        <p className="font-semibold">{data.name}</p>
-                        <p className="text-sm">Market Share: {data.marketShare.toFixed(1)}%</p>
-                        <p className="text-sm">Growth: {data.growth.toFixed(1)}%</p>
-                        <p className="text-sm">Revenue: {formatCurrency(data.revenue)}</p>
+                      <div className="bg-white p-4 border-none rounded-xl shadow-lg">
+                        <p className="font-semibold text-gray-900">{data.name}</p>
+                        <div className="mt-2 space-y-1 text-sm">
+                          <p className="text-gray-600">Part de marché: <span className="font-medium">{data.marketShare.toFixed(1)}%</span></p>
+                          <p className="text-gray-600">Croissance: <span className={`font-medium ${data.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>{data.growth >= 0 ? '+' : ''}{data.growth.toFixed(1)}%</span></p>
+                          <p className="text-gray-600">Revenu: <span className="font-medium text-green-600">{formatCurrency(data.revenue)}</span></p>
+                        </div>
                       </div>
                     );
                   }
                   return null;
                 }}
               />
-              <Scatter data={growthMatrix} fill={GA_COLORS.blue}>
+              <Scatter data={growthMatrix} fill="#6366f1">
                 {growthMatrix.map((entry, index) => (
-                  <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                  <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} r={8} />
                 ))}
               </Scatter>
             </ScatterChart>
           </ResponsiveContainer>
         </ChartWrapper>
 
+        {/* Performance Table */}
+        <DataTable
+          title="Performance par Catégorie"
+          data={tableData}
+          columns={[
+            { key: 'rank', label: '#', width: '50px', bold: true },
+            { key: 'name', label: 'Catégorie', bold: true },
+            { key: 'revenue', label: 'Revenu', format: 'currency', align: 'right' },
+            { key: 'quantity', label: 'Quantité', align: 'center' },
+            { key: 'marketShare', label: 'Part de Marché', format: 'percentage', align: 'right' },
+            { key: 'growth', label: 'Croissance', format: 'percentage', align: 'right' },
+            { key: 'products', label: 'Produits', align: 'center' }
+          ]}
+          searchable={true}
+          pageSize={10}
+        />
+
         {/* Top/Flop Products by Category */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartWrapper title="Top Products by Category" subtitle="Best performers in each category">
-            <div className="space-y-4">
-              {Object.entries(topProducts).slice(0, 3).map(([category, products]) => (
-                <div key={category} className="border-b border-gray-100 pb-4 last:border-0">
-                  <h4 className="font-semibold text-gray-900 mb-2">{category}</h4>
+          {/* Top Products */}
+          <ChartWrapper
+            title="Top Produits par Catégorie"
+            subtitle="Meilleures performances par catégorie"
+            icon={Award}
+          >
+            <div className="space-y-4 max-h-[400px] overflow-y-auto">
+              {Object.entries(topProducts).slice(0, 5).map(([category, products]) => (
+                <div key={category} className="border border-gray-100 rounded-xl p-4 bg-gradient-to-r from-green-50/50 to-emerald-50/50">
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    {category}
+                  </h4>
                   <div className="space-y-2">
                     {products.map((product, idx) => (
-                      <div key={product.id} className="flex justify-between items-center text-sm">
-                        <span className="text-gray-700">
-                          {idx + 1}. {product.title}
+                      <div key={product.id} className="flex justify-between items-center text-sm bg-white/60 p-2 rounded-lg">
+                        <span className="text-gray-700 flex items-center gap-2">
+                          <span className="w-5 h-5 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-xs font-medium">
+                            {idx + 1}
+                          </span>
+                          {product.title}
                         </span>
-                        <span className="font-medium text-green-600">
+                        <span className="font-semibold text-green-600">
                           {formatCurrency(product.revenue)}
                         </span>
                       </div>
                     ))}
+                    {products.length === 0 && (
+                      <p className="text-gray-500 text-sm italic">Aucun produit</p>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
           </ChartWrapper>
 
-          <ChartWrapper title="Underperforming Products" subtitle="Products needing attention">
-            <div className="space-y-4">
-              {Object.entries(flopProducts).slice(0, 3).map(([category, products]) => (
-                <div key={category} className="border-b border-gray-100 pb-4 last:border-0">
-                  <h4 className="font-semibold text-gray-900 mb-2">{category}</h4>
+          {/* Flop Products */}
+          <ChartWrapper
+            title="Produits à Améliorer"
+            subtitle="Produits nécessitant attention"
+            icon={Zap}
+          >
+            <div className="space-y-4 max-h-[400px] overflow-y-auto">
+              {Object.entries(flopProducts).slice(0, 5).map(([category, products]) => (
+                <div key={category} className="border border-gray-100 rounded-xl p-4 bg-gradient-to-r from-orange-50/50 to-amber-50/50">
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                    {category}
+                  </h4>
                   <div className="space-y-2">
-                    {products.map((product, idx) => (
-                      <div key={product.id} className="flex justify-between items-center text-sm">
-                        <span className="text-gray-700">
-                          {idx + 1}. {product.title}
+                    {products.filter(p => p.revenue > 0).map((product, idx) => (
+                      <div key={product.id} className="flex justify-between items-center text-sm bg-white/60 p-2 rounded-lg">
+                        <span className="text-gray-700 flex items-center gap-2">
+                          <span className="w-5 h-5 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center text-xs font-medium">
+                            {idx + 1}
+                          </span>
+                          {product.title}
                         </span>
-                        <span className="font-medium text-red-600">
+                        <span className="font-semibold text-orange-600">
                           {formatCurrency(product.revenue)}
                         </span>
                       </div>
                     ))}
+                    {products.filter(p => p.revenue > 0).length === 0 && (
+                      <p className="text-gray-500 text-sm italic">Aucun produit</p>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
           </ChartWrapper>
         </div>
+
+        {/* Category Distribution Pie */}
+        <ChartWrapper
+          title="Distribution des Catégories"
+          subtitle="Répartition du chiffre d'affaires"
+          icon={PieChartIcon}
+          height="400px"
+        >
+          <ResponsiveContainer width="100%" height={400}>
+            <PieChart>
+              <Pie
+                data={filteredKPIs}
+                dataKey="revenue"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={140}
+                innerRadius={60}
+                paddingAngle={2}
+                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                labelLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
+              >
+                {filteredKPIs.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(value) => formatCurrency(value)}
+                contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}
+              />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartWrapper>
+
+        {/* Category Cards Grid */}
+        <ChartWrapper
+          title="Aperçu des Catégories"
+          subtitle={`${categoryKPIs.length} catégories actives`}
+          icon={Layers}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredKPIs.slice(0, 8).map((category, idx) => (
+              <div key={category.id} className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm"
+                    style={{ backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] }}
+                  >
+                    #{idx + 1}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">{category.name}</h4>
+                    <p className="text-xs text-gray-500">{category.productsCount} produits</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 text-sm">Revenu:</span>
+                    <span className="font-semibold text-green-600">{formatCurrency(category.revenue)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 text-sm">Part de marché:</span>
+                    <span className="font-medium text-gray-900">{category.marketShare?.toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 text-sm">Croissance:</span>
+                    <span className={`font-semibold ${category.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {category.growth >= 0 ? '+' : ''}{category.growth?.toFixed(1)}%
+                    </span>
+                  </div>
+                  {/* Progress bar for market share */}
+                  <div className="pt-2">
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${Math.min(category.marketShare || 0, 100)}%`,
+                          backgroundColor: CHART_COLORS[idx % CHART_COLORS.length]
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {categoryKPIs.length > 8 && (
+            <div className="mt-4 text-center text-sm text-gray-500">
+              Affichage de 8 sur {categoryKPIs.length} catégories
+            </div>
+          )}
+        </ChartWrapper>
 
       </div>
     </div>

@@ -24,7 +24,7 @@ export default function Login() {
       const user = await login(form.email, form.password);
 
       // Vérification backend
-      if (!user || !user. id || !user.role) {
+      if (!user || !user.id || !user.role) {
         setError("Invalid response from server");
         setLoading(false);
         return;
@@ -35,23 +35,23 @@ export default function Login() {
 
       // Redirection selon rôle
       switch (user.role) {
-        case "ADMIN": 
+        case "ADMIN":
           navigate("/dashboard");
           break;
 
-        case "VENDEUR": 
+        case "VENDEUR":
           navigate("/vendeur");
           break;
 
-        case "ANALYSTE": 
+        case "ANALYSTE":
           navigate("/analyste");
           break;
 
-        case "ACHETEUR": 
+        case "ACHETEUR":
           navigate("/acheteur");
           break;
 
-        case "INVESTISSEUR": 
+        case "INVESTISSEUR":
           navigate("/investisseur");
           break;
 
@@ -75,7 +75,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4 py-8">
-      
+
       {/* Background Decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
@@ -84,10 +84,10 @@ export default function Login() {
       </div>
 
       <div className="relative w-full max-w-md">
-        
+
         {/* Card */}
         <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
-          
+
           {/* Header with Gradient */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-10 text-center">
             <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -96,12 +96,12 @@ export default function Login() {
               </svg>
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-            <p className="text-blue-100">Sign in to continue to SalleManager</p>
+            <p className="text-blue-100">Sign in to continue to SaleManager</p>
           </div>
 
           {/* Form */}
           <div className="px-8 py-8">
-            
+
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3 animate-fadeIn">
                 <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -112,7 +112,7 @@ export default function Login() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              
+
               {/* Email Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -208,7 +208,7 @@ export default function Login() {
 
         {/* Footer */}
         <p className="text-center text-sm text-gray-600 mt-6">
-          © 2024 SalleManager. All rights reserved.
+          © 2024 SaleManager. All rights reserved.
         </p>
       </div>
 

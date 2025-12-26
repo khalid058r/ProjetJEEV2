@@ -10,7 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@heroicons/react": "^2.2.0",
+    "@mui/material": "^7.3.6",
     "axios": "^1.13.2",
     "chart.js": "^4.5.1",
     "daisyui": "^4.12.10",

@@ -57,7 +57,7 @@ export default function Products() {
     price: "",
     stock: "",
     categoryId: "",
-    imageUrl:  "",
+    imageUrl: "",
     rating: 0,
     reviewCount: 0,
     rank: 0
@@ -78,7 +78,7 @@ export default function Products() {
   const loadProducts = async () => {
     try {
       const res = await getProducts();
-      setProducts(res. data);
+      setProducts(res.data);
     } catch {
       showToast("Failed to load products", "error");
     }
@@ -94,14 +94,14 @@ export default function Products() {
   };
 
   const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]:  e.target.value });
+    setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleImage = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     // Validate file type
-    if (! file.type.startsWith('image/')) {
+    if (!file.type.startsWith('image/')) {
       showToast("Please upload an image file", "error");
       return;
     }
@@ -153,7 +153,7 @@ export default function Products() {
 
   const saveProduct = async () => {
     // Validation
-    if (!form.title. trim()) {
+    if (!form.title.trim()) {
       showToast("Product title is required", "error");
       return;
     }
@@ -175,15 +175,15 @@ export default function Products() {
       title: form.title,
       price: Number(form.price),
       stock: Number(form.stock),
-      categoryId: Number(form. categoryId),
+      categoryId: Number(form.categoryId),
       imageUrl: form.imageUrl,
       rating: Number(form.rating || 0),
-      reviewCount:  Number(form.reviewCount || 0),
+      reviewCount: Number(form.reviewCount || 0),
       rank: Number(form.rank || 0),
     };
 
     try {
-      if (! editingId) {
+      if (!editingId) {
         await createProduct(payload);
         showToast("Product created successfully!", "success");
       } else {
@@ -217,22 +217,22 @@ export default function Products() {
 
   // Filtering & Sorting
   const filtered = products
-    .filter((p) => 
+    .filter((p) =>
       p.title.toLowerCase().includes(search.toLowerCase()) ||
-      p.asin?. toLowerCase().includes(search.toLowerCase())
+      p.asin?.toLowerCase().includes(search.toLowerCase())
     )
     .filter((p) =>
-      categoryFilter === "All" ?  true : p.categoryName === categoryFilter
+      categoryFilter === "All" ? true : p.categoryName === categoryFilter
     )
     .filter((p) => {
       if (stockFilter === "low") return p.stock < 10;
-      if (stockFilter === "medium") return p.stock >= 10 && p. stock < 50;
+      if (stockFilter === "medium") return p.stock >= 10 && p.stock < 50;
       if (stockFilter === "high") return p.stock >= 50;
       return true;
     })
     .sort((a, b) => {
       if (sortBy === "price-asc") return a.price - b.price;
-      if (sortBy === "price-desc") return b.price - a. price;
+      if (sortBy === "price-desc") return b.price - a.price;
       if (sortBy === "stock-asc") return a.stock - b.stock;
       if (sortBy === "stock-desc") return b.stock - a.stock;
       if (sortBy === "name-asc") return a.title.localeCompare(b.title);
@@ -251,7 +251,7 @@ export default function Products() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 p-8">
-      
+
       {/* HEADER */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
@@ -304,7 +304,7 @@ export default function Products() {
         {/* FILTERS */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex flex-col lg:flex-row gap-4">
-            
+
             {/* Search */}
             <div className="relative flex-1">
               <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
@@ -318,7 +318,7 @@ export default function Products() {
               {search && (
                 <button
                   onClick={() => setSearch("")}
-                  className="absolute right-3 top-3 text-gray-400 hover: text-gray-600"
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
                 >
                   <XMarkIcon className="h-5 w-5" />
                 </button>
@@ -327,7 +327,7 @@ export default function Products() {
 
             {/* Filters */}
             <div className="flex flex-wrap gap-3">
-              
+
               {/* Category Filter */}
               <select
                 value={categoryFilter}
@@ -371,21 +371,19 @@ export default function Products() {
               <div className="flex gap-2 border-2 border-gray-200 rounded-lg p-1">
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded-md transition ${
-                    viewMode === "grid"
+                  className={`p-2 rounded-md transition ${viewMode === "grid"
                       ? "bg-blue-600 text-white"
                       : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   <Squares2X2Icon className="h-5 w-5" />
                 </button>
                 <button
                   onClick={() => setViewMode("list")}
-                  className={`p-2 rounded-md transition ${
-                    viewMode === "list"
+                  className={`p-2 rounded-md transition ${viewMode === "list"
                       ? "bg-blue-600 text-white"
                       : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   <ListBulletIcon className="h-5 w-5" />
                 </button>
@@ -428,7 +426,7 @@ export default function Products() {
         }} />
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filtered. map((p) => (
+          {filtered.map((p) => (
             <ProductCardGrid
               key={p.id}
               product={p}
@@ -487,7 +485,7 @@ export default function Products() {
 
 function KpiCard({ icon, title, value, color, alert }) {
   const colorClasses = {
-    blue:  "text-blue-600 bg-blue-50",
+    blue: "text-blue-600 bg-blue-50",
     green: "text-green-600 bg-green-50",
     purple: "text-purple-600 bg-purple-50",
     red: "text-red-600 bg-red-50",
@@ -521,12 +519,12 @@ function FilterTag({ label, onRemove }) {
 function ProductCardGrid({ product, onEdit, onDelete, onClick }) {
   return (
     <div className="group bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-      
+
       {/* Image */}
       <div className="relative overflow-hidden bg-gray-100 h-56">
         <img
           src={product.imageUrl}
-          alt={product. title}
+          alt={product.title}
           className="w-full h-full object-cover cursor-pointer group-hover:scale-110 transition-transform duration-300"
           onClick={onClick}
         />
@@ -538,7 +536,7 @@ function ProductCardGrid({ product, onEdit, onDelete, onClick }) {
         {product.rating > 0 && (
           <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1">
             <StarSolid className="h-4 w-4 text-yellow-400" />
-            <span className="text-sm font-semibold">{product.rating. toFixed(1)}</span>
+            <span className="text-sm font-semibold">{product.rating.toFixed(1)}</span>
           </div>
         )}
       </div>
@@ -547,7 +545,7 @@ function ProductCardGrid({ product, onEdit, onDelete, onClick }) {
       <div className="p-5">
         <div className="mb-3">
           <h2 className="text-lg font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-blue-600 transition cursor-pointer" onClick={onClick}>
-            {product. title}
+            {product.title}
           </h2>
           <p className="text-xs text-gray-500">{product.categoryName}</p>
           {product.asin && <p className="text-xs text-gray-400">ASIN: {product.asin}</p>}
@@ -564,7 +562,7 @@ function ProductCardGrid({ product, onEdit, onDelete, onClick }) {
         <div className="flex gap-2">
           <button
             onClick={(e) => {
-              e. stopPropagation();
+              e.stopPropagation();
               onEdit();
             }}
             className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition font-medium text-sm"
@@ -649,7 +647,7 @@ function EmptyState({ hasFilters, onReset }) {
         {hasFilters ? "No products found" : "No products yet"}
       </p>
       <p className="text-gray-400 text-sm mb-6">
-        {hasFilters ?  "Try adjusting your filters" : "Get started by adding your first product"}
+        {hasFilters ? "Try adjusting your filters" : "Get started by adding your first product"}
       </p>
       {hasFilters && (
         <button
@@ -667,7 +665,7 @@ function ProductModal({ form, editingId, categories, preview, loadingImg, onChan
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        
+
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-5 rounded-t-2xl flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-3">
@@ -689,7 +687,7 @@ function ProductModal({ form, editingId, categories, preview, loadingImg, onChan
         {/* Body */}
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            
+
             {/* Left Column */}
             <div className="space-y-4">
               <FormField label="Product Title *" required>
@@ -841,7 +839,7 @@ function ProductModal({ form, editingId, categories, preview, loadingImg, onChan
             disabled={loadingImg}
             className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold hover:from-blue-700 hover:to-cyan-700 shadow-lg hover:shadow-xl transition transform hover:scale-105 disabled: opacity-50 disabled:cursor-not-allowed"
           >
-            {editingId ? "Update Product" :  "Create Product"}
+            {editingId ? "Update Product" : "Create Product"}
           </button>
         </div>
       </div>

@@ -39,7 +39,7 @@ export default function Users() {
     try {
       setLoading(true);
       const res = await getUsersPage(page, 10);
-      setUsers(res. data.content);
+      setUsers(res.data.content);
       setPageInfo(res.data);
     } catch (err) {
       showToast("Failed to load users", "error");
@@ -90,7 +90,7 @@ export default function Users() {
 
   const handleDelete = async (id, username) => {
     setConfirmAction({
-      type:  "delete",
+      type: "delete",
       id,
       title: "Delete User",
       message: `Are you sure you want to permanently delete ${username}?  This action cannot be undone.`,
@@ -112,7 +112,7 @@ export default function Users() {
       u.username.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase())
     )
-    .filter((u) => (roleFilter === "All" ?  true : u.role === roleFilter))
+    .filter((u) => (roleFilter === "All" ? true : u.role === roleFilter))
     .filter((u) => {
       if (statusFilter === "Active") return u.active;
       if (statusFilter === "Inactive") return !u.active;
@@ -120,7 +120,7 @@ export default function Users() {
     });
 
   // Stats
-  const totalUsers = users. length;
+  const totalUsers = users.length;
   const activeUsers = users.filter((u) => u.active).length;
   const inactiveUsers = users.filter((u) => !u.active).length;
   const roleCount = users.reduce((acc, u) => {
@@ -130,8 +130,8 @@ export default function Users() {
 
   const roles = [
     { value: "ADMIN", label: "Admin", icon: "👑", color: "from-red-500 to-pink-500" },
-    { value: "VENDEUR", label:  "Vendeur", icon: "🛒", color: "from-green-500 to-emerald-500" },
-    { value: "ANALYSTE", label: "Analyste", icon:  "📊", color: "from-blue-500 to-cyan-500" },
+    { value: "VENDEUR", label: "Vendeur", icon: "🛒", color: "from-green-500 to-emerald-500" },
+    { value: "ANALYSTE", label: "Analyste", icon: "📊", color: "from-blue-500 to-cyan-500" },
     { value: "ACHETEUR", label: "Acheteur", icon: "🛍️", color: "from-purple-500 to-pink-500" },
     { value: "INVESTISSEUR", label: "Investisseur", icon: "💼", color: "from-orange-500 to-red-500" },
   ];
@@ -149,7 +149,7 @@ export default function Users() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-purple-50/30 p-8">
-      
+
       {/* HEADER */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
@@ -201,7 +201,7 @@ export default function Users() {
         {/* FILTERS */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex flex-col lg:flex-row gap-4">
-            
+
             {/* Search */}
             <div className="relative flex-1">
               <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
@@ -215,7 +215,7 @@ export default function Users() {
               {search && (
                 <button
                   onClick={() => setSearch("")}
-                  className="absolute right-3 top-3 text-gray-400 hover: text-gray-600"
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
                 >
                   <XMarkIcon className="h-5 w-5" />
                 </button>
@@ -268,7 +268,7 @@ export default function Users() {
         {/* Results Count */}
         <div className="mt-4">
           <p className="text-sm text-gray-600">
-            Showing <span className="font-semibold text-gray-900">{filteredUsers. length}</span> of{" "}
+            Showing <span className="font-semibold text-gray-900">{filteredUsers.length}</span> of{" "}
             <span className="font-semibold text-gray-900">{totalUsers}</span> users
           </p>
         </div>
@@ -298,16 +298,16 @@ export default function Users() {
               </thead>
 
               <tbody className="divide-y divide-gray-100">
-                {filteredUsers. map((u) => {
-                  const roleInfo = getRoleInfo(u. role);
+                {filteredUsers.map((u) => {
+                  const roleInfo = getRoleInfo(u.role);
                   return (
                     <tr key={u.id} className="hover:bg-gray-50 transition">
-                      
+
                       {/* User Info */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
-                            {u.username. charAt(0).toUpperCase()}
+                            {u.username.charAt(0).toUpperCase()}
                           </div>
                           <div>
                             <p className="font-semibold text-gray-900">{u.username}</p>
@@ -321,7 +321,7 @@ export default function Users() {
                       <td className="px-6 py-4">
                         <div className={`inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r ${roleInfo.color} text-white rounded-full text-sm font-semibold shadow-sm`}>
                           <span>{roleInfo.icon}</span>
-                          <span>{roleInfo. label}</span>
+                          <span>{roleInfo.label}</span>
                         </div>
                       </td>
 
@@ -351,7 +351,7 @@ export default function Users() {
                             <PencilSquareIcon className="h-5 w-5" />
                           </button>
 
-                          {u.active ?  (
+                          {u.active ? (
                             <button
                               onClick={() => handleDeactivate(u.id, u.username)}
                               className="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition"
@@ -370,7 +370,7 @@ export default function Users() {
                           )}
 
                           <button
-                            onClick={() => handleDelete(u.id, u. username)}
+                            onClick={() => handleDelete(u.id, u.username)}
                             className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
                             title="Delete User"
                           >
@@ -436,10 +436,10 @@ export default function Users() {
 
 function StatCard({ icon, label, value, color }) {
   const colorClasses = {
-    blue:  "text-blue-600 bg-blue-50 border-blue-200",
+    blue: "text-blue-600 bg-blue-50 border-blue-200",
     green: "text-green-600 bg-green-50 border-green-200",
     red: "text-red-600 bg-red-50 border-red-200",
-    purple:  "text-purple-600 bg-purple-50 border-purple-200",
+    purple: "text-purple-600 bg-purple-50 border-purple-200",
   };
 
   return (
@@ -474,7 +474,7 @@ function EmptyState({ hasFilters, onReset }) {
         {hasFilters ? "No users found" : "No users yet"}
       </p>
       <p className="text-gray-400 text-sm mb-6">
-        {hasFilters ?  "Try adjusting your filters" :  "Get started by adding your first user"}
+        {hasFilters ? "Try adjusting your filters" : "Get started by adding your first user"}
       </p>
       {hasFilters && (
         <button
