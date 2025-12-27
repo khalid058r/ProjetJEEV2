@@ -129,15 +129,15 @@ export default function Navbar() {
       className={`
         flex justify-between items-center px-6 py-4 border-b transition-all duration-300 backdrop-blur-sm sticky top-0 z-40
         ${theme.mode === 'dark'
-          ? 'bg-slate-900/95 border-slate-800'
-          : 'bg-white/95 border-gray-100'
+          ? 'bg-warm-950/95 border-warm-800'
+          : 'bg-white/95 border-warm-100'
         }
       `}
     >
       {/* Recherche */}
       <div className="relative group">
         <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none`}>
-          <svg className={`w-5 h-5 ${theme.mode === 'dark' ? 'text-slate-500' : 'text-gray-400'} group-focus-within:text-indigo-500 transition-colors`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className={`w-5 h-5 ${theme.mode === 'dark' ? 'text-warm-500' : 'text-warm-400'} group-focus-within:text-coral-500 transition-colors`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
@@ -147,10 +147,10 @@ export default function Navbar() {
           className={`
             pl-12 pr-4 py-3 rounded-2xl w-80 transition-all duration-300
             ${theme.mode === 'dark'
-              ? 'bg-slate-800/80 text-white placeholder-slate-500 border-slate-700 focus:bg-slate-800 focus:border-indigo-500'
-              : 'bg-gray-50 text-gray-900 placeholder-gray-400 border-gray-200 focus:bg-white focus:border-indigo-500'
+              ? 'bg-warm-900/80 text-white placeholder-warm-500 border-warm-700 focus:bg-warm-900 focus:border-coral-500'
+              : 'bg-warm-50 text-warm-900 placeholder-warm-400 border-warm-200 focus:bg-white focus:border-coral-500'
             }
-            border-2 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 hover:border-indigo-400/50
+            border-2 focus:outline-none focus:ring-4 focus:ring-coral-500/20 hover:border-coral-400/50
           `}
         />
       </div>
@@ -163,17 +163,17 @@ export default function Navbar() {
           className={`
             p-3 rounded-2xl transition-all duration-300 group relative overflow-hidden
             ${theme.mode === 'dark'
-              ? 'bg-slate-800 hover:bg-slate-700'
-              : 'bg-gray-100 hover:bg-gray-200'
+              ? 'bg-warm-800 hover:bg-warm-700'
+              : 'bg-warm-100 hover:bg-warm-200'
             }
             hover:scale-105 hover:shadow-lg
           `}
           title={theme.mode === 'light' ? 'Mode sombre' : 'Mode clair'}
         >
           {theme.mode === "light" ? (
-            <MoonIcon className="h-5 w-5 text-slate-600 group-hover:text-indigo-600 transition-colors" />
+            <MoonIcon className="h-5 w-5 text-warm-600 group-hover:text-coral-600 transition-colors" />
           ) : (
-            <SunIcon className="h-5 w-5 text-amber-400 group-hover:text-amber-300 transition-colors" />
+            <SunIcon className="h-5 w-5 text-hof-400 group-hover:text-hof-300 transition-colors" />
           )}
         </button>
 
@@ -183,10 +183,10 @@ export default function Navbar() {
             className={`
               px-4 py-3 rounded-2xl transition-all duration-300 cursor-pointer appearance-none pr-10
               ${theme.mode === 'dark'
-                ? 'bg-slate-800 text-white border-slate-700 hover:border-indigo-500'
-                : 'bg-gray-100 text-gray-900 border-gray-200 hover:border-indigo-500'
+                ? 'bg-warm-800 text-white border-warm-700 hover:border-coral-500'
+                : 'bg-warm-100 text-warm-900 border-warm-200 hover:border-coral-500'
               }
-              border-2 focus:outline-none focus:ring-4 focus:ring-indigo-500/20
+              border-2 focus:outline-none focus:ring-4 focus:ring-coral-500/20
             `}
             value={theme.primary}
             onChange={(e) => setPrimary(e.target.value)}
@@ -198,7 +198,7 @@ export default function Navbar() {
             <option value="rose">Pink</option>
           </select>
           <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-            <svg className={`w-4 h-4 ${theme.mode === 'dark' ? 'text-slate-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-4 h-4 ${theme.mode === 'dark' ? 'text-warm-500' : 'text-warm-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
@@ -211,8 +211,8 @@ export default function Navbar() {
             className={`
               relative p-3 rounded-2xl transition-all duration-300 group
               ${theme.mode === 'dark'
-                ? 'bg-slate-800 hover:bg-slate-700 text-slate-300'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                ? 'bg-warm-800 hover:bg-warm-700 text-warm-300'
+                : 'bg-warm-100 hover:bg-warm-200 text-warm-700'
               }
               hover:scale-105 hover:shadow-lg
             `}
@@ -220,7 +220,7 @@ export default function Navbar() {
           >
             <BellIcon className="h-5 w-5 group-hover:animate-wiggle" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1.5 bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg shadow-red-500/30 animate-pulse">
+              <span className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1.5 bg-gradient-to-r from-coral-500 to-coral-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg shadow-coral-500/30 animate-pulse">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -232,26 +232,26 @@ export default function Navbar() {
               className={`
                 absolute right-0 mt-2 w-96 rounded-2xl shadow-2xl z-50 overflow-hidden
                 ${theme.mode === 'dark'
-                  ? 'bg-gray-800 border border-gray-700'
-                  : 'bg-white border border-gray-200'
+                  ? 'bg-warm-900 border border-warm-700'
+                  : 'bg-white border border-warm-200'
                 }
               `}
             >
               {/* Header */}
-              <div className={`px-4 py-3 border-b ${theme.mode === 'dark' ? 'border-gray-700' : 'border-gray-100'}`}>
+              <div className={`px-4 py-3 border-b ${theme.mode === 'dark' ? 'border-warm-700' : 'border-warm-100'}`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className={`font-semibold ${theme.mode === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                    <h3 className={`font-semibold ${theme.mode === 'dark' ? 'text-white' : 'text-warm-900'}`}>
                       Notifications
                     </h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-xs text-warm-500 mt-0.5">
                       {unreadCount > 0 ? `${unreadCount} non lue(s)` : 'Tout est à jour'}
                     </p>
                   </div>
                   {unreadCount > 0 && (
                     <button
                       onClick={handleMarkAllAsRead}
-                      className="text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1"
+                      className="text-xs text-coral-500 hover:text-coral-600 font-medium flex items-center gap-1"
                     >
                       <CheckIcon className="w-3 h-3" />
                       Tout marquer lu
@@ -264,13 +264,13 @@ export default function Navbar() {
               <div className="max-h-96 overflow-y-auto">
                 {loading ? (
                   <div className="p-8 text-center">
-                    <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                    <p className="text-sm text-gray-500 mt-2">Chargement...</p>
+                    <div className="w-8 h-8 border-2 border-coral-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="text-sm text-warm-500 mt-2">Chargement...</p>
                   </div>
                 ) : notifications.length === 0 ? (
                   <div className="p-8 text-center">
-                    <BellIcon className={`w-12 h-12 mx-auto ${theme.mode === 'dark' ? 'text-gray-600' : 'text-gray-300'}`} />
-                    <p className={`text-sm mt-2 ${theme.mode === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <BellIcon className={`w-12 h-12 mx-auto ${theme.mode === 'dark' ? 'text-warm-600' : 'text-warm-300'}`} />
+                    <p className={`text-sm mt-2 ${theme.mode === 'dark' ? 'text-warm-400' : 'text-warm-500'}`}>
                       Aucune notification
                     </p>
                   </div>
@@ -281,10 +281,10 @@ export default function Navbar() {
                       className={`
                         px-4 py-3 border-b last:border-0 transition-colors group
                         ${theme.mode === 'dark'
-                          ? `border-gray-700 ${notif.read ? 'bg-gray-800' : 'bg-gray-750 bg-opacity-50'}`
-                          : `border-gray-50 ${notif.read ? 'bg-white' : 'bg-blue-50/50'}`
+                          ? `border-warm-700 ${notif.read ? 'bg-warm-900' : 'bg-coral-500/10'}`
+                          : `border-warm-50 ${notif.read ? 'bg-white' : 'bg-coral-50/50'}`
                         }
-                        hover:${theme.mode === 'dark' ? 'bg-gray-700' : 'bg-gray-50'}
+                        hover:${theme.mode === 'dark' ? 'bg-warm-800' : 'bg-warm-50'}
                       `}
                     >
                       <div className="flex items-start gap-3">
@@ -292,10 +292,10 @@ export default function Navbar() {
                           <BellIcon className="w-4 h-4" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm ${theme.mode === 'dark' ? 'text-gray-200' : 'text-gray-900'} ${!notif.read ? 'font-medium' : ''}`}>
+                          <p className={`text-sm ${theme.mode === 'dark' ? 'text-warm-200' : 'text-warm-900'} ${!notif.read ? 'font-medium' : ''}`}>
                             {notif.message}
                           </p>
-                          <p className="text-xs mt-1 text-gray-500">
+                          <p className="text-xs mt-1 text-warm-500">
                             {notif.time}
                           </p>
                         </div>
@@ -303,18 +303,18 @@ export default function Navbar() {
                           {!notif.read && (
                             <button
                               onClick={() => handleMarkAsRead(notif.id)}
-                              className="p-1 hover:bg-gray-200 rounded"
+                              className={`p-1 rounded ${theme.mode === 'dark' ? 'hover:bg-warm-700' : 'hover:bg-warm-200'}`}
                               title="Marquer comme lu"
                             >
-                              <CheckIcon className="w-4 h-4 text-green-500" />
+                              <CheckIcon className="w-4 h-4 text-teal-500" />
                             </button>
                           )}
                           <button
                             onClick={() => handleDelete(notif.id)}
-                            className="p-1 hover:bg-gray-200 rounded"
+                            className={`p-1 rounded ${theme.mode === 'dark' ? 'hover:bg-warm-700' : 'hover:bg-warm-200'}`}
                             title="Supprimer"
                           >
-                            <TrashIcon className="w-4 h-4 text-red-500" />
+                            <TrashIcon className="w-4 h-4 text-coral-500" />
                           </button>
                         </div>
                       </div>
@@ -324,10 +324,10 @@ export default function Navbar() {
               </div>
 
               {/* Footer */}
-              <div className={`px-4 py-3 border-t ${theme.mode === 'dark' ? 'border-gray-700 bg-gray-800/50' : 'border-gray-100 bg-gray-50'}`}>
+              <div className={`px-4 py-3 border-t ${theme.mode === 'dark' ? 'border-warm-700 bg-warm-800/50' : 'border-warm-100 bg-warm-50'}`}>
                 <button
                   onClick={() => window.location.href = '/alerts'}
-                  className="w-full text-center text-sm text-blue-500 hover:text-blue-600 font-medium py-1"
+                  className="w-full text-center text-sm text-coral-500 hover:text-coral-600 font-medium py-1"
                 >
                   Voir toutes les notifications
                 </button>

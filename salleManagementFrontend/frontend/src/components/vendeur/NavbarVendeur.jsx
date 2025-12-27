@@ -2,24 +2,21 @@ import { useState, useEffect, useRef } from "react";
 import {
   Search,
   Bell,
-  Moon,
-  Sun,
   Settings,
   User,
   LogOut,
   ChevronDown,
-  Check,
-  X,
   ShoppingCart,
   Package,
   TrendingUp,
 } from "lucide-react";
 import { useUser } from "../../context/UserContext";
+import { useDarkMode } from "../../context/DarkModeContext";
 import { alertsApi } from "../../api";
 
 export default function NavbarVendeur() {
   const { user, logout } = useUser();
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode } = useDarkMode();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -67,10 +64,10 @@ export default function NavbarVendeur() {
 
   const getNotificationIcon = (type) => {
     switch (type) {
-      case "SALE": return <ShoppingCart className="w-4 h-4 text-emerald-500" />;
-      case "PRODUCT": return <Package className="w-4 h-4 text-blue-500" />;
-      case "TREND": return <TrendingUp className="w-4 h-4 text-purple-500" />;
-      default: return <Bell className="w-4 h-4 text-gray-500" />;
+      case "SALE": return <ShoppingCart className="w-4 h-4 text-coral-500" />;
+      case "PRODUCT": return <Package className="w-4 h-4 text-teal-500" />;
+      case "TREND": return <TrendingUp className="w-4 h-4 text-hof-500" />;
+      default: return <Bell className="w-4 h-4 text-warm-500" />;
     }
   };
 
@@ -83,48 +80,54 @@ export default function NavbarVendeur() {
   };
 
   return (
-    <header className="h-18 bg-white/95 backdrop-blur-sm border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-40 shadow-sm">
+    <header className={`
+      h-18 backdrop-blur-sm border-b flex items-center justify-between px-6 sticky top-0 z-40 shadow-sm
+      ${darkMode
+        ? 'bg-warm-900/95 border-warm-800'
+        : 'bg-white/95 border-warm-100'
+      }
+    `}>
 
       {/* Search Bar */}
       <div className="flex-1 max-w-md">
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="w-5 h-5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" />
+            <Search className={`w-5 h-5 transition-colors ${darkMode ? 'text-warm-400 group-focus-within:text-coral-500' : 'text-warm-400 group-focus-within:text-coral-500'}`} />
           </div>
           <input
             type="text"
             placeholder="Search products, sales..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-2xl text-sm focus:bg-white focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none hover:border-emerald-400/50"
+            className={`
+              w-full pl-12 pr-4 py-3 border-2 rounded-2xl text-sm transition-all outline-none
+              focus:ring-4 focus:ring-coral-500/20 focus:border-coral-500
+              ${darkMode
+                ? 'bg-warm-800 border-warm-700 text-white placeholder-warm-400 focus:bg-warm-700 hover:border-coral-400/50'
+                : 'bg-warm-50 border-warm-200 text-warm-900 placeholder-warm-400 focus:bg-white hover:border-coral-400/50'
+              }
+            `}
           />
         </div>
       </div>
 
       {/* Right Section */}
       <div className="flex items-center gap-3">
-
-        {/* Dark Mode Toggle */}
-        <button
-          onClick={() => setDarkMode(!darkMode)}
-          className="p-3 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-all duration-300 hover:scale-105 hover:shadow-lg group"
-        >
-          {darkMode ? (
-            <Sun className="w-5 h-5 text-amber-500 group-hover:text-amber-400" />
-          ) : (
-            <Moon className="w-5 h-5 text-gray-600 group-hover:text-indigo-600" />
-          )}
-        </button>
-
         {/* Notifications */}
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative p-3 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-all duration-300 hover:scale-105 hover:shadow-lg group"
+            className={`
+              relative p-3 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-lg group
+              ${darkMode
+                ? 'bg-warm-800 hover:bg-warm-700'
+                : 'bg-warm-50 hover:bg-warm-100'
+              }
+            `}
           >
-            <Bell className="w-5 h-5 text-gray-600 group-hover:text-emerald-600" />
+            <Bell className={`w-5 h-5 ${darkMode ? 'text-warm-400 group-hover:text-coral-400' : 'text-warm-600 group-hover:text-coral-600'}`} />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg shadow-red-500/30 animate-pulse">
+              <span className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-coral-500 to-coral-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg shadow-coral-500/30 animate-pulse">
                 {unreadCount}
               </span>
             )}
@@ -132,16 +135,20 @@ export default function NavbarVendeur() {
 
           {/* Notifications Dropdown */}
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
-                <h3 className="font-semibold text-gray-900">Notifications</h3>
+            <div className={`
+              absolute right-0 mt-2 w-80 rounded-2xl shadow-2xl border overflow-hidden 
+              animate-in fade-in slide-in-from-top-2 duration-200
+              ${darkMode ? 'bg-warm-900 border-warm-700' : 'bg-white border-warm-100'}
+            `}>
+              <div className={`p-4 border-b flex items-center justify-between ${darkMode ? 'border-warm-700 bg-warm-800' : 'border-warm-100 bg-gradient-to-r from-warm-50 to-white'}`}>
+                <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-warm-900'}`}>Notifications</h3>
                 {unreadCount > 0 && (
-                  <span className="text-xs bg-emerald-100 text-emerald-700 font-semibold px-2 py-1 rounded-full">{unreadCount} new</span>
+                  <span className="text-xs bg-coral-100 text-coral-700 font-semibold px-2 py-1 rounded-full">{unreadCount} new</span>
                 )}
               </div>
               <div className="max-h-72 overflow-y-auto">
                 {notifications.length === 0 ? (
-                  <div className="p-8 text-center text-gray-400">
+                  <div className={`p-8 text-center ${darkMode ? 'text-warm-500' : 'text-warm-400'}`}>
                     <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No notifications</p>
                   </div>
@@ -149,24 +156,33 @@ export default function NavbarVendeur() {
                   notifications.map((notif) => (
                     <div
                       key={notif.id}
-                      className={`p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer ${!notif.read ? "bg-emerald-50/50" : ""
-                        }`}
+                      className={`
+                        p-4 border-b transition-colors cursor-pointer
+                        ${darkMode
+                          ? `border-warm-800 hover:bg-warm-800 ${!notif.read ? "bg-coral-500/10" : ""}`
+                          : `border-warm-50 hover:bg-warm-50 ${!notif.read ? "bg-coral-50/50" : ""}`
+                        }
+                      `}
                     >
                       <div className="flex gap-3">
-                        <div className="p-2 bg-gray-100 rounded-lg">
+                        <div className={`p-2 rounded-lg ${darkMode ? 'bg-warm-800' : 'bg-warm-100'}`}>
                           {getNotificationIcon(notif.type)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900 font-medium truncate">{notif.title || notif.message}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{formatTimeAgo(notif.createdAt)}</p>
+                          <p className={`text-sm font-medium truncate ${darkMode ? 'text-white' : 'text-warm-900'}`}>
+                            {notif.title || notif.message}
+                          </p>
+                          <p className={`text-xs mt-0.5 ${darkMode ? 'text-warm-400' : 'text-warm-500'}`}>
+                            {formatTimeAgo(notif.createdAt)}
+                          </p>
                         </div>
                       </div>
                     </div>
                   ))
                 )}
               </div>
-              <div className="p-3 bg-gray-50 border-t border-gray-100">
-                <button className="w-full text-center text-sm text-emerald-600 font-medium hover:text-emerald-700">
+              <div className={`p-3 border-t ${darkMode ? 'bg-warm-800 border-warm-700' : 'bg-warm-50 border-warm-100'}`}>
+                <button className="w-full text-center text-sm text-coral-500 font-medium hover:text-coral-600">
                   View all notifications
                 </button>
               </div>
@@ -178,39 +194,52 @@ export default function NavbarVendeur() {
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => setShowProfile(!showProfile)}
-            className="flex items-center gap-3 pl-3 pr-2 py-2 rounded-xl hover:bg-gray-50 transition-colors"
+            className={`flex items-center gap-3 pl-3 pr-2 py-2 rounded-xl transition-colors ${darkMode ? 'hover:bg-warm-800' : 'hover:bg-warm-50'}`}
           >
-            <div className="w-9 h-9 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-emerald-500/25">
+            <div className="w-9 h-9 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-teal-500/25">
               {user?.username?.charAt(0).toUpperCase() || "V"}
             </div>
             <div className="hidden md:block text-left">
-              <p className="text-sm font-semibold text-gray-900">{user?.username || "Vendeur"}</p>
-              <p className="text-xs text-gray-500">Sales Agent</p>
+              <p className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-warm-900'}`}>
+                {user?.username || "Vendeur"}
+              </p>
+              <p className={`text-xs ${darkMode ? 'text-warm-400' : 'text-warm-500'}`}>Sales Agent</p>
             </div>
-            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showProfile ? "rotate-180" : ""}`} />
+            <ChevronDown className={`w-4 h-4 transition-transform ${darkMode ? 'text-warm-400' : 'text-warm-400'} ${showProfile ? "rotate-180" : ""}`} />
           </button>
 
           {/* Profile Menu */}
           {showProfile && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="p-4 border-b border-gray-100">
-                <p className="font-semibold text-gray-900">{user?.username || "Vendeur"}</p>
-                <p className="text-sm text-gray-500">{user?.email || "vendeur@example.com"}</p>
+            <div className={`
+              absolute right-0 mt-2 w-56 rounded-2xl shadow-2xl border overflow-hidden 
+              animate-in fade-in slide-in-from-top-2 duration-200
+              ${darkMode ? 'bg-warm-900 border-warm-700' : 'bg-white border-warm-100'}
+            `}>
+              <div className={`p-4 border-b ${darkMode ? 'border-warm-700' : 'border-warm-100'}`}>
+                <p className={`font-semibold ${darkMode ? 'text-white' : 'text-warm-900'}`}>
+                  {user?.username || "Vendeur"}
+                </p>
+                <p className={`text-sm ${darkMode ? 'text-warm-400' : 'text-warm-500'}`}>
+                  {user?.email || "vendeur@example.com"}
+                </p>
               </div>
               <div className="p-2">
-                <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-xl transition-colors">
+                <button className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl transition-colors ${darkMode ? 'text-warm-300 hover:bg-warm-800' : 'text-warm-700 hover:bg-warm-50'
+                  }`}>
                   <User className="w-4 h-4" />
                   My Profile
                 </button>
-                <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-xl transition-colors">
+                <button className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl transition-colors ${darkMode ? 'text-warm-300 hover:bg-warm-800' : 'text-warm-700 hover:bg-warm-50'
+                  }`}>
                   <Settings className="w-4 h-4" />
                   Settings
                 </button>
               </div>
-              <div className="p-2 border-t border-gray-100">
+              <div className={`p-2 border-t ${darkMode ? 'border-warm-700' : 'border-warm-100'}`}>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl transition-colors ${darkMode ? 'text-coral-400 hover:bg-coral-500/10' : 'text-coral-600 hover:bg-coral-50'
+                    }`}
                 >
                   <LogOut className="w-4 h-4" />
                   Logout

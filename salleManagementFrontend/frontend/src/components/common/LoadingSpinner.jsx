@@ -1,4 +1,5 @@
 import { Loader2 } from "lucide-react";
+import { useDarkMode } from "../../context/DarkModeContext";
 
 export default function LoadingSpinner({
     size = "md",
@@ -6,6 +7,8 @@ export default function LoadingSpinner({
     fullScreen = false,
     variant = "default" // 'default', 'primary', 'gradient'
 }) {
+    const { darkMode } = useDarkMode();
+
     const sizes = {
         sm: "w-6 h-6",
         md: "w-10 h-10",
@@ -14,8 +17,8 @@ export default function LoadingSpinner({
     };
 
     const variants = {
-        default: "text-gray-400",
-        primary: "text-blue-600",
+        default: darkMode ? "text-warm-400" : "text-warm-400",
+        primary: "text-coral-500",
         gradient: "text-transparent"
     };
 
@@ -23,27 +26,23 @@ export default function LoadingSpinner({
         <div className="flex flex-col items-center justify-center gap-4">
             {variant === "gradient" ? (
                 <div className="relative">
-                    <div className={`${sizes[size]} rounded-full border-4 border-gray-200`}></div>
+                    <div className={`${sizes[size]} rounded-full border-4 ${darkMode ? 'border-warm-800' : 'border-warm-200'}`}></div>
                     <div
-                        className={`absolute top-0 left-0 ${sizes[size]} rounded-full border-4 border-transparent border-t-blue-600 border-r-blue-600 animate-spin`}
-                        style={{
-                            background: "linear-gradient(to right, transparent, transparent)",
-                            borderImage: "linear-gradient(to right, #3B82F6, #8B5CF6) 1"
-                        }}
+                        className={`absolute top-0 left-0 ${sizes[size]} rounded-full border-4 border-transparent border-t-coral-500 border-r-teal-500 animate-spin`}
                     ></div>
                 </div>
             ) : (
                 <Loader2 className={`${sizes[size]} ${variants[variant]} animate-spin`} />
             )}
             {message && (
-                <p className="text-gray-500 font-medium text-sm animate-pulse">{message}</p>
+                <p className={`font-medium text-sm animate-pulse ${darkMode ? 'text-warm-400' : 'text-warm-500'}`}>{message}</p>
             )}
         </div>
     );
 
     if (fullScreen) {
         return (
-            <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className={`fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 ${darkMode ? 'bg-warm-950/80' : 'bg-white/80'}`}>
                 <Spinner />
             </div>
         );
@@ -54,7 +53,7 @@ export default function LoadingSpinner({
 
 // Skeleton loader for content placeholders
 export function Skeleton({ className = "", variant = "default" }) {
-    const baseClass = "animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%]";
+    const baseClass = "animate-pulse bg-gradient-to-r from-warm-200 via-warm-100 to-warm-200 dark:from-warm-800 dark:via-warm-700 dark:to-warm-800 bg-[length:200%_100%]";
 
     const variants = {
         default: "rounded-lg",
@@ -76,7 +75,7 @@ export function CardSkeleton({ count = 1 }) {
     return (
         <>
             {Array.from({ length: count }).map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div key={i} className="bg-white dark:bg-warm-900 rounded-2xl p-6 shadow-sm border border-warm-100 dark:border-warm-800">
                     <div className="flex items-center gap-4 mb-4">
                         <Skeleton variant="circle" className="w-12 h-12" />
                         <div className="flex-1 space-y-2">
@@ -94,8 +93,8 @@ export function CardSkeleton({ count = 1 }) {
 // Table skeleton for loading tables
 export function TableSkeleton({ rows = 5, cols = 4 }) {
     return (
-        <div className="bg-white rounded-2xl overflow-hidden border border-gray-100">
-            <div className="p-4 border-b border-gray-100 bg-gray-50">
+        <div className="bg-white dark:bg-warm-900 rounded-2xl overflow-hidden border border-warm-100 dark:border-warm-800">
+            <div className="p-4 border-b border-warm-100 dark:border-warm-800 bg-warm-50 dark:bg-warm-800/50">
                 <div className="flex gap-4">
                     {Array.from({ length: cols }).map((_, i) => (
                         <Skeleton key={i} variant="text" className="flex-1" />

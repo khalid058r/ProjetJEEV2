@@ -6,6 +6,7 @@ import {
     Plus,
     RefreshCw
 } from "lucide-react";
+import { useDarkMode } from "../../context/DarkModeContext";
 
 const icons = {
     empty: Inbox,
@@ -24,29 +25,30 @@ export default function EmptyState({
     onSecondaryAction,
     variant = "default" // 'default', 'compact', 'card'
 }) {
+    const { darkMode } = useDarkMode();
     const Icon = icons[icon] || Inbox;
 
     const baseStyles = {
         default: "py-16",
         compact: "py-8",
-        card: "py-12 bg-white rounded-2xl border border-gray-100 shadow-sm",
+        card: `py-12 rounded-2xl border shadow-sm ${darkMode ? 'bg-warm-900 border-warm-800' : 'bg-white border-warm-100'}`,
     };
 
     return (
         <div className={`flex flex-col items-center justify-center text-center px-4 ${baseStyles[variant]}`}>
             {/* Icon */}
             <div className="relative mb-6">
-                <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-50 rounded-full flex items-center justify-center">
-                    <Icon className="w-10 h-10 text-gray-400" />
+                <div className={`w-20 h-20 rounded-full flex items-center justify-center ${darkMode ? 'bg-gradient-to-br from-warm-800 to-warm-900' : 'bg-gradient-to-br from-warm-100 to-warm-50'}`}>
+                    <Icon className={`w-10 h-10 ${darkMode ? 'text-warm-500' : 'text-warm-400'}`} />
                 </div>
                 {/* Decorative dots */}
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-200 rounded-full opacity-60"></div>
-                <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-purple-200 rounded-full opacity-60"></div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-coral-300 rounded-full opacity-60"></div>
+                <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-teal-300 rounded-full opacity-60"></div>
             </div>
 
             {/* Content */}
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-            <p className="text-gray-500 max-w-sm mb-6">{description}</p>
+            <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-warm-900'}`}>{title}</h3>
+            <p className={`max-w-sm mb-6 ${darkMode ? 'text-warm-400' : 'text-warm-500'}`}>{description}</p>
 
             {/* Actions */}
             {(actionLabel || secondaryActionLabel) && (
@@ -54,7 +56,7 @@ export default function EmptyState({
                     {actionLabel && onAction && (
                         <button
                             onClick={onAction}
-                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:scale-[1.02]"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-coral-500 to-coral-600 text-white font-medium rounded-xl hover:from-coral-600 hover:to-coral-700 transition-all duration-200 shadow-lg shadow-coral-500/25 hover:shadow-xl hover:scale-[1.02]"
                         >
                             <Plus className="w-4 h-4" />
                             {actionLabel}
@@ -63,7 +65,7 @@ export default function EmptyState({
                     {secondaryActionLabel && onSecondaryAction && (
                         <button
                             onClick={onSecondaryAction}
-                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-all duration-200"
+                            className={`inline-flex items-center gap-2 px-5 py-2.5 font-medium rounded-xl transition-all duration-200 ${darkMode ? 'bg-warm-800 text-warm-300 hover:bg-warm-700' : 'bg-warm-100 text-warm-700 hover:bg-warm-200'}`}
                         >
                             <RefreshCw className="w-4 h-4" />
                             {secondaryActionLabel}

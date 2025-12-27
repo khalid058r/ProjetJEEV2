@@ -8,7 +8,11 @@ export function UserProvider({ children }) {
   useEffect(() => {
     const saved = localStorage.getItem("user");
     if (saved) {
-      setUser(JSON.parse(saved));
+      try {
+        setUser(JSON.parse(saved));
+      } catch (e) {
+        localStorage.removeItem("user");
+      }
     }
   }, []);
 
@@ -17,13 +21,17 @@ export function UserProvider({ children }) {
     localStorage.setItem("user", JSON.stringify(userData));
   };
 
-  const logoutUser = () => {
+  const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
   };
 
+  // Alias for compatibility
+  const logoutUser = logout;
+
   return (
-    <UserContext.Provider value={{ user, loginUser, logoutUser }}>
+    <UserContext.Provider value={{ user, loginUser, logout, logoutUser }}>
       {children}
     </UserContext.Provider>
   );

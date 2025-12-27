@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
+import { useDarkMode } from "../../context/DarkModeContext";
 
 export default function LoadingScreen({ message = "Chargement..." }) {
+  const { darkMode } = useDarkMode();
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900">
+    <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'bg-warm-950' : 'bg-gradient-to-br from-warm-50 via-white to-coral-50/20'}`}>
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -10,12 +13,12 @@ export default function LoadingScreen({ message = "Chargement..." }) {
       >
         {/* Spinner */}
         <div className="relative w-16 h-16 mx-auto mb-4">
-          <div className="absolute inset-0 border-4 border-blue-200 dark:border-blue-900 rounded-full"></div>
-          <div className="absolute inset-0 border-4 border-transparent border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
+          <div className={`absolute inset-0 border-4 rounded-full ${darkMode ? 'border-warm-800' : 'border-coral-100'}`}></div>
+          <div className="absolute inset-0 border-4 border-transparent border-t-coral-500 rounded-full animate-spin"></div>
         </div>
 
         {/* Message */}
-        <p className="text-gray-600 dark:text-gray-400 font-medium">{message}</p>
+        <p className={`font-medium ${darkMode ? 'text-warm-400' : 'text-warm-600'}`}>{message}</p>
       </motion.div>
     </div>
   );
@@ -32,8 +35,8 @@ export function LoadingSpinner({ size = "md", className = "" }) {
 
   return (
     <div className={`relative ${sizes[size]} ${className}`}>
-      <div className="absolute inset-0 border-blue-200 dark:border-blue-900 rounded-full"></div>
-      <div className="absolute inset-0 border-transparent border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
+      <div className="absolute inset-0 border-coral-200 dark:border-warm-800 rounded-full"></div>
+      <div className="absolute inset-0 border-transparent border-t-coral-500 dark:border-t-coral-400 rounded-full animate-spin"></div>
     </div>
   );
 }
@@ -50,7 +53,7 @@ export function Skeleton({ className = "", variant = "text" }) {
 
   return (
     <div
-      className={`animate-pulse bg-gray-200 dark:bg-slate-700 ${variants[variant]} ${className}`}
+      className={`animate-pulse bg-warm-200 dark:bg-warm-800 ${variants[variant]} ${className}`}
     />
   );
 }
@@ -58,7 +61,7 @@ export function Skeleton({ className = "", variant = "text" }) {
 // Loading skeleton for cards
 export function CardSkeleton({ className = "" }) {
   return (
-    <div className={`bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm ${className}`}>
+    <div className={`bg-white dark:bg-warm-900 rounded-xl p-6 shadow-sm ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <Skeleton className="w-24" variant="text" />
         <Skeleton className="w-10 h-10" variant="circular" />
@@ -72,9 +75,9 @@ export function CardSkeleton({ className = "" }) {
 // Loading skeleton for tables
 export function TableSkeleton({ rows = 5, columns = 4 }) {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-warm-900 rounded-xl shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="flex gap-4 p-4 border-b border-gray-200 dark:border-slate-700">
+      <div className="flex gap-4 p-4 border-b border-warm-200 dark:border-warm-700">
         {Array.from({ length: columns }).map((_, i) => (
           <Skeleton key={i} className="flex-1 h-4" variant="text" />
         ))}
@@ -84,7 +87,7 @@ export function TableSkeleton({ rows = 5, columns = 4 }) {
       {Array.from({ length: rows }).map((_, rowIndex) => (
         <div
           key={rowIndex}
-          className="flex gap-4 p-4 border-b border-gray-100 dark:border-slate-700/50 last:border-0"
+          className="flex gap-4 p-4 border-b border-warm-100 dark:border-warm-800 last:border-0"
         >
           {Array.from({ length: columns }).map((_, colIndex) => (
             <Skeleton key={colIndex} className="flex-1 h-4" variant="text" />

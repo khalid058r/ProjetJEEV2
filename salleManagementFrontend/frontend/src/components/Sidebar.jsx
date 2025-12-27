@@ -13,27 +13,36 @@ import {
   ChevronRight,
   LogOut,
   Menu,
-  X
+  X,
+  FileText,
+  Settings,
+  Briefcase,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useDarkMode } from "../context/DarkModeContext";
 
 const mainLinks = [
-  { name: "Dashboard", to: "/dashboard", icon: LayoutDashboard, gradient: "from-blue-500 to-cyan-500" },
-  { name: "Products", to: "/products", icon: Package, gradient: "from-emerald-500 to-teal-500" },
-  { name: "Categories", to: "/categories", icon: FolderTree, gradient: "from-amber-500 to-orange-500" },
-  { name: "Users", to: "/users", icon: Users2, gradient: "from-violet-500 to-purple-500" },
-  { name: "Sales", to: "/sales", icon: ShoppingCart, gradient: "from-rose-500 to-pink-500" },
+  { name: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
+  { name: "Products", to: "/products", icon: Package },
+  { name: "Categories", to: "/categories", icon: FolderTree },
+  { name: "Users", to: "/users", icon: Users2 },
+  { name: "Sales", to: "/sales", icon: ShoppingCart },
 ];
 
 const analyticsLinks = [
-  { name: "Overview", to: "/analytics", icon: BarChart3, gradient: "from-indigo-500 to-blue-500" },
-  { name: "Products Analytics", to: "/analytics/products", icon: TrendingUp, gradient: "from-cyan-500 to-blue-500" },
-  { name: "Categories Analytics", to: "/analytics/categories", icon: PieChart, gradient: "from-pink-500 to-rose-500" },
-  { name: "Sales Analytics", to: "/analytics/sales", icon: Sparkles, gradient: "from-orange-500 to-amber-500" },
+  { name: "Overview", to: "/analytics", icon: BarChart3 },
+  { name: "Products Analytics", to: "/analytics/products", icon: TrendingUp },
+  { name: "Categories Analytics", to: "/analytics/categories", icon: PieChart },
+  { name: "Sales Analytics", to: "/analytics/sales", icon: Sparkles },
+  { name: "Reports", to: "/analytics/reports", icon: FileText },
+  { name: "Workspace", to: "/analytics/workspace", icon: Briefcase },
 ];
 
 export default function Sidebar() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const { isDark, toggleDarkMode } = useDarkMode();
 
   const handleLogout = () => {
     localStorage.clear();
@@ -41,47 +50,57 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className={`${collapsed ? 'w-20' : 'w-72'} bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 min-h-screen flex flex-col shadow-2xl transition-all duration-300 relative`}>
-
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 -left-20 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-40 -right-20 w-60 h-60 bg-purple-500/10 rounded-full blur-3xl" />
-      </div>
-
+    <aside 
+      className={`${collapsed ? 'w-20' : 'w-72'} min-h-screen flex flex-col transition-all duration-300 relative border-r ${
+        isDark 
+          ? 'bg-warm-950 border-warm-800' 
+          : 'bg-white border-warm-200'
+      }`}
+    >
       {/* Toggle Button */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-8 w-6 h-6 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg z-10 hover:scale-110 transition-transform"
+        className={`absolute -right-3 top-8 w-6 h-6 rounded-full flex items-center justify-center shadow-lg z-10 hover:scale-110 transition-transform ${
+          isDark ? 'bg-coral-500' : 'bg-coral-500'
+        }`}
       >
-        {collapsed ? <ChevronRight className="w-3 h-3 text-white" /> : <X className="w-3 h-3 text-white" />}
+        {collapsed ? (
+          <ChevronRight className="w-3 h-3 text-white" />
+        ) : (
+          <X className="w-3 h-3 text-white" />
+        )}
       </button>
 
       {/* LOGO */}
-      <div className={`px-4 py-6 ${collapsed ? 'px-3' : 'px-6'} relative z-10`}>
+      <div className={`px-4 py-6 ${collapsed ? 'px-3' : 'px-6'}`}>
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30 flex-shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-coral-500 to-coral-600 flex items-center justify-center shadow-lg flex-shrink-0">
             <BarChart3 className="w-6 h-6 text-white" />
           </div>
           {!collapsed && (
             <div className="overflow-hidden">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">SaleManager</h1>
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest">Admin Dashboard</p>
+              <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-warm-900'}`}>
+                SaleManager
+              </h1>
+              <p className={`text-[10px] uppercase tracking-widest ${isDark ? 'text-warm-500' : 'text-warm-400'}`}>
+                Dashboard
+              </p>
             </div>
           )}
         </div>
       </div>
 
-      <nav className="flex-1 px-3 space-y-6 overflow-y-auto relative z-10 scrollbar-thin scrollbar-thumb-slate-700">
-
+      <nav className="flex-1 px-3 space-y-6 overflow-y-auto scrollbar-thin">
         {/* MAIN LINKS */}
         <div className="space-y-1">
           {!collapsed && (
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 px-3">
+            <p className={`text-[10px] font-bold uppercase tracking-widest mb-4 px-3 ${
+              isDark ? 'text-warm-500' : 'text-warm-400'
+            }`}>
               Main Menu
             </p>
           )}
-          {mainLinks.map(({ name, to, icon: Icon, gradient }) => {
+          {mainLinks.map(({ name, to, icon: Icon }) => {
             const isActive = location.pathname === to || (to !== '/dashboard' && location.pathname.startsWith(to));
             return (
               <NavLink
@@ -89,30 +108,33 @@ export default function Sidebar() {
                 to={to}
                 title={collapsed ? name : undefined}
                 className={`
-                  group flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 relative overflow-hidden
+                  group flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 relative
                   ${isActive
-                    ? "bg-white/10 text-white shadow-lg"
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                    ? isDark 
+                      ? "bg-coral-500/15 text-coral-400 border-l-4 border-coral-500"
+                      : "bg-coral-50 text-coral-600 border-l-4 border-coral-500"
+                    : isDark
+                      ? "text-warm-400 hover:text-white hover:bg-warm-800/50"
+                      : "text-warm-500 hover:text-warm-900 hover:bg-warm-100"
                   }
                 `}
               >
-                {isActive && (
-                  <div className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-20`} />
-                )}
-                <div className={`
-                  relative p-2.5 rounded-xl transition-all duration-300 flex-shrink-0
-                  ${isActive
-                    ? `bg-gradient-to-br ${gradient} shadow-lg`
-                    : 'bg-slate-800/80 group-hover:bg-slate-700'
-                  }
-                `}>
-                  <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+                <div className={`p-2 rounded-lg transition-all flex-shrink-0 ${
+                  isActive 
+                    ? isDark ? 'bg-coral-500/20' : 'bg-coral-100'
+                    : isDark ? 'bg-warm-800' : 'bg-warm-100 group-hover:bg-warm-200'
+                }`}>
+                  <Icon className={`h-5 w-5 ${
+                    isActive 
+                      ? isDark ? 'text-coral-400' : 'text-coral-600'
+                      : isDark ? 'text-warm-400' : 'text-warm-500'
+                  }`} />
                 </div>
                 {!collapsed && (
                   <>
-                    <span className="text-sm font-medium relative">{name}</span>
+                    <span className="text-sm font-medium">{name}</span>
                     {isActive && (
-                      <ChevronRight className="w-4 h-4 ml-auto text-white/60" />
+                      <ChevronRight className="w-4 h-4 ml-auto opacity-60" />
                     )}
                   </>
                 )}
@@ -124,11 +146,13 @@ export default function Sidebar() {
         {/* ANALYTICS SECTION */}
         <div className="space-y-1">
           {!collapsed && (
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 px-3">
+            <p className={`text-[10px] font-bold uppercase tracking-widest mb-4 px-3 ${
+              isDark ? 'text-warm-500' : 'text-warm-400'
+            }`}>
               Analytics & Reports
             </p>
           )}
-          {analyticsLinks.map(({ name, to, icon: Icon, gradient }) => {
+          {analyticsLinks.map(({ name, to, icon: Icon }) => {
             const isActive = location.pathname === to;
             return (
               <NavLink
@@ -136,58 +160,75 @@ export default function Sidebar() {
                 to={to}
                 title={collapsed ? name : undefined}
                 className={`
-                  group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 relative overflow-hidden
+                  group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative
                   ${isActive
-                    ? "bg-white/10 text-white"
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                    ? isDark 
+                      ? "bg-teal-500/15 text-teal-400"
+                      : "bg-teal-50 text-teal-600"
+                    : isDark
+                      ? "text-warm-400 hover:text-white hover:bg-warm-800/50"
+                      : "text-warm-500 hover:text-warm-900 hover:bg-warm-100"
                   }
                 `}
               >
-                {isActive && (
-                  <div className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-15`} />
-                )}
-                <div className={`
-                  relative p-2 rounded-lg transition-all flex-shrink-0
-                  ${isActive ? `bg-gradient-to-br ${gradient}` : 'group-hover:bg-slate-800'}
-                `}>
-                  <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'}`} />
+                <div className={`p-2 rounded-lg transition-all flex-shrink-0 ${
+                  isActive 
+                    ? isDark ? 'bg-teal-500/20' : 'bg-teal-100'
+                    : isDark ? 'bg-warm-800' : 'bg-warm-100 group-hover:bg-warm-200'
+                }`}>
+                  <Icon className={`h-4 w-4 ${
+                    isActive 
+                      ? isDark ? 'text-teal-400' : 'text-teal-600'
+                      : isDark ? 'text-warm-500' : 'text-warm-500'
+                  }`} />
                 </div>
                 {!collapsed && (
-                  <span className="text-sm relative">{name}</span>
+                  <span className="text-sm">{name}</span>
                 )}
               </NavLink>
             );
           })}
         </div>
-
       </nav>
 
       {/* BOTTOM SECTION */}
-      <div className={`p-3 ${collapsed ? 'p-2' : 'p-4'} relative z-10`}>
-        {!collapsed && (
-          <div className="bg-gradient-to-br from-indigo-600/20 via-purple-600/15 to-pink-600/20 rounded-2xl p-4 border border-white/10 mb-3 backdrop-blur-sm">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl shadow-lg">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-sm font-semibold text-white">Pro Features</span>
-            </div>
-            <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-              Unlock advanced analytics and AI-powered insights.
-            </p>
-            <button className="w-full py-2.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white text-xs font-semibold rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 hover:scale-[1.02]">
-              Upgrade Now
-            </button>
+      <div className={`p-3 ${collapsed ? 'p-2' : 'p-4'} space-y-3`}>
+        {/* Dark Mode Toggle */}
+        <button
+          onClick={toggleDarkMode}
+          className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
+            isDark 
+              ? 'text-warm-400 hover:bg-warm-800 hover:text-white'
+              : 'text-warm-500 hover:bg-warm-100 hover:text-warm-900'
+          }`}
+        >
+          <div className={`p-2 rounded-lg transition-all flex-shrink-0 ${
+            isDark ? 'bg-warm-800' : 'bg-warm-100'
+          }`}>
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </div>
-        )}
+          {!collapsed && (
+            <span className="text-sm font-medium">
+              {isDark ? 'Mode Clair' : 'Mode Sombre'}
+            </span>
+          )}
+        </button>
 
         {/* Logout Button */}
         <button
           onClick={handleLogout}
           title={collapsed ? "Logout" : undefined}
-          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 group"
+          className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group ${
+            isDark 
+              ? 'text-warm-400 hover:bg-coral-500/10 hover:text-coral-400'
+              : 'text-warm-500 hover:bg-coral-50 hover:text-coral-600'
+          }`}
         >
-          <div className="p-2 rounded-lg bg-slate-800/80 group-hover:bg-red-500/20 transition-all flex-shrink-0">
+          <div className={`p-2 rounded-lg transition-all flex-shrink-0 ${
+            isDark 
+              ? 'bg-warm-800 group-hover:bg-coral-500/20'
+              : 'bg-warm-100 group-hover:bg-coral-100'
+          }`}>
             <LogOut className="w-4 h-4" />
           </div>
           {!collapsed && <span className="text-sm font-medium">Déconnexion</span>}

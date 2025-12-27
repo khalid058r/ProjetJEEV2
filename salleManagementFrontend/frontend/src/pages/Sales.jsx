@@ -18,8 +18,10 @@ import {
   ArrowTrendingUpIcon,
 } from "@heroicons/react/24/outline";
 import SaleFormModal from "../components/SaleFormModal";
+import { useDarkMode } from "../context/DarkModeContext";
 
 export default function Sales() {
+  const { darkMode } = useDarkMode();
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -65,19 +67,19 @@ export default function Sales() {
   const todaySales = sales.filter(s => {
     const saleDate = new Date(s.saleDate);
     const today = new Date();
-    return saleDate. toDateString() === today.toDateString();
+    return saleDate.toDateString() === today.toDateString();
   }).length;
 
   // Filtering
   const filteredSales = sales
     .filter(s =>
-      s.username?. toLowerCase().includes(search.toLowerCase()) ||
-      s.clientName?. toLowerCase().includes(search.toLowerCase()) ||
-      s.id. toString().includes(search)
+      s.username?.toLowerCase().includes(search.toLowerCase()) ||
+      s.clientName?.toLowerCase().includes(search.toLowerCase()) ||
+      s.id.toString().includes(search)
     )
     .filter(s => {
       if (dateFilter === "today") {
-        const saleDate = new Date(s. saleDate);
+        const saleDate = new Date(s.saleDate);
         const today = new Date();
         return saleDate.toDateString() === today.toDateString();
       }
@@ -95,40 +97,43 @@ export default function Sales() {
       }
       return true;
     })
-    .filter(s => statusFilter === "all" ?  true : s.status === statusFilter);
+    .filter(s => statusFilter === "all" ? true : s.status === statusFilter);
 
   const statusColors = {
-    COMPLETED: "bg-green-100 text-green-700",
-    PENDING: "bg-yellow-100 text-yellow-700",
-    CANCELLED: "bg-red-100 text-red-700",
+    COMPLETED: darkMode ? "bg-teal-500/20 text-teal-400" : "bg-teal-50 text-teal-700",
+    PENDING: darkMode ? "bg-hof-400/20 text-hof-300" : "bg-hof-50 text-hof-600",
+    CANCELLED: darkMode ? "bg-coral-500/20 text-coral-400" : "bg-coral-50 text-coral-600",
   };
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mb-4"></div>
-        <p className="text-gray-500">Loading sales...</p>
+      <div className={`flex flex-col items-center justify-center min-h-screen ${darkMode ? 'bg-warm-950' : 'bg-gradient-to-br from-warm-50 via-white to-coral-50/20'}`}>
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-coral-200 rounded-full animate-pulse" />
+          <div className="absolute inset-0 w-16 h-16 border-4 border-coral-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+        <p className={`mt-4 ${darkMode ? 'text-warm-400' : 'text-warm-500'}`}>Loading sales...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50/30 p-8">
-      
+    <div className={`min-h-screen p-8 ${darkMode ? 'bg-warm-950' : 'bg-gradient-to-br from-warm-50 via-white to-coral-50/20'}`}>
+
       {/* HEADER */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-              <ShoppingCartIcon className="h-10 w-10 text-green-600" />
+            <h1 className={`text-4xl font-bold mb-2 flex items-center gap-3 ${darkMode ? 'text-white' : 'text-warm-900'}`}>
+              <ShoppingCartIcon className="h-10 w-10 text-coral-500" />
               Sales Management
             </h1>
-            <p className="text-gray-600">Track and manage all sales transactions</p>
+            <p className={darkMode ? 'text-warm-400' : 'text-warm-600'}>Track and manage all sales transactions</p>
           </div>
 
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200"
+            className="flex items-center gap-2 bg-gradient-to-r from-coral-500 to-coral-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-coral-600 hover:to-coral-700 transform hover:scale-105 transition-all duration-200"
           >
             <PlusIcon className="h-5 w-5" />
             <span className="font-semibold">New Sale</span>
@@ -141,46 +146,53 @@ export default function Sales() {
             icon={<CurrencyDollarIcon className="h-6 w-6" />}
             label="Total Revenue"
             value={`$${totalRevenue.toFixed(2)}`}
-            color="green"
+            color="coral"
+            darkMode={darkMode}
           />
           <KpiCard
             icon={<ShoppingCartIcon className="h-6 w-6" />}
             label="Total Sales"
             value={totalSales}
-            color="blue"
+            color="teal"
+            darkMode={darkMode}
           />
           <KpiCard
             icon={<ChartBarIcon className="h-6 w-6" />}
             label="Avg Order Value"
             value={`$${avgOrderValue.toFixed(2)}`}
-            color="purple"
+            color="arches"
+            darkMode={darkMode}
           />
           <KpiCard
             icon={<ArrowTrendingUpIcon className="h-6 w-6" />}
             label="Today's Sales"
             value={todaySales}
-            color="orange"
+            color="hof"
+            darkMode={darkMode}
           />
         </div>
 
         {/* FILTERS */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className={`rounded-2xl shadow-sm border p-6 ${darkMode ? 'bg-warm-900 border-warm-800' : 'bg-white border-warm-100'}`}>
           <div className="flex flex-col lg:flex-row gap-4">
-            
+
             {/* Search */}
             <div className="relative flex-1">
-              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
+              <MagnifyingGlassIcon className={`h-5 w-5 absolute left-3 top-3 ${darkMode ? 'text-warm-500' : 'text-warm-400'}`} />
               <input
                 type="text"
                 placeholder="Search by ID, client, or user..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-10 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
+                className={`w-full pl-10 pr-10 py-3 rounded-xl border-2 focus:ring-2 focus:ring-coral-500 focus:border-transparent outline-none transition ${darkMode
+                  ? 'bg-warm-800 border-warm-700 text-white placeholder-warm-500'
+                  : 'bg-warm-50 border-warm-200 text-warm-900 placeholder-warm-400'
+                  }`}
               />
               {search && (
                 <button
                   onClick={() => setSearch("")}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  className={`absolute right-3 top-3 ${darkMode ? 'text-warm-500 hover:text-warm-300' : 'text-warm-400 hover:text-warm-600'}`}
                 >
                   <XMarkIcon className="h-5 w-5" />
                 </button>
@@ -191,7 +203,10 @@ export default function Sales() {
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="px-4 py-2. 5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition bg-white font-medium text-sm"
+              className={`px-4 py-2.5 rounded-xl border-2 focus:ring-2 focus:ring-coral-500 outline-none transition font-medium text-sm ${darkMode
+                ? 'bg-warm-800 border-warm-700 text-white'
+                : 'bg-white border-warm-200 text-warm-700'
+                }`}
             >
               <option value="all">All Time</option>
               <option value="today">Today</option>
@@ -203,7 +218,10 @@ export default function Sales() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition bg-white font-medium text-sm"
+              className={`px-4 py-2.5 rounded-xl border-2 focus:ring-2 focus:ring-coral-500 outline-none transition font-medium text-sm ${darkMode
+                ? 'bg-warm-800 border-warm-700 text-white'
+                : 'bg-white border-warm-200 text-warm-700'
+                }`}
             >
               <option value="all">All Status</option>
               <option value="COMPLETED">Completed</option>
@@ -214,16 +232,16 @@ export default function Sales() {
 
           {/* Active Filters */}
           {(search || dateFilter !== "all" || statusFilter !== "all") && (
-            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-200">
-              <span className="text-sm text-gray-600 font-medium">Active Filters:</span>
+            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-warm-200 dark:border-warm-700">
+              <span className={`text-sm font-medium ${darkMode ? 'text-warm-400' : 'text-warm-600'}`}>Active Filters:</span>
               {search && (
-                <FilterTag label={`Search: "${search}"`} onRemove={() => setSearch("")} />
+                <FilterTag label={`Search: "${search}"`} onRemove={() => setSearch("")} darkMode={darkMode} />
               )}
               {dateFilter !== "all" && (
-                <FilterTag label={`Date: ${dateFilter}`} onRemove={() => setDateFilter("all")} />
+                <FilterTag label={`Date: ${dateFilter}`} onRemove={() => setDateFilter("all")} darkMode={darkMode} />
               )}
               {statusFilter !== "all" && (
-                <FilterTag label={`Status: ${statusFilter}`} onRemove={() => setStatusFilter("all")} />
+                <FilterTag label={`Status: ${statusFilter}`} onRemove={() => setStatusFilter("all")} darkMode={darkMode} />
               )}
             </div>
           )}
@@ -231,9 +249,9 @@ export default function Sales() {
 
         {/* Results Count */}
         <div className="mt-4">
-          <p className="text-sm text-gray-600">
-            Showing <span className="font-semibold text-gray-900">{filteredSales.length}</span> of{" "}
-            <span className="font-semibold text-gray-900">{totalSales}</span> sales
+          <p className={`text-sm ${darkMode ? 'text-warm-400' : 'text-warm-600'}`}>
+            Showing <span className={`font-semibold ${darkMode ? 'text-white' : 'text-warm-900'}`}>{filteredSales.length}</span> of{" "}
+            <span className={`font-semibold ${darkMode ? 'text-white' : 'text-warm-900'}`}>{totalSales}</span> sales
           </p>
         </div>
       </div>
@@ -247,53 +265,54 @@ export default function Sales() {
             setDateFilter("all");
             setStatusFilter("all");
           }}
+          darkMode={darkMode}
         />
       ) : (
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div className={`rounded-2xl shadow-lg border overflow-hidden ${darkMode ? 'bg-warm-900 border-warm-800' : 'bg-white border-warm-100'}`}>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gradient-to-r from-green-50 to-emerald-50">
+              <thead className={darkMode ? 'bg-warm-800' : 'bg-gradient-to-r from-coral-50 to-warm-50'}>
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Sale ID</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Client</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">User</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Date</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Total</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Status</th>
-                  <th className="px-6 py-4 text-right text-sm font-bold text-gray-700">Actions</th>
+                  <th className={`px-6 py-4 text-left text-sm font-bold ${darkMode ? 'text-warm-300' : 'text-warm-700'}`}>Sale ID</th>
+                  <th className={`px-6 py-4 text-left text-sm font-bold ${darkMode ? 'text-warm-300' : 'text-warm-700'}`}>Client</th>
+                  <th className={`px-6 py-4 text-left text-sm font-bold ${darkMode ? 'text-warm-300' : 'text-warm-700'}`}>User</th>
+                  <th className={`px-6 py-4 text-left text-sm font-bold ${darkMode ? 'text-warm-300' : 'text-warm-700'}`}>Date</th>
+                  <th className={`px-6 py-4 text-left text-sm font-bold ${darkMode ? 'text-warm-300' : 'text-warm-700'}`}>Total</th>
+                  <th className={`px-6 py-4 text-left text-sm font-bold ${darkMode ? 'text-warm-300' : 'text-warm-700'}`}>Status</th>
+                  <th className={`px-6 py-4 text-right text-sm font-bold ${darkMode ? 'text-warm-300' : 'text-warm-700'}`}>Actions</th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-gray-100">
+              <tbody className={`divide-y ${darkMode ? 'divide-warm-800' : 'divide-warm-100'}`}>
                 {filteredSales.map((s) => (
-                  <tr key={s.id} className="hover:bg-gray-50 transition">
-                    
+                  <tr key={s.id} className={`transition ${darkMode ? 'hover:bg-warm-800/50' : 'hover:bg-warm-50'}`}>
+
                     {/* Sale ID */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <DocumentTextIcon className="h-5 w-5 text-gray-400" />
-                        <span className="font-semibold text-gray-900">#{s.id}</span>
+                        <DocumentTextIcon className={`h-5 w-5 ${darkMode ? 'text-warm-500' : 'text-warm-400'}`} />
+                        <span className={`font-semibold ${darkMode ? 'text-white' : 'text-warm-900'}`}>#{s.id}</span>
                       </div>
                     </td>
 
                     {/* Client */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <UserIcon className="h-5 w-5 text-gray-400" />
-                        <span className="text-gray-700">{s.clientName || "Walk-in"}</span>
+                        <UserIcon className={`h-5 w-5 ${darkMode ? 'text-warm-500' : 'text-warm-400'}`} />
+                        <span className={darkMode ? 'text-warm-300' : 'text-warm-700'}>{s.clientName || "Walk-in"}</span>
                       </div>
                     </td>
 
                     {/* User */}
                     <td className="px-6 py-4">
-                      <span className="text-gray-700">{s.username}</span>
+                      <span className={darkMode ? 'text-warm-300' : 'text-warm-700'}>{s.username}</span>
                     </td>
 
                     {/* Date */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <CalendarIcon className="h-5 w-5 text-gray-400" />
-                        <span className="text-gray-700">
+                        <CalendarIcon className={`h-5 w-5 ${darkMode ? 'text-warm-500' : 'text-warm-400'}`} />
+                        <span className={darkMode ? 'text-warm-300' : 'text-warm-700'}>
                           {new Date(s.saleDate).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'short',
@@ -305,14 +324,14 @@ export default function Sales() {
 
                     {/* Total */}
                     <td className="px-6 py-4">
-                      <span className="text-lg font-bold text-green-600">
+                      <span className="text-lg font-bold text-coral-500">
                         ${s.totalAmount.toFixed(2)}
                       </span>
                     </td>
 
                     {/* Status */}
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${statusColors[s. status] || statusColors.COMPLETED}`}>
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${statusColors[s.status] || statusColors.COMPLETED}`}>
                         {s.status}
                       </span>
                     </td>
@@ -322,7 +341,7 @@ export default function Sales() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => navigate(`/sales/${s.id}`)}
-                          className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
+                          className={`p-2 rounded-xl transition ${darkMode ? 'bg-teal-500/20 text-teal-400 hover:bg-teal-500/30' : 'bg-teal-50 text-teal-600 hover:bg-teal-100'}`}
                           title="View Details"
                         >
                           <EyeIcon className="h-5 w-5" />
@@ -330,7 +349,7 @@ export default function Sales() {
 
                         <button
                           onClick={() => setConfirmDeleteId(s.id)}
-                          className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
+                          className={`p-2 rounded-xl transition ${darkMode ? 'bg-coral-500/20 text-coral-400 hover:bg-coral-500/30' : 'bg-coral-50 text-coral-600 hover:bg-coral-100'}`}
                           title="Delete Sale"
                         >
                           <TrashIcon className="h-5 w-5" />
@@ -374,52 +393,57 @@ export default function Sales() {
     COMPONENTS
 ------------------------------------------ */
 
-function KpiCard({ icon, label, value, color }) {
+function KpiCard({ icon, label, value, color, darkMode }) {
   const colorClasses = {
-    green: "text-green-600 bg-green-50 border-green-200",
-    blue: "text-blue-600 bg-blue-50 border-blue-200",
-    purple: "text-purple-600 bg-purple-50 border-purple-200",
-    orange:  "text-orange-600 bg-orange-50 border-orange-200",
+    coral: { icon: "from-coral-500 to-coral-600", text: "text-coral-500" },
+    teal: { icon: "from-teal-500 to-teal-600", text: "text-teal-500" },
+    arches: { icon: "from-arches-500 to-arches-600", text: "text-arches-500" },
+    hof: { icon: "from-hof-400 to-hof-500", text: "text-hof-500" },
   };
 
+  const colors = colorClasses[color] || colorClasses.coral;
+
   return (
-    <div className={`bg-white rounded-xl shadow-sm border-2 p-5 ${colorClasses[color]}`}>
+    <div className={`rounded-2xl shadow-sm border p-5 transition-all hover:shadow-lg ${darkMode ? 'bg-warm-900 border-warm-800' : 'bg-white border-warm-100'
+      }`}>
       <div className="flex items-center justify-between mb-3">
-        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
+        <div className={`p-3 rounded-xl bg-gradient-to-br ${colors.icon} text-white shadow-lg`}>
           {icon}
         </div>
       </div>
-      <p className="text-sm text-gray-600 mb-1">{label}</p>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
+      <p className={`text-sm mb-1 ${darkMode ? 'text-warm-400' : 'text-warm-600'}`}>{label}</p>
+      <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-warm-900'}`}>{value}</p>
     </div>
   );
 }
 
-function FilterTag({ label, onRemove }) {
+function FilterTag({ label, onRemove, darkMode }) {
   return (
-    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1">
+    <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${darkMode ? 'bg-coral-500/20 text-coral-400' : 'bg-coral-100 text-coral-700'
+      }`}>
       {label}
-      <button onClick={onRemove} className="hover:text-green-900">
+      <button onClick={onRemove} className={darkMode ? 'hover:text-coral-300' : 'hover:text-coral-900'}>
         <XMarkIcon className="h-3 w-3" />
       </button>
     </span>
   );
 }
 
-function EmptyState({ hasFilters, onReset }) {
+function EmptyState({ hasFilters, onReset, darkMode }) {
   return (
-    <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border-2 border-dashed border-gray-300">
-      <ShoppingCartIcon className="h-16 w-16 text-gray-300 mb-4" />
-      <p className="text-gray-500 text-lg mb-2">
+    <div className={`flex flex-col items-center justify-center py-20 rounded-2xl border-2 border-dashed ${darkMode ? 'bg-warm-900 border-warm-700' : 'bg-white border-warm-300'
+      }`}>
+      <ShoppingCartIcon className={`h-16 w-16 mb-4 ${darkMode ? 'text-warm-600' : 'text-warm-300'}`} />
+      <p className={`text-lg mb-2 ${darkMode ? 'text-warm-400' : 'text-warm-500'}`}>
         {hasFilters ? "No sales found" : "No sales yet"}
       </p>
-      <p className="text-gray-400 text-sm mb-6">
-        {hasFilters ?  "Try adjusting your filters" :  "Get started by creating your first sale"}
+      <p className={`text-sm mb-6 ${darkMode ? 'text-warm-500' : 'text-warm-400'}`}>
+        {hasFilters ? "Try adjusting your filters" : "Get started by creating your first sale"}
       </p>
       {hasFilters && (
         <button
           onClick={onReset}
-          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+          className="px-6 py-3 bg-gradient-to-r from-coral-500 to-coral-600 text-white rounded-xl hover:from-coral-600 hover:to-coral-700 transition shadow-lg"
         >
           Clear Filters
         </button>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import AnalyticsService from "../../services/analyticsService";
+import { useDarkMode } from "../../context/DarkModeContext";
 
 import {
   DollarSign,
@@ -14,6 +15,7 @@ import VendeurBestProducts from "../../components/vendeur/VendeurBestProducts";
 import VendeurSalesChart from "../../components/vendeur/VendeurSalesChart";
 
 export default function VendeurAnalytics() {
+  const { darkMode } = useDarkMode();
   const [kpi, setKpi] = useState(null);
   const [bestProducts, setBestProducts] = useState([]);
   const [salesByDay, setSalesByDay] = useState([]);
@@ -64,10 +66,11 @@ export default function VendeurAnalytics() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <div className="relative">
-          <div className="w-16 h-16 border-4 border-emerald-200 rounded-full animate-spin border-t-emerald-600"></div>
-          <TrendingUp className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-emerald-600" />
+          <div className={`w-16 h-16 border-4 rounded-full animate-spin ${darkMode ? 'border-warm-700 border-t-coral-500' : 'border-warm-200 border-t-coral-600'
+            }`}></div>
+          <TrendingUp className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-coral-600" />
         </div>
-        <p className="mt-4 text-gray-600 font-medium">Loading analytics...</p>
+        <p className={`mt-4 font-medium ${darkMode ? 'text-warm-300' : 'text-warm-600'}`}>Loading analytics...</p>
       </div>
     );
   }
@@ -78,21 +81,27 @@ export default function VendeurAnalytics() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl shadow-lg">
+            <div className="p-2 bg-gradient-to-r from-coral-500 to-coral-600 rounded-xl shadow-lg">
               <Zap className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-warm-900'}`}>
               Seller Analytics
             </h1>
           </div>
-          <p className="text-gray-500 ml-14">
+          <p className={`ml-14 ${darkMode ? 'text-warm-400' : 'text-warm-500'}`}>
             Overview of your sales performance
           </p>
         </div>
         <button
           onClick={loadAnalytics}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl hover:bg-emerald-100 transition-colors font-medium"
+          className={`
+            flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-colors
+            ${darkMode
+              ? 'bg-coral-500/10 text-coral-400 hover:bg-coral-500/20'
+              : 'bg-coral-50 text-coral-700 hover:bg-coral-100'
+            }
+          `}
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Refresh
@@ -101,7 +110,10 @@ export default function VendeurAnalytics() {
 
       {/* Error */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
+        <div className={`rounded-xl p-4 ${darkMode
+            ? 'bg-coral-500/10 border border-coral-500/20 text-coral-400'
+            : 'bg-coral-50 border border-coral-200 text-coral-700'
+          }`}>
           {error}
         </div>
       )}
@@ -112,7 +124,7 @@ export default function VendeurAnalytics() {
           title="Revenue"
           value={`$${(kpi?.sales?.totalRevenue || 0).toFixed(2)}`}
           icon={<DollarSign className="w-6 h-6" />}
-          gradient="from-emerald-500 to-teal-500"
+          gradient="from-coral-500 to-coral-600"
           trend="+12%"
           trendUp={true}
         />
@@ -120,7 +132,7 @@ export default function VendeurAnalytics() {
           title="Sales"
           value={kpi?.sales?.salesCount || 0}
           icon={<ShoppingCart className="w-6 h-6" />}
-          gradient="from-blue-500 to-indigo-500"
+          gradient="from-teal-500 to-teal-600"
           trend="+8%"
           trendUp={true}
         />
@@ -128,7 +140,7 @@ export default function VendeurAnalytics() {
           title="Avg Basket"
           value={`$${(kpi?.sales?.averageBasket || 0).toFixed(2)}`}
           icon={<TrendingUp className="w-6 h-6" />}
-          gradient="from-purple-500 to-pink-500"
+          gradient="from-arches-500 to-arches-600"
           trend="+5%"
           trendUp={true}
         />

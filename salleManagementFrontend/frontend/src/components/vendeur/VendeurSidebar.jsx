@@ -9,22 +9,24 @@ import {
   LogOut,
   Store,
   ChevronRight,
-  Sparkles,
-  X,
+  ChevronLeft,
   Target,
-  Zap,
+  Moon,
+  Sun,
 } from "lucide-react";
+import { useDarkMode } from "../../context/DarkModeContext";
 
 const navItems = [
-  { to: "/vendeur", icon: LayoutDashboard, label: "Dashboard", end: true, gradient: "from-blue-500 to-cyan-500" },
-  { to: "/vendeur/categories", icon: FolderTree, label: "Catégories", gradient: "from-amber-500 to-orange-500" },
-  { to: "/vendeur/products", icon: Package, label: "Produits", gradient: "from-emerald-500 to-teal-500" },
-  { to: "/vendeur/sales", icon: ShoppingCart, label: "Mes Ventes", gradient: "from-rose-500 to-pink-500" },
-  { to: "/vendeur/analytics", icon: BarChart3, label: "Analytics", gradient: "from-indigo-500 to-purple-500" },
+  { to: "/vendeur", icon: LayoutDashboard, label: "Dashboard", end: true, gradient: "from-coral-500 to-coral-600" },
+  { to: "/vendeur/categories", icon: FolderTree, label: "Catégories", gradient: "from-hof-400 to-hof-500" },
+  { to: "/vendeur/products", icon: Package, label: "Produits", gradient: "from-teal-500 to-teal-600" },
+  { to: "/vendeur/sales", icon: ShoppingCart, label: "Mes Ventes", gradient: "from-arches-500 to-arches-600" },
+  { to: "/vendeur/analytics", icon: BarChart3, label: "Analytics", gradient: "from-coral-500 to-coral-600" },
 ];
 
 export default function VendeurSidebar() {
   const location = useLocation();
+  const { darkMode, toggleDarkMode } = useDarkMode();
   const [collapsed, setCollapsed] = useState(false);
 
   const isActive = (path, end = false) => {
@@ -33,41 +35,46 @@ export default function VendeurSidebar() {
   };
 
   return (
-    <aside className={`${collapsed ? 'w-20' : 'w-64'} bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 h-full flex flex-col shadow-2xl transition-all duration-300 relative`}>
-
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 -left-20 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-40 -right-20 w-60 h-60 bg-teal-500/10 rounded-full blur-3xl" />
-      </div>
-
+    <aside className={`
+      ${collapsed ? 'w-20' : 'w-64'} 
+      h-full flex flex-col transition-all duration-300 relative
+      ${darkMode
+        ? 'bg-warm-900 border-r border-warm-800'
+        : 'bg-white border-r border-warm-200'
+      }
+    `}>
       {/* Toggle Button */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-8 w-6 h-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center shadow-lg z-10 hover:scale-110 transition-transform"
+        className={`
+          absolute -right-3 top-8 w-6 h-6 rounded-full flex items-center justify-center shadow-lg z-10 
+          hover:scale-110 transition-transform bg-gradient-to-r from-coral-500 to-coral-600
+        `}
       >
-        {collapsed ? <ChevronRight className="w-3 h-3 text-white" /> : <X className="w-3 h-3 text-white" />}
+        {collapsed ? <ChevronRight className="w-3 h-3 text-white" /> : <ChevronLeft className="w-3 h-3 text-white" />}
       </button>
 
       {/* Logo / Brand */}
-      <div className={`p-6 border-b border-slate-800/50 ${collapsed ? 'p-4' : ''} relative z-10`}>
+      <div className={`p-6 border-b ${darkMode ? 'border-warm-800' : 'border-warm-200'} ${collapsed ? 'p-4' : ''}`}>
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30 flex-shrink-0">
+          <div className="w-11 h-11 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-teal-500/30 flex-shrink-0">
             <Store className="w-5 h-5 text-white" />
           </div>
           {!collapsed && (
             <div className="overflow-hidden">
-              <h1 className="text-lg font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">Vendeur</h1>
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest">Sales Portal</p>
+              <h1 className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-warm-900'}`}>Vendeur</h1>
+              <p className={`text-[10px] uppercase tracking-widest ${darkMode ? 'text-warm-500' : 'text-warm-400'}`}>
+                Sales Portal
+              </p>
             </div>
           )}
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto relative z-10">
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         {!collapsed && (
-          <p className="px-3 mb-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          <p className={`px-3 mb-4 text-[10px] font-bold uppercase tracking-widest ${darkMode ? 'text-warm-500' : 'text-warm-400'}`}>
             Menu
           </p>
         )}
@@ -85,29 +92,32 @@ export default function VendeurSidebar() {
               className={`
                 group flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 relative overflow-hidden
                 ${active
-                  ? "bg-white/10 text-white shadow-lg"
-                  : "text-slate-400 hover:bg-slate-800/50 hover:text-white"
+                  ? darkMode
+                    ? "bg-coral-500/10 text-coral-400 border border-coral-500/20"
+                    : "bg-coral-50 text-coral-600 border border-coral-200"
+                  : darkMode
+                    ? "text-warm-400 hover:bg-warm-800/50 hover:text-white border border-transparent"
+                    : "text-warm-600 hover:bg-warm-50 hover:text-warm-900 border border-transparent"
                 }
               `}
             >
-              {active && (
-                <div className={`absolute inset-0 bg-gradient-to-r ${item.gradient} opacity-20`} />
-              )}
               <div className={`
                 relative p-2.5 rounded-xl transition-all duration-300 flex-shrink-0
                 ${active
-                  ? `bg-gradient-to-br ${item.gradient} shadow-lg shadow-emerald-500/30`
-                  : "bg-slate-800 group-hover:bg-slate-700"
+                  ? `bg-gradient-to-br ${item.gradient} shadow-lg shadow-coral-500/30`
+                  : darkMode
+                    ? "bg-warm-800 group-hover:bg-warm-700"
+                    : "bg-warm-100 group-hover:bg-warm-200"
                 }
               `}>
-                <Icon className={`w-4 h-4 ${active ? "text-white" : "text-slate-400 group-hover:text-white"}`} />
+                <Icon className={`w-4 h-4 ${active ? "text-white" : darkMode ? "text-warm-400 group-hover:text-white" : "text-warm-500 group-hover:text-warm-700"}`} />
               </div>
 
               {!collapsed && (
                 <>
                   <span className="font-medium flex-1 relative">{item.label}</span>
                   {active && (
-                    <ChevronRight className="w-4 h-4 text-white/60" />
+                    <ChevronRight className="w-4 h-4 text-coral-500" />
                   )}
                 </>
               )}
@@ -118,20 +128,25 @@ export default function VendeurSidebar() {
 
       {/* Pro Features Card */}
       {!collapsed && (
-        <div className="p-4 relative z-10">
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border border-emerald-500/20 backdrop-blur-sm">
+        <div className="p-4">
+          <div className={`p-4 rounded-2xl border backdrop-blur-sm ${darkMode
+              ? 'bg-gradient-to-br from-coral-500/10 to-teal-500/5 border-coral-500/20'
+              : 'bg-gradient-to-br from-coral-50 to-teal-50 border-coral-100'
+            }`}>
             <div className="flex items-center gap-2 mb-3">
-              <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl shadow-lg">
+              <div className="p-2 bg-gradient-to-br from-coral-500 to-coral-600 rounded-xl shadow-lg">
                 <Target className="w-4 h-4 text-white" />
               </div>
-              <span className="text-sm font-semibold text-white">Sales Tips</span>
+              <span className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-warm-900'}`}>
+                Sales Tips
+              </span>
             </div>
-            <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-              Track your best products and optimize your sales strategy!
+            <p className={`text-xs mb-4 leading-relaxed ${darkMode ? 'text-warm-400' : 'text-warm-500'}`}>
+              Track your best products and optimize your sales!
             </p>
             <NavLink
               to="/vendeur/analytics"
-              className="block w-full py-2.5 px-3 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white text-xs font-semibold rounded-xl hover:shadow-lg hover:shadow-emerald-500/25 transition-all duration-300 text-center hover:scale-[1.02]"
+              className="block w-full py-2.5 px-3 bg-gradient-to-r from-coral-500 to-coral-600 text-white text-xs font-semibold rounded-xl hover:shadow-lg hover:shadow-coral-500/25 transition-all duration-300 text-center hover:scale-[1.02]"
             >
               View Analytics
             </NavLink>
@@ -139,17 +154,49 @@ export default function VendeurSidebar() {
         </div>
       )}
 
+      {/* Theme Toggle */}
+      <div className={`p-4 border-t ${darkMode ? 'border-warm-800' : 'border-warm-200'}`}>
+        <button
+          onClick={toggleDarkMode}
+          className={`
+            w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
+            ${collapsed ? 'justify-center' : ''}
+            ${darkMode
+              ? 'bg-warm-800 hover:bg-warm-700 text-warm-300'
+              : 'bg-warm-50 hover:bg-warm-100 text-warm-600'
+            }
+          `}
+        >
+          {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          {!collapsed && (
+            <span className="font-medium text-sm">
+              {darkMode ? 'Light Mode' : 'Dark Mode'}
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* Logout */}
-      <div className={`p-4 border-t border-slate-800/50 ${collapsed ? 'p-2' : ''} relative z-10`}>
+      <div className={`p-4 border-t ${darkMode ? 'border-warm-800' : 'border-warm-200'} ${collapsed ? 'p-2' : ''}`}>
         <button
           onClick={() => {
             localStorage.clear();
             window.location.href = "/login";
           }}
           title={collapsed ? "Déconnexion" : undefined}
-          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 group"
+          className={`
+            w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group
+            ${collapsed ? 'justify-center' : ''}
+            ${darkMode
+              ? 'text-warm-400 hover:bg-coral-500/10 hover:text-coral-400'
+              : 'text-warm-500 hover:bg-coral-50 hover:text-coral-600'
+            }
+          `}
         >
-          <div className="p-2 rounded-lg bg-slate-800 group-hover:bg-red-500/20 transition-all flex-shrink-0">
+          <div className={`p-2 rounded-lg transition-all flex-shrink-0 ${darkMode
+              ? 'bg-warm-800 group-hover:bg-coral-500/20'
+              : 'bg-warm-100 group-hover:bg-coral-100'
+            }`}>
             <LogOut className="w-4 h-4" />
           </div>
           {!collapsed && <span className="font-medium">Déconnexion</span>}

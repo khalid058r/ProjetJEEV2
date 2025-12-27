@@ -3,70 +3,185 @@
 @tailwind utilities;
 
 /* ===========================================
-   CSS VARIABLES - Light & Dark Mode
+   AIRBNB-INSPIRED CSS VARIABLES
+   Clean, minimal design with excellent contrast
    =========================================== */
 :root {
+  /* Airbnb Brand Colors */
+  --airbnb-coral: #FF5A5F;
+  --airbnb-teal: #00A699;
+  --airbnb-arches: #FC642D;
+  --airbnb-hof: #FFB400;
+  --airbnb-kazan: #914669;
+
   /* Primary colors */
-  --primary: #3b82f6;
-  --primary-dark: #2563eb;
-  --primary-light: #60a5fa;
+  --primary: #FF5A5F;
+  --primary-dark: #E04851;
+  --primary-light: #FF7A7F;
+  --primary-50: #FEF3F2;
 
-  /* Background colors */
-  --bg-primary: #f8fafc;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #f1f5f9;
+  /* Secondary colors */
+  --secondary: #00A699;
+  --secondary-dark: #008F84;
+  --secondary-light: #00D1C0;
 
-  /* Text colors */
-  --text-primary: #1f2937;
-  --text-secondary: #4b5563;
-  --text-muted: #9ca3af;
+  /* Background colors - Clean whites */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F7F7F7;
+  --bg-tertiary: #EBEBEB;
+  --bg-elevated: #FFFFFF;
+  --bg-hover: #F7F7F7;
+  --bg-active: #EBEBEB;
+
+  /* Text colors - Warm blacks/grays */
+  --text-primary: #222222;
+  --text-secondary: #717171;
+  --text-muted: #B0B0B0;
+  --text-inverse: #FFFFFF;
 
   /* Border colors */
-  --border-primary: #e5e7eb;
-  --border-secondary: #d1d5db;
+  --border-primary: #DDDDDD;
+  --border-secondary: #EBEBEB;
+  --border-focus: #222222;
+
+  /* Semantic colors */
+  --success: #00A699;
+  --success-light: #E6F6F5;
+  --warning: #FFB400;
+  --warning-light: #FFF8E5;
+  --error: #FF5A5F;
+  --error-light: #FEECEE;
+  --info: #428BFF;
+  --info-light: #E8F0FF;
 
   /* Toast colors */
-  --toast-bg: #ffffff;
-  --toast-text: #1f2937;
+  --toast-bg: #FFFFFF;
+  --toast-text: #222222;
+  --toast-border: #EBEBEB;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-}
+  /* Card colors */
+  --card-bg: #FFFFFF;
+  --card-border: #EBEBEB;
 
-.dark {
-  /* Primary colors */
-  --primary: #60a5fa;
-  --primary-dark: #3b82f6;
-  --primary-light: #93c5fd;
+  /* Sidebar */
+  --sidebar-bg: #FFFFFF;
+  --sidebar-border: #EBEBEB;
+  --sidebar-text: #222222;
+  --sidebar-text-muted: #717171;
+  --sidebar-hover: #F7F7F7;
+  --sidebar-active: #FEF3F2;
+  --sidebar-active-border: #FF5A5F;
 
-  /* Background colors */
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
+  /* Chart colors */
+  --chart-1: #FF5A5F;
+  --chart-2: #00A699;
+  --chart-3: #FC642D;
+  --chart-4: #FFB400;
+  --chart-5: #914669;
+  --chart-6: #428BFF;
 
-  /* Text colors */
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #64748b;
+  /* Shadows - Soft and subtle */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.06), 0 4px 10px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 6px 20px rgba(0, 0, 0, 0.06);
+  --shadow-button: 0 2px 6px rgba(0, 0, 0, 0.08);
 
-  /* Border colors */
-  --border-primary: #334155;
-  --border-secondary: #475569;
+  /* Border radius - Rounded like Airbnb */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
 
-  /* Toast colors */
-  --toast-bg: #1e293b;
-  --toast-text: #f8fafc;
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease;
 }
 
 /* ===========================================
-   BASE STYLES
+   DARK MODE - Rich, warm darks
+   =========================================== */
+.dark {
+  /* Primary colors - Brighter for dark mode */
+  --primary: #FF7A7F;
+  --primary-dark: #FF5A5F;
+  --primary-light: #FF9B9E;
+  --primary-50: rgba(255, 122, 127, 0.15);
+
+  /* Secondary colors */
+  --secondary: #00D1C0;
+  --secondary-dark: #00A699;
+  --secondary-light: #00E5D3;
+
+  /* Background colors - Rich warm darks */
+  --bg-primary: #0F0F0F;
+  --bg-secondary: #1A1A1A;
+  --bg-tertiary: #262626;
+  --bg-elevated: #1A1A1A;
+  --bg-hover: #262626;
+  --bg-active: #333333;
+
+  /* Text colors - Clean whites */
+  --text-primary: #FFFFFF;
+  --text-secondary: #B3B3B3;
+  --text-muted: #6B6B6B;
+  --text-inverse: #0F0F0F;
+
+  /* Border colors */
+  --border-primary: #333333;
+  --border-secondary: #262626;
+  --border-focus: #FFFFFF;
+
+  /* Semantic colors - Brighter for visibility */
+  --success: #00D1C0;
+  --success-light: rgba(0, 209, 192, 0.15);
+  --warning: #FFD166;
+  --warning-light: rgba(255, 209, 102, 0.15);
+  --error: #FF7A7F;
+  --error-light: rgba(255, 122, 127, 0.15);
+  --info: #64A9FF;
+  --info-light: rgba(100, 169, 255, 0.15);
+
+  /* Toast colors */
+  --toast-bg: #1A1A1A;
+  --toast-text: #FFFFFF;
+  --toast-border: #333333;
+
+  /* Card colors */
+  --card-bg: #1A1A1A;
+  --card-border: #333333;
+
+  /* Sidebar */
+  --sidebar-bg: #0F0F0F;
+  --sidebar-border: #262626;
+  --sidebar-text: #FFFFFF;
+  --sidebar-text-muted: #B3B3B3;
+  --sidebar-hover: #1A1A1A;
+  --sidebar-active: rgba(255, 122, 127, 0.15);
+  --sidebar-active-border: #FF7A7F;
+
+  /* Chart colors - Brighter for dark mode */
+  --chart-1: #FF7A7F;
+  --chart-2: #00D1C0;
+  --chart-3: #FF9B4A;
+  --chart-4: #FFD166;
+  --chart-5: #B98EFF;
+  --chart-6: #64A9FF;
+
+  /* Shadows - Deeper for dark mode */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.35), 0 4px 10px rgba(0, 0, 0, 0.25);
+  --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 6px 20px rgba(0, 0, 0, 0.4);
+  --shadow-button: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* ===========================================
+   BASE STYLES - Airbnb Inspired
    =========================================== */
 * {
   box-sizing: border-box;
@@ -77,11 +192,16 @@ html {
 }
 
 body {
-  @apply bg-gray-100 dark:bg-slate-900 text-gray-900 dark:text-gray-100;
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: "Circular", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+.dark body {
+  background-color: var(--bg-primary);
 }
 
 /* ===========================================

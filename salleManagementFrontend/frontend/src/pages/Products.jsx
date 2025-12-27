@@ -21,6 +21,7 @@ import { useNavigate } from "react-router-dom";
 
 import ConfirmModal from "../components/ConfirmModal";
 import { useToast } from "../components/Toast";
+import { useDarkMode } from "../context/DarkModeContext";
 
 import {
   getProducts,
@@ -33,6 +34,7 @@ import { getCategories } from "../services/categoryService";
 export default function Products() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { darkMode } = useDarkMode();
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -242,30 +244,33 @@ export default function Products() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mb-4"></div>
-        <p className="text-gray-500">Loading products...</p>
+      <div className={`flex flex-col items-center justify-center min-h-screen ${darkMode ? 'bg-warm-950' : 'bg-gradient-to-br from-warm-50 via-white to-arches-50/20'}`}>
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-arches-200 rounded-full animate-pulse" />
+          <div className="absolute inset-0 w-16 h-16 border-4 border-arches-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+        <p className={`mt-4 ${darkMode ? 'text-warm-400' : 'text-warm-500'}`}>Loading products...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 p-8">
+    <div className={`min-h-screen p-8 ${darkMode ? 'bg-warm-950' : 'bg-gradient-to-br from-warm-50 via-white to-arches-50/20'}`}>
 
       {/* HEADER */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-              <CubeIcon className="h-10 w-10 text-blue-600" />
+            <h1 className={`text-4xl font-bold mb-2 flex items-center gap-3 ${darkMode ? 'text-white' : 'text-warm-900'}`}>
+              <CubeIcon className="h-10 w-10 text-arches-500" />
               Products
             </h1>
-            <p className="text-gray-600">Manage your product inventory</p>
+            <p className={darkMode ? 'text-warm-400' : 'text-warm-600'}>Manage your product inventory</p>
           </div>
 
           <button
             onClick={openAddModal}
-            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-cyan-700 transform hover:scale-105 transition-all duration-200"
+            className="flex items-center gap-2 bg-gradient-to-r from-arches-500 to-arches-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-arches-600 hover:to-arches-700 transform hover:scale-105 transition-all duration-200"
           >
             <PlusIcon className="h-5 w-5" />
             <span className="font-semibold">Add Product</span>
@@ -276,49 +281,56 @@ export default function Products() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <KpiCard
             icon={<CubeIcon className="h-6 w-6" />}
+            darkMode={darkMode}
             title="Total Products"
             value={totalProducts}
-            color="blue"
+            color="arches"
           />
           <KpiCard
             icon={<ChartBarIcon className="h-6 w-6" />}
             title="Total Value"
             value={`$${totalValue.toFixed(0)}`}
-            color="green"
+            color="teal"
+            darkMode={darkMode}
           />
           <KpiCard
             icon={<TagIcon className="h-6 w-6" />}
             title="Avg Price"
             value={`$${avgPrice}`}
-            color="purple"
+            color="hof"
+            darkMode={darkMode}
           />
           <KpiCard
             icon={<XMarkIcon className="h-6 w-6" />}
             title="Low Stock"
             value={lowStockCount}
-            color="red"
+            color="coral"
+            darkMode={darkMode}
             alert={lowStockCount > 0}
           />
         </div>
 
         {/* FILTERS */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className={`rounded-2xl shadow-sm border p-6 ${darkMode ? 'bg-warm-900 border-warm-800' : 'bg-white border-warm-100'}`}>
           <div className="flex flex-col lg:flex-row gap-4">
 
             {/* Search */}
             <div className="relative flex-1">
-              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
+              <MagnifyingGlassIcon className={`h-5 w-5 absolute left-3 top-3 ${darkMode ? 'text-warm-500' : 'text-warm-400'}`} />
               <input
                 type="text"
                 placeholder="Search by name or ASIN..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-10 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                className={`w-full pl-10 pr-10 py-3 rounded-xl border-2 focus:ring-2 focus:ring-arches-500 focus:border-transparent outline-none transition ${darkMode
+                    ? 'bg-warm-800 border-warm-700 text-white placeholder-warm-500'
+                    : 'bg-warm-50 border-warm-200 text-warm-900 placeholder-warm-400'
+                  }`}
               />
               {search && (
                 <button
                   onClick={() => setSearch("")}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  className={`absolute right-3 top-3 ${darkMode ? 'text-warm-500 hover:text-warm-300' : 'text-warm-400 hover:text-warm-600'}`}
                 >
                   <XMarkIcon className="h-5 w-5" />
                 </button>
@@ -332,7 +344,10 @@ export default function Products() {
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition bg-white font-medium text-sm"
+                className={`px-4 py-2.5 rounded-xl border-2 focus:ring-2 focus:ring-arches-500 outline-none transition font-medium text-sm ${darkMode
+                    ? 'bg-warm-800 border-warm-700 text-white'
+                    : 'bg-white border-warm-200 text-warm-700'
+                  }`}
               >
                 <option value="All">All Categories</option>
                 {categories.map((cat) => (
@@ -344,7 +359,10 @@ export default function Products() {
               <select
                 value={stockFilter}
                 onChange={(e) => setStockFilter(e.target.value)}
-                className="px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition bg-white font-medium text-sm"
+                className={`px-4 py-2.5 rounded-xl border-2 focus:ring-2 focus:ring-arches-500 outline-none transition font-medium text-sm ${darkMode
+                    ? 'bg-warm-800 border-warm-700 text-white'
+                    : 'bg-white border-warm-200 text-warm-700'
+                  }`}
               >
                 <option value="all">All Stock</option>
                 <option value="low">Low (&lt; 10)</option>
@@ -356,7 +374,10 @@ export default function Products() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition bg-white font-medium text-sm"
+                className={`px-4 py-2.5 rounded-xl border-2 focus:ring-2 focus:ring-arches-500 outline-none transition font-medium text-sm ${darkMode
+                    ? 'bg-warm-800 border-warm-700 text-white'
+                    : 'bg-white border-warm-200 text-warm-700'
+                  }`}
               >
                 <option value="none">Sort by... </option>
                 <option value="name-asc">Name: A → Z</option>
@@ -368,21 +389,21 @@ export default function Products() {
               </select>
 
               {/* View Toggle */}
-              <div className="flex gap-2 border-2 border-gray-200 rounded-lg p-1">
+              <div className={`flex gap-2 rounded-xl p-1 ${darkMode ? 'bg-warm-800' : 'border-2 border-warm-200'}`}>
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded-md transition ${viewMode === "grid"
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-600 hover:bg-gray-100"
+                  className={`p-2 rounded-lg transition ${viewMode === "grid"
+                    ? "bg-arches-500 text-white"
+                    : darkMode ? "text-warm-400 hover:bg-warm-700" : "text-warm-600 hover:bg-warm-100"
                     }`}
                 >
                   <Squares2X2Icon className="h-5 w-5" />
                 </button>
                 <button
                   onClick={() => setViewMode("list")}
-                  className={`p-2 rounded-md transition ${viewMode === "list"
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-600 hover:bg-gray-100"
+                  className={`p-2 rounded-lg transition ${viewMode === "list"
+                    ? "bg-arches-500 text-white"
+                    : darkMode ? "text-warm-400 hover:bg-warm-700" : "text-warm-600 hover:bg-warm-100"
                     }`}
                 >
                   <ListBulletIcon className="h-5 w-5" />
@@ -393,16 +414,16 @@ export default function Products() {
 
           {/* Active Filters */}
           {(search || categoryFilter !== "All" || stockFilter !== "all") && (
-            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-200">
-              <span className="text-sm text-gray-600 font-medium">Active Filters:</span>
+            <div className={`flex flex-wrap gap-2 mt-4 pt-4 border-t ${darkMode ? 'border-warm-700' : 'border-warm-200'}`}>
+              <span className={`text-sm font-medium ${darkMode ? 'text-warm-400' : 'text-warm-600'}`}>Active Filters:</span>
               {search && (
-                <FilterTag label={`Search: "${search}"`} onRemove={() => setSearch("")} />
+                <FilterTag label={`Search: "${search}"`} onRemove={() => setSearch("")} darkMode={darkMode} />
               )}
               {categoryFilter !== "All" && (
-                <FilterTag label={`Category: ${categoryFilter}`} onRemove={() => setCategoryFilter("All")} />
+                <FilterTag label={`Category: ${categoryFilter}`} onRemove={() => setCategoryFilter("All")} darkMode={darkMode} />
               )}
               {stockFilter !== "all" && (
-                <FilterTag label={`Stock: ${stockFilter}`} onRemove={() => setStockFilter("all")} />
+                <FilterTag label={`Stock: ${stockFilter}`} onRemove={() => setStockFilter("all")} darkMode={darkMode} />
               )}
             </div>
           )}
@@ -483,33 +504,39 @@ export default function Products() {
     COMPONENTS
 ------------------------------------------ */
 
-function KpiCard({ icon, title, value, color, alert }) {
+function KpiCard({ icon, title, value, color, alert, darkMode }) {
   const colorClasses = {
-    blue: "text-blue-600 bg-blue-50",
-    green: "text-green-600 bg-green-50",
-    purple: "text-purple-600 bg-purple-50",
-    red: "text-red-600 bg-red-50",
+    coral: { icon: "from-coral-500 to-coral-600", text: "text-coral-500" },
+    teal: { icon: "from-teal-500 to-teal-600", text: "text-teal-500" },
+    arches: { icon: "from-arches-500 to-arches-600", text: "text-arches-500" },
+    hof: { icon: "from-hof-400 to-hof-500", text: "text-hof-500" },
   };
 
+  const colors = colorClasses[color] || colorClasses.arches;
+
   return (
-    <div className={`bg-white rounded-xl shadow-sm border p-5 ${alert ? 'border-red-300 bg-red-50/50' : 'border-gray-100'}`}>
+    <div className={`rounded-2xl shadow-sm border p-5 transition-all hover:shadow-lg ${alert
+        ? darkMode ? 'bg-coral-500/10 border-coral-600' : 'border-coral-300 bg-coral-50/50'
+        : darkMode ? 'bg-warm-900 border-warm-800' : 'bg-white border-warm-100'
+      }`}>
       <div className="flex items-center justify-between mb-3">
-        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
+        <div className={`p-3 rounded-xl bg-gradient-to-br ${colors.icon} text-white shadow-lg`}>
           {icon}
         </div>
-        {alert && <span className="text-xs font-bold text-red-600 animate-pulse">!</span>}
+        {alert && <span className="text-xs font-bold text-coral-500 animate-pulse">⚠</span>}
       </div>
-      <p className="text-sm text-gray-600 mb-1">{title}</p>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
+      <p className={`text-sm mb-1 ${darkMode ? 'text-warm-400' : 'text-warm-600'}`}>{title}</p>
+      <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-warm-900'}`}>{value}</p>
     </div>
   );
 }
 
-function FilterTag({ label, onRemove }) {
+function FilterTag({ label, onRemove, darkMode }) {
   return (
-    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium flex items-center gap-1">
+    <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${darkMode ? 'bg-arches-500/20 text-arches-400' : 'bg-arches-100 text-arches-700'
+      }`}>
       {label}
-      <button onClick={onRemove} className="hover:text-blue-900">
+      <button onClick={onRemove} className={darkMode ? 'hover:text-arches-300' : 'hover:text-arches-900'}>
         <XMarkIcon className="h-3 w-3" />
       </button>
     </span>
