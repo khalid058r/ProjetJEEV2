@@ -46,7 +46,7 @@ export default function ProductDetails() {
       setSelectedImage(p.imageUrl);
     } catch (err) {
       showToast("Failed to load product", "error");
-      navigate("/products");
+      navigate("/admin/products");
     }
     setLoading(false);
   };
@@ -55,14 +55,14 @@ export default function ProductDetails() {
     try {
       await deleteProduct(id);
       showToast("Product deleted successfully", "success");
-      navigate("/products");
+      navigate("/admin/products");
     } catch (err) {
       showToast(err.response?.data?.message || "Cannot delete product", "error");
     }
   };
 
   const handleEdit = () => {
-    navigate("/products", { state: { editProductId: id } });
+    navigate("/admin/products", { state: { editProductId: id } });
   };
 
   if (loading) {
@@ -79,7 +79,7 @@ export default function ProductDetails() {
       <div className="flex flex-col items-center justify-center min-h-screen">
         <p className="text-red-500 text-lg mb-4">Product not found</p>
         <button
-          onClick={() => navigate("/products")}
+          onClick={() => navigate("/admin/products")}
           className="text-blue-600 hover:underline"
         >
           Back to Products
@@ -101,11 +101,11 @@ export default function ProductDetails() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 p-8">
-      
+
       {/* BREADCRUMB */}
       <div className="mb-6">
         <button
-          onClick={() => navigate("/products")}
+          onClick={() => navigate("/admin/products")}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition"
         >
           <ArrowLeftIcon className="h-4 w-4" />
@@ -115,7 +115,7 @@ export default function ProductDetails() {
 
       {/* MAIN CONTENT */}
       <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-        
+
         {/* HEADER */}
         <div className="bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -149,7 +149,7 @@ export default function ProductDetails() {
 
         {/* CONTENT GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
-          
+
           {/* LEFT:  IMAGE GALLERY */}
           <div className="space-y-4">
             <div className="relative group">
@@ -167,16 +167,15 @@ export default function ProductDetails() {
             </div>
 
             <div className="grid grid-cols-4 gap-3">
-              {product.gallery. map((img, idx) => (
+              {product.gallery.map((img, idx) => (
                 <img
                   key={idx}
                   src={img}
                   alt={`Gallery ${idx + 1}`}
-                  className={`w-full h-24 object-cover rounded-lg cursor-pointer transition-all duration-300 ${
-                    selectedImage === img
+                  className={`w-full h-24 object-cover rounded-lg cursor-pointer transition-all duration-300 ${selectedImage === img
                       ? "ring-4 ring-blue-500 scale-105"
                       : "hover:ring-2 hover:ring-gray-300 opacity-70 hover:opacity-100"
-                  }`}
+                    }`}
                   onClick={() => setSelectedImage(img)}
                 />
               ))}
@@ -194,7 +193,7 @@ export default function ProductDetails() {
                 icon={<ArchiveBoxIcon className="h-5 w-5" />}
                 label="In Stock"
                 value={product.stock}
-                color={stockStatus === "high" ? "green" :  stockStatus === "medium" ? "yellow" : "red"}
+                color={stockStatus === "high" ? "green" : stockStatus === "medium" ? "yellow" : "red"}
               />
               <AdminStatCard
                 icon={<ChartBarIcon className="h-5 w-5" />}
@@ -207,7 +206,7 @@ export default function ProductDetails() {
 
           {/* RIGHT: ADMIN INFO */}
           <div className="space-y-6">
-            
+
             {/* ✅ INVENTORY OVERVIEW - Pour Admin */}
             <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-2xl border-2 border-blue-100">
               <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
@@ -217,7 +216,7 @@ export default function ProductDetails() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-gray-600 mb-1">Unit Price</p>
-                  <p className="text-3xl font-bold text-blue-600">${product. price}</p>
+                  <p className="text-3xl font-bold text-blue-600">${product.price}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-600 mb-1">Total Value</p>
@@ -236,11 +235,11 @@ export default function ProductDetails() {
 
             {/* ✅ PRODUCT STATUS - Pour Admin */}
             <div className="grid grid-cols-2 gap-4">
-              
+
               {/* Stock Status */}
               <div className={`p-5 rounded-xl border-2 ${stockColor[stockStatus]}`}>
                 <div className="flex items-center gap-2 mb-2">
-                  {product.stock > 10 ?  (
+                  {product.stock > 10 ? (
                     <CheckCircleIcon className="h-6 w-6" />
                   ) : (
                     <XCircleIcon className="h-6 w-6" />
@@ -262,8 +261,8 @@ export default function ProductDetails() {
                   <span className="font-bold">Category</span>
                 </div>
                 <p className="text-2xl font-bold mb-1">{product.categoryName}</p>
-                <button 
-                  onClick={() => navigate(`/categories/${product.categoryId}`)}
+                <button
+                  onClick={() => navigate(`/admin/categories/${product.categoryId}`)}
                   className="text-sm font-medium hover:underline"
                 >
                   View category →
@@ -283,16 +282,15 @@ export default function ProductDetails() {
                     {[1, 2, 3, 4, 5].map((star) => (
                       <StarSolid
                         key={star}
-                        className={`h-7 w-7 ${
-                          star <= Math.round(product.rating)
+                        className={`h-7 w-7 ${star <= Math.round(product.rating)
                             ? "text-yellow-400"
                             : "text-gray-300"
-                        }`}
+                          }`}
                       />
                     ))}
                   </div>
                   <div>
-                    <p className="text-3xl font-bold text-gray-900">{product.rating. toFixed(1)}</p>
+                    <p className="text-3xl font-bold text-gray-900">{product.rating.toFixed(1)}</p>
                     <p className="text-sm text-gray-600">{product.reviewCount} reviews</p>
                   </div>
                 </div>
@@ -305,7 +303,7 @@ export default function ProductDetails() {
                 <DocumentTextIcon className="h-6 w-6 text-blue-600" />
                 Product Information
               </h3>
-              
+
               <InfoRow label="Product ID" value={`#${product.id}`} />
               <InfoRow label="ASIN" value={product.asin || "Not set"} />
               <InfoRow label="Category" value={product.categoryName} />
@@ -313,13 +311,13 @@ export default function ProductDetails() {
               <InfoRow label="Current Stock" value={`${product.stock} units`} />
               <InfoRow label="Inventory Value" value={`$${inventoryValue}`} />
               {product.rank && <InfoRow label="Sales Rank" value={`#${product.rank}`} />}
-              <InfoRow 
-                label="Last Updated" 
-                value={new Date().toLocaleDateString('en-US', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })} 
+              <InfoRow
+                label="Last Updated"
+                value={new Date().toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
               />
             </div>
 
@@ -336,13 +334,13 @@ export default function ProductDetails() {
                 <ActionButton
                   icon={<EyeIcon className="h-5 w-5" />}
                   label="View Sales"
-                  onClick={() => navigate(`/sales?productId=${product.id}`)}
+                  onClick={() => navigate(`/admin/sales?productId=${product.id}`)}
                   color="green"
                 />
                 <ActionButton
                   icon={<ChartBarIcon className="h-5 w-5" />}
                   label="Analytics"
-                  onClick={() => navigate(`/analytics/products`)}
+                  onClick={() => navigate(`/admin/analytics/products`)}
                   color="purple"
                 />
                 <ActionButton
@@ -359,7 +357,7 @@ export default function ProductDetails() {
         {/* FOOTER */}
         <div className="bg-gray-50 px-8 py-6 border-t flex justify-between items-center">
           <button
-            onClick={() => navigate("/products")}
+            onClick={() => navigate("/admin/products")}
             className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold"
           >
             <ArrowLeftIcon className="h-5 w-5" />
@@ -408,7 +406,7 @@ function AdminStatCard({ icon, label, value, color }) {
     blue: "text-blue-600 bg-blue-50 border-blue-200",
     green: "text-green-600 bg-green-50 border-green-200",
     yellow: "text-yellow-600 bg-yellow-50 border-yellow-200",
-    red:  "text-red-600 bg-red-50 border-red-200",
+    red: "text-red-600 bg-red-50 border-red-200",
     purple: "text-purple-600 bg-purple-50 border-purple-200",
   };
 

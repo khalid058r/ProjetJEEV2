@@ -1,0 +1,5 @@
+export { default as AdminLayout } from './AdminLayout'
+export { default as VendeurLayout } from './VendeurLayout'
+export { default as AnalystLayout } from './AnalystLayout'
+export { default as InvestorLayout } from './InvestorLayout'
+export { default as AuthLayout } from './AuthLayout'

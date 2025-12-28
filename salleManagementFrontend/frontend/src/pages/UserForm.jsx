@@ -20,7 +20,7 @@ export default function UserForm() {
 
   const [form, setForm] = useState({
     username: "",
-    email:  "",
+    email: "",
     password: "",
     role: "VENDEUR",
   });
@@ -39,26 +39,26 @@ export default function UserForm() {
     try {
       const res = await getUser(id);
       setForm({
-        username: res.data. username,
-        email: res. data.email,
+        username: res.data.username,
+        email: res.data.email,
         password: "",
         role: res.data.role,
       });
     } catch (err) {
       showToast("Failed to load user", "error");
-      navigate("/users");
+      navigate("/admin/users");
     }
     setLoadingData(false);
   };
 
   const handleChange = (e) =>
-    setForm({ ...form, [e.target. name]: e.target.value });
+    setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validation
-    if (!form. username. trim()) {
+    if (!form.username.trim()) {
       showToast("Username is required", "error");
       return;
     }
@@ -66,7 +66,7 @@ export default function UserForm() {
       showToast("Email is required", "error");
       return;
     }
-    if (! isEdit && !form.password) {
+    if (!isEdit && !form.password) {
       showToast("Password is required for new users", "error");
       return;
     }
@@ -81,7 +81,7 @@ export default function UserForm() {
         await createUser(form);
         showToast("User created successfully!", "success");
       }
-      navigate("/users");
+      navigate("/admin/users");
     } catch (err) {
       showToast(
         err.response?.data?.message || `Failed to ${isEdit ? "update" : "create"} user`,
@@ -94,7 +94,7 @@ export default function UserForm() {
 
   const roles = [
     { value: "ADMIN", label: "Admin", icon: "👑", description: "Full system access", color: "from-red-500 to-pink-500" },
-    { value: "VENDEUR", label:  "Vendeur", icon: "🛒", description: "Sales management", color: "from-green-500 to-emerald-500" },
+    { value: "VENDEUR", label: "Vendeur", icon: "🛒", description: "Sales management", color: "from-green-500 to-emerald-500" },
     { value: "ANALYSTE", label: "Analyste", icon: "📊", description: "Analytics access", color: "from-blue-500 to-cyan-500" },
     { value: "ACHETEUR", label: "Acheteur", icon: "🛍️", description: "Purchase orders", color: "from-purple-500 to-pink-500" },
     { value: "INVESTISSEUR", label: "Investisseur", icon: "💼", description: "Financial reports", color: "from-orange-500 to-red-500" },
@@ -111,11 +111,11 @@ export default function UserForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-purple-50/30 p-8">
-      
+
       {/* BREADCRUMB */}
       <div className="mb-6">
         <button
-          onClick={() => navigate("/users")}
+          onClick={() => navigate("/admin/users")}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition"
         >
           <ArrowLeftIcon className="h-4 w-4" />
@@ -126,7 +126,7 @@ export default function UserForm() {
       {/* FORM CARD */}
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          
+
           {/* HEADER */}
           <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-6">
             <div className="flex items-center gap-4">
@@ -147,7 +147,7 @@ export default function UserForm() {
           {/* FORM */}
           <form onSubmit={handleSubmit} className="p-8">
             <div className="space-y-6">
-              
+
               {/* Username */}
               <FormField label="Username" required>
                 <div className="relative">
@@ -185,8 +185,8 @@ export default function UserForm() {
               </FormField>
 
               {/* Password */}
-              <FormField 
-                label="Password" 
+              <FormField
+                label="Password"
                 required={!isEdit}
                 helper={isEdit ? "Leave blank to keep current password" : undefined}
               >
@@ -212,11 +212,10 @@ export default function UserForm() {
                   {roles.map((role) => (
                     <label
                       key={role.value}
-                      className={`relative flex flex-col p-5 border-2 rounded-xl cursor-pointer transition-all duration-300 ${
-                        form.role === role.value
+                      className={`relative flex flex-col p-5 border-2 rounded-xl cursor-pointer transition-all duration-300 ${form.role === role.value
                           ? "border-purple-500 bg-purple-50 shadow-md scale-105"
                           : "border-gray-200 hover: border-purple-300 hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       <input
                         type="radio"
@@ -226,7 +225,7 @@ export default function UserForm() {
                         onChange={handleChange}
                         className="sr-only"
                       />
-                      
+
                       <div className="flex items-start gap-3 mb-2">
                         <span className="text-3xl">{role.icon}</span>
                         <div className="flex-1">
@@ -254,7 +253,7 @@ export default function UserForm() {
             <div className="flex gap-4 mt-8 pt-6 border-t">
               <button
                 type="button"
-                onClick={() => navigate("/users")}
+                onClick={() => navigate("/admin/users")}
                 className="flex-1 px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold"
               >
                 Cancel
@@ -274,7 +273,7 @@ export default function UserForm() {
                     {isEdit ? "Updating..." : "Creating..."}
                   </span>
                 ) : (
-                  <span>{isEdit ? "Update User" :  "Create User"}</span>
+                  <span>{isEdit ? "Update User" : "Create User"}</span>
                 )}
               </button>
             </div>

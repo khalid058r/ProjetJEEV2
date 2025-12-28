@@ -365,7 +365,7 @@ export default function Users() {
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => navigate(`/users/${u.id}`)}
+                            onClick={() => navigate(`/admin/users/${u.id}`)}
                             className={`p-2 rounded-xl transition ${darkMode ? 'bg-teal-500/20 text-teal-400 hover:bg-teal-500/30' : 'bg-teal-50 text-teal-600 hover:bg-teal-100'}`}
                             title="Edit User"
                           >

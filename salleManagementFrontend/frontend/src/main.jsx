@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import AppRouter from "./router/AppRouter";
+import AppRouter from "./router/AppRouterNew";
 import "./index.css";
 import { ThemeProvider } from "./context/ThemeContext";
 import { UserProvider } from "./context/UserContext";

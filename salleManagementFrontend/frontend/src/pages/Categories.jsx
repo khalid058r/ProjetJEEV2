@@ -59,7 +59,7 @@ export default function Categories() {
   // CREATE CATEGORY
   // ---------------------------------
   const addCategory = async () => {
-    if (!form.name. trim()) {
+    if (!form.name.trim()) {
       showToast("Category name is required", "error");
       return;
     }
@@ -95,7 +95,7 @@ export default function Categories() {
   // Filter categories by search
   const filteredCategories = categories.filter(cat =>
     cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cat.description?. toLowerCase().includes(searchTerm. toLowerCase())
+    cat.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Category colors for visual variety
@@ -110,7 +110,7 @@ export default function Categories() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 p-8">
-      
+
       {/* HEADER */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
@@ -181,7 +181,7 @@ export default function Categories() {
           <p className="text-gray-400 text-sm mb-6">
             {searchTerm ? "Try a different search term" : "Get started by creating your first category"}
           </p>
-          {! searchTerm && (
+          {!searchTerm && (
             <button
               onClick={() => setShowModal(true)}
               className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
@@ -197,7 +197,7 @@ export default function Categories() {
             <div
               key={cat.id}
               className="group bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
-              onClick={() => navigate(`/categories/${cat.id}`)}
+              onClick={() => navigate(`/admin/categories/${cat.id}`)}
             >
               {/* Gradient Header */}
               <div className={`h-24 bg-gradient-to-br ${categoryColors[index % categoryColors.length]} p-5 relative overflow-hidden`}>
@@ -220,8 +220,8 @@ export default function Categories() {
                 <div className="flex justify-end gap-2 mt-5 pt-4 border-t border-gray-100">
                   <button
                     onClick={(e) => {
-                      e. stopPropagation();
-                      navigate(`/categories/${cat.id}`);
+                      e.stopPropagation();
+                      navigate(`/admin/categories/${cat.id}`);
                     }}
                     className="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition group-hover:scale-110"
                     title="Edit"
@@ -232,7 +232,7 @@ export default function Categories() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      removeCategory(cat. id);
+                      removeCategory(cat.id);
                     }}
                     className="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition group-hover:scale-110"
                     title="Delete"
@@ -250,7 +250,7 @@ export default function Categories() {
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg transform animate-slideUp">
-            
+
             {/* Modal Header */}
             <div className="bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-5 rounded-t-2xl flex items-center justify-between">
               <div className="flex items-center gap-3">

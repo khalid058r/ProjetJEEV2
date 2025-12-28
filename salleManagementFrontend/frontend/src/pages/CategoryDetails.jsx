@@ -44,7 +44,7 @@ export default function CategoryDetails() {
       setCategory(res.data);
 
       const p = await getCategoryProducts(id);
-      setProducts(p. data);
+      setProducts(p.data);
     } catch (err) {
       console.error(err);
       showToast("Failed to load category details", "error");
@@ -70,7 +70,7 @@ export default function CategoryDetails() {
       <div className="flex flex-col items-center justify-center min-h-screen">
         <p className="text-red-500 text-lg">Category not found</p>
         <button
-          onClick={() => navigate("/categories")}
+          onClick={() => navigate("/admin/categories")}
           className="mt-4 text-blue-600 hover:underline"
         >
           Back to Categories
@@ -83,7 +83,7 @@ export default function CategoryDetails() {
       KPI CALCULATIONS
   -------------------------------------------- */
   const totalProducts = products.length;
-  const totalStock = products. reduce((s, p) => s + (p.stock || 0), 0);
+  const totalStock = products.reduce((s, p) => s + (p.stock || 0), 0);
   const avgPrice =
     totalProducts > 0
       ? (products.reduce((s, p) => s + (p.price || 0), 0) / totalProducts).toFixed(2)
@@ -113,18 +113,18 @@ export default function CategoryDetails() {
       if (sortBy === "stock-asc") return a.stock - b.stock;
       if (sortBy === "stock-desc") return b.stock - a.stock;
       if (sortBy === "sales") return (b.salesCount || 0) - (a.salesCount || 0);
-      return a.title. localeCompare(b.title);
+      return a.title.localeCompare(b.title);
     });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-purple-50/30 p-8">
-      
+
       {/* -----------------------------------------
           HEADER WITH BREADCRUMB
       ------------------------------------------ */}
       <div className="mb-6">
         <button
-          onClick={() => navigate("/categories")}
+          onClick={() => navigate("/admin/categories")}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition"
         >
           <ArrowLeftIcon className="h-4 w-4" />
@@ -132,13 +132,13 @@ export default function CategoryDetails() {
         </button>
 
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          
+
           {/* Gradient Header */}
           <div className="bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 px-8 py-10 relative overflow-hidden">
             <div className="absolute top-0 right-0 opacity-20">
               <SparklesIcon className="h-40 w-40 text-white" />
             </div>
-            
+
             <div className="relative flex items-start justify-between">
               <div className="flex items-center gap-4">
                 <div className="p-4 bg-white/20 backdrop-blur-sm rounded-2xl">
@@ -153,7 +153,7 @@ export default function CategoryDetails() {
               </div>
 
               <button
-                onClick={() => navigate("/products")}
+                onClick={() => navigate("/admin/products")}
                 className="flex items-center gap-2 bg-white text-purple-600 px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all font-semibold"
               >
                 <PlusIcon className="h-5 w-5" />
@@ -166,7 +166,7 @@ export default function CategoryDetails() {
               KPI CARDS INLINE
           ------------------------------------------ */}
           <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-gray-200">
-            
+
             <KpiCard
               icon={<CubeIcon className="h-6 w-6" />}
               title="Products"
@@ -177,7 +177,7 @@ export default function CategoryDetails() {
             <KpiCard
               icon={<ChartBarIcon className="h-6 w-6" />}
               title="Total Stock"
-              value={totalStock. toLocaleString()}
+              value={totalStock.toLocaleString()}
               color="green"
             />
 
@@ -212,7 +212,7 @@ export default function CategoryDetails() {
       ------------------------------------------ */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
         <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-          
+
           {/* Search */}
           <div className="relative flex-1 w-full lg:max-w-md">
             <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
@@ -235,11 +235,11 @@ export default function CategoryDetails() {
 
           {/* Filters */}
           <div className="flex flex-wrap gap-3">
-            
+
             {/* Price Filter */}
             <select
               value={priceFilter}
-              onChange={(e) => setPriceFilter(e.target. value)}
+              onChange={(e) => setPriceFilter(e.target.value)}
               className="px-4 py-2. 5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition bg-white font-medium text-sm"
             >
               <option value="all">All Prices</option>
@@ -266,21 +266,19 @@ export default function CategoryDetails() {
             <div className="flex gap-2 border-2 border-gray-200 rounded-lg p-1">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 rounded-md transition ${
-                  viewMode === "grid"
+                className={`p-2 rounded-md transition ${viewMode === "grid"
                     ? "bg-purple-600 text-white"
                     : "text-gray-600 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <Squares2X2Icon className="h-5 w-5" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 rounded-md transition ${
-                  viewMode === "list"
+                className={`p-2 rounded-md transition ${viewMode === "list"
                     ? "bg-purple-600 text-white"
                     : "text-gray-600 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <ListBulletIcon className="h-5 w-5" />
               </button>
@@ -375,7 +373,7 @@ function ProductCardGrid({ product, navigate }) {
   return (
     <div
       className="group bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
-      onClick={() => navigate(`/products/${product.id}`)}
+      onClick={() => navigate(`/admin/products/${product.id}`)}
     >
       <div className="relative overflow-hidden bg-gray-100">
         <img
@@ -418,7 +416,7 @@ function ProductCardList({ product, navigate }) {
   return (
     <div
       className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition cursor-pointer flex gap-5"
-      onClick={() => navigate(`/products/${product.id}`)}
+      onClick={() => navigate(`/admin/products/${product.id}`)}
     >
       <img
         src={product.imageUrl}
@@ -436,7 +434,7 @@ function ProductCardList({ product, navigate }) {
           {product.salesCount !== undefined && (
             <span className="flex items-center gap-1 text-green-600 font-medium">
               <TrophyIcon className="h-4 w-4" />
-              {product. salesCount} sales
+              {product.salesCount} sales
             </span>
           )}
         </div>

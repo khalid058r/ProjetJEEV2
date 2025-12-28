@@ -323,8 +323,8 @@ export default function Products() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className={`w-full pl-10 pr-10 py-3 rounded-xl border-2 focus:ring-2 focus:ring-arches-500 focus:border-transparent outline-none transition ${darkMode
-                    ? 'bg-warm-800 border-warm-700 text-white placeholder-warm-500'
-                    : 'bg-warm-50 border-warm-200 text-warm-900 placeholder-warm-400'
+                  ? 'bg-warm-800 border-warm-700 text-white placeholder-warm-500'
+                  : 'bg-warm-50 border-warm-200 text-warm-900 placeholder-warm-400'
                   }`}
               />
               {search && (
@@ -345,8 +345,8 @@ export default function Products() {
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
                 className={`px-4 py-2.5 rounded-xl border-2 focus:ring-2 focus:ring-arches-500 outline-none transition font-medium text-sm ${darkMode
-                    ? 'bg-warm-800 border-warm-700 text-white'
-                    : 'bg-white border-warm-200 text-warm-700'
+                  ? 'bg-warm-800 border-warm-700 text-white'
+                  : 'bg-white border-warm-200 text-warm-700'
                   }`}
               >
                 <option value="All">All Categories</option>
@@ -360,8 +360,8 @@ export default function Products() {
                 value={stockFilter}
                 onChange={(e) => setStockFilter(e.target.value)}
                 className={`px-4 py-2.5 rounded-xl border-2 focus:ring-2 focus:ring-arches-500 outline-none transition font-medium text-sm ${darkMode
-                    ? 'bg-warm-800 border-warm-700 text-white'
-                    : 'bg-white border-warm-200 text-warm-700'
+                  ? 'bg-warm-800 border-warm-700 text-white'
+                  : 'bg-white border-warm-200 text-warm-700'
                   }`}
               >
                 <option value="all">All Stock</option>
@@ -375,8 +375,8 @@ export default function Products() {
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className={`px-4 py-2.5 rounded-xl border-2 focus:ring-2 focus:ring-arches-500 outline-none transition font-medium text-sm ${darkMode
-                    ? 'bg-warm-800 border-warm-700 text-white'
-                    : 'bg-white border-warm-200 text-warm-700'
+                  ? 'bg-warm-800 border-warm-700 text-white'
+                  : 'bg-white border-warm-200 text-warm-700'
                   }`}
               >
                 <option value="none">Sort by... </option>
@@ -453,7 +453,7 @@ export default function Products() {
               product={p}
               onEdit={() => openEditModal(p)}
               onDelete={() => setConfirmDeleteId(p.id)}
-              onClick={() => navigate(`/products/${p.id}`)}
+              onClick={() => navigate(`/admin/products/${p.id}`)}
             />
           ))}
         </div>
@@ -465,7 +465,7 @@ export default function Products() {
               product={p}
               onEdit={() => openEditModal(p)}
               onDelete={() => setConfirmDeleteId(p.id)}
-              onClick={() => navigate(`/products/${p.id}`)}
+              onClick={() => navigate(`/admin/products/${p.id}`)}
             />
           ))}
         </div>
@@ -516,8 +516,8 @@ function KpiCard({ icon, title, value, color, alert, darkMode }) {
 
   return (
     <div className={`rounded-2xl shadow-sm border p-5 transition-all hover:shadow-lg ${alert
-        ? darkMode ? 'bg-coral-500/10 border-coral-600' : 'border-coral-300 bg-coral-50/50'
-        : darkMode ? 'bg-warm-900 border-warm-800' : 'bg-white border-warm-100'
+      ? darkMode ? 'bg-coral-500/10 border-coral-600' : 'border-coral-300 bg-coral-50/50'
+      : darkMode ? 'bg-warm-900 border-warm-800' : 'bg-white border-warm-100'
       }`}>
       <div className="flex items-center justify-between mb-3">
         <div className={`p-3 rounded-xl bg-gradient-to-br ${colors.icon} text-white shadow-lg`}>
