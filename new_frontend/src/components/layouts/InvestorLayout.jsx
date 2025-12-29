@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     LayoutDashboard, TrendingUp, Package, FolderTree,
-    DollarSign, PieChart, LogOut, Menu, X, Moon, Sun, Bell, ChevronDown, User
+    DollarSign, PieChart, LogOut, Menu, X, Moon, Sun, Bell, ChevronDown, User, FileText
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -11,11 +11,10 @@ import { Avatar } from '../ui'
 
 const navigation = [
     { name: 'Dashboard', href: '/investor', icon: LayoutDashboard },
-    { name: 'Produits', href: '/investor/products', icon: Package },
-    { name: 'Catégories', href: '/investor/categories', icon: FolderTree },
     { name: 'Performance', href: '/investor/performance', icon: TrendingUp },
     { name: 'Financier', href: '/investor/financial', icon: DollarSign },
     { name: 'Portfolio', href: '/investor/portfolio', icon: PieChart },
+    { name: 'Rapports', href: '/investor/reports', icon: FileText },
 ]
 
 export default function InvestorLayout() {

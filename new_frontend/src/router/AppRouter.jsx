@@ -30,16 +30,29 @@ const AdminProfile = lazy(() => import('../pages/admin/Profile'))
 const VendeurDashboard = lazy(() => import('../pages/vendeur/Dashboard'))
 const VendeurNewSale = lazy(() => import('../pages/vendeur/NewSale'))
 const VendeurMySales = lazy(() => import('../pages/vendeur/MySales'))
+const VendeurStats = lazy(() => import('../pages/vendeur/Stats'))
+const VendeurProfile = lazy(() => import('../pages/vendeur/Profile'))
+const VendeurReports = lazy(() => import('../pages/vendeur/Reports'))
 
 // Analyst Pages
 const AnalystDashboard = lazy(() => import('../pages/analyst/Dashboard'))
 const AnalystPredictions = lazy(() => import('../pages/analyst/Predictions'))
 const AnalystReports = lazy(() => import('../pages/analyst/Reports'))
+const AnalystProfile = lazy(() => import('../pages/analyst/Profile'))
+const AnalystTrends = lazy(() => import('../pages/analyst/Trends'))
+const AnalystAlerts = lazy(() => import('../pages/analyst/Alerts'))
+const AnalystDataExplorer = lazy(() => import('../pages/analyst/DataExplorer'))
+const AnalystComparison = lazy(() => import('../pages/analyst/Comparison'))
+const AnalystProductsList = lazy(() => import('../pages/analyst/ProductsList'))
+const AnalystProductStats = lazy(() => import('../pages/analyst/ProductStats'))
 
 // Investor Pages
 const InvestorDashboard = lazy(() => import('../pages/investor/Dashboard'))
 const InvestorFinancial = lazy(() => import('../pages/investor/Financial'))
 const InvestorPerformance = lazy(() => import('../pages/investor/Performance'))
+const InvestorPortfolio = lazy(() => import('../pages/investor/Portfolio'))
+const InvestorReports = lazy(() => import('../pages/investor/Reports'))
+const InvestorProfile = lazy(() => import('../pages/investor/Profile'))
 
 // Suspense wrapper
 const SuspenseWrapper = ({ children }) => (
@@ -197,6 +210,9 @@ export default function AppRouter() {
                 <Route index element={<SuspenseWrapper><VendeurDashboard /></SuspenseWrapper>} />
                 <Route path="new-sale" element={<SuspenseWrapper><VendeurNewSale /></SuspenseWrapper>} />
                 <Route path="my-sales" element={<SuspenseWrapper><VendeurMySales /></SuspenseWrapper>} />
+                <Route path="stats" element={<SuspenseWrapper><VendeurStats /></SuspenseWrapper>} />
+                <Route path="reports" element={<SuspenseWrapper><VendeurReports /></SuspenseWrapper>} />
+                <Route path="profile" element={<SuspenseWrapper><VendeurProfile /></SuspenseWrapper>} />
             </Route>
 
             {/* Analyst routes */}
@@ -211,7 +227,14 @@ export default function AppRouter() {
                 <Route index element={<SuspenseWrapper><AnalystDashboard /></SuspenseWrapper>} />
                 <Route path="analytics" element={<SuspenseWrapper><AnalystDashboard /></SuspenseWrapper>} />
                 <Route path="predictions" element={<SuspenseWrapper><AnalystPredictions /></SuspenseWrapper>} />
+                <Route path="trends" element={<SuspenseWrapper><AnalystTrends /></SuspenseWrapper>} />
+                <Route path="explorer" element={<SuspenseWrapper><AnalystDataExplorer /></SuspenseWrapper>} />
+                <Route path="compare" element={<SuspenseWrapper><AnalystComparison /></SuspenseWrapper>} />
+                <Route path="products" element={<SuspenseWrapper><AnalystProductsList /></SuspenseWrapper>} />
+                <Route path="products/:id" element={<SuspenseWrapper><AnalystProductStats /></SuspenseWrapper>} />
+                <Route path="alerts" element={<SuspenseWrapper><AnalystAlerts /></SuspenseWrapper>} />
                 <Route path="reports" element={<SuspenseWrapper><AnalystReports /></SuspenseWrapper>} />
+                <Route path="profile" element={<SuspenseWrapper><AnalystProfile /></SuspenseWrapper>} />
             </Route>
 
             {/* Investor routes */}
@@ -224,11 +247,11 @@ export default function AppRouter() {
                 }
             >
                 <Route index element={<SuspenseWrapper><InvestorDashboard /></SuspenseWrapper>} />
-                <Route path="products" element={<SuspenseWrapper><InvestorDashboard /></SuspenseWrapper>} />
-                <Route path="categories" element={<SuspenseWrapper><InvestorDashboard /></SuspenseWrapper>} />
                 <Route path="performance" element={<SuspenseWrapper><InvestorPerformance /></SuspenseWrapper>} />
                 <Route path="financial" element={<SuspenseWrapper><InvestorFinancial /></SuspenseWrapper>} />
-                <Route path="portfolio" element={<SuspenseWrapper><InvestorDashboard /></SuspenseWrapper>} />
+                <Route path="portfolio" element={<SuspenseWrapper><InvestorPortfolio /></SuspenseWrapper>} />
+                <Route path="reports" element={<SuspenseWrapper><InvestorReports /></SuspenseWrapper>} />
+                <Route path="profile" element={<SuspenseWrapper><InvestorProfile /></SuspenseWrapper>} />
             </Route>
 
             {/* 404 */}

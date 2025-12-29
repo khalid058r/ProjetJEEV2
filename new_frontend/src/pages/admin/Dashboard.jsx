@@ -6,9 +6,9 @@ import {
     ArrowUpRight, ArrowDownRight, DollarSign, FolderTree,
     AlertTriangle, Bell, Clock, ExternalLink, Plus, BarChart3,
     Target, Zap, Activity, ArrowRight, Sparkles, CalendarDays,
-    CheckCircle2, XCircle, RefreshCw
+    CheckCircle2, XCircle, RefreshCw, Crown, Medal, Award
 } from 'lucide-react'
-import { productApi, saleApi, userApi, categoryApi } from '../../api'
+import { analyticsApi, saleApi, userApi } from '../../api'
 import { StatCard, Card, Loading, EmptyState, AlertBox, Badge } from '../../components/ui'
 import { AreaChartComponent, BarChartComponent, PieChartComponent } from '../../components/charts'
 import { formatCurrency, formatNumber, formatRelativeTime } from '../../utils/formatters'
@@ -20,14 +20,19 @@ export default function AdminDashboard() {
         categories: 0,
         sales: 0,
         users: 0,
-        revenue: 0
+        revenue: 0,
+        avgOrderValue: 0,
+        todaySales: 0,
+        todayRevenue: 0
     })
     const [recentSales, setRecentSales] = useState([])
     const [topProducts, setTopProducts] = useState([])
     const [salesByCategory, setSalesByCategory] = useState([])
     const [salesTrend, setSalesTrend] = useState([])
     const [lowStockProducts, setLowStockProducts] = useState([])
+    const [topVendeurs, setTopVendeurs] = useState([])
     const [loading, setLoading] = useState(true)
+    const [kpiData, setKpiData] = useState(null)
 
     useEffect(() => {
         fetchDashboardData()
@@ -37,92 +42,128 @@ export default function AdminDashboard() {
         try {
             setLoading(true)
 
-            // Fetch all data in parallel
-            const [productsRes, categoriesRes, salesRes, usersRes] = await Promise.all([
-                productApi.getAll().catch(() => ({ data: [] })),
-                categoryApi.getAll().catch(() => ({ data: [] })),
+            // 🚀 Utiliser les endpoints Analytics du backend pour de meilleures performances
+            const [
+                dashboardRes,
+                kpiRes,
+                bestSellersRes,
+                lowStockRes,
+                categoryStatsRes,
+                monthlySalesRes,
+                recentSalesRes,
+                usersRes
+            ] = await Promise.all([
+                analyticsApi.getDashboard().catch(() => ({ data: null })),
+                analyticsApi.getKPI().catch(() => ({ data: null })),
+                analyticsApi.getBestSellers(5).catch(() => ({ data: [] })),
+                analyticsApi.getLowStockProducts(10).catch(() => ({ data: [] })),
+                analyticsApi.getCategoryStats().catch(() => ({ data: [] })),
+                analyticsApi.getMonthlySales().catch(() => ({ data: null })),
                 saleApi.getAll().catch(() => ({ data: [] })),
                 userApi.getAll().catch(() => ({ data: [] }))
             ])
 
-            const products = productsRes.data || []
-            const categories = categoriesRes.data || []
-            const sales = salesRes.data || []
-            const users = usersRes.data || []
+            // Stats depuis le dashboard backend
+            const dashboard = dashboardRes.data
+            const kpi = kpiRes.data
 
-            // Calculate stats
-            const totalRevenue = sales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0)
+            // Structure backend: dashboard.kpi.totalProducts, kpi.totals.products, kpi.sales.salesCount
+            if (dashboard || kpi) {
+                setStats({
+                    products: dashboard?.kpi?.totalProducts || kpi?.totals?.products || 0,
+                    categories: dashboard?.kpi?.totalCategories || kpi?.totals?.categories || 0,
+                    sales: kpi?.sales?.salesCount || 0,
+                    users: kpi?.totals?.users || 0,
+                    revenue: kpi?.sales?.totalRevenue || 0,
+                    avgOrderValue: kpi?.sales?.averageBasket || 0,
+                    todaySales: kpi?.sales?.salesCount || 0,
+                    todayRevenue: kpi?.sales?.currentMonthRevenue || 0
+                })
+            }
 
-            setStats({
-                products: products.length,
-                categories: categories.length,
-                sales: sales.length,
-                users: users.length,
-                revenue: totalRevenue
-            })
+            setKpiData(kpi)
 
-            // Low stock products (stock < 10)
-            const lowStock = products.filter(p => p.stock < 10).sort((a, b) => a.stock - b.stock).slice(0, 5)
-            setLowStockProducts(lowStock)
+            // Low stock depuis l'API (plus rapide que filtrer localement)
+            // Backend retourne: { value: [...], Count: n }
+            const lowStockData = lowStockRes.data?.value || lowStockRes.data || []
+            setLowStockProducts(Array.isArray(lowStockData) ? lowStockData : [])
 
-            // Recent sales (sorted by date)
+            // Top products depuis l'API (calculé par le backend avec SQL optimisé)
+            // Backend retourne: { value: [...], Count: n } ou directement un array
+            const bestSellersData = bestSellersRes.data?.value || bestSellersRes.data || []
+            const bestSellers = Array.isArray(bestSellersData) ? bestSellersData : []
+            setTopProducts(bestSellers.map(p => ({
+                name: p.title || p.productName || 'Produit',
+                value: p.quantitySold || p.totalSold || p.quantity || 0
+            })))
+
+            // Sales by category depuis l'API
+            // Backend retourne: { value: [...], Count: n } ou directement un array
+            const categoryData = categoryStatsRes.data?.value || categoryStatsRes.data || []
+            const categoryStats = Array.isArray(categoryData) ? categoryData : []
+            setSalesByCategory(categoryStats.map(c => ({
+                name: c.categoryName || c.name || 'Catégorie',
+                value: c.totalRevenue || c.revenue || 0
+            })))
+
+            // Ventes récentes
+            const sales = recentSalesRes.data || []
             const sortedSales = [...sales].sort((a, b) =>
                 new Date(b.saleDate) - new Date(a.saleDate)
             )
             setRecentSales(sortedSales.slice(0, 5))
 
-            // Top products by sales (from lignes array)
-            const productSales = {}
-            sales.forEach(sale => {
-                if (sale.lignes && Array.isArray(sale.lignes)) {
-                    sale.lignes.forEach(ligne => {
-                        const productId = ligne.productId
-                        const productName = ligne.productTitle || 'Produit'
-                        const qty = ligne.quantity || 1
-                        if (productSales[productId]) {
-                            productSales[productId].value += qty
-                        } else {
-                            productSales[productId] = { name: productName, value: qty }
-                        }
-                    })
+            // Sales trend depuis l'API ou données mensuelles
+            // Backend retourne: { list: [...], map: {...} }
+            const monthlySales = monthlySalesRes.data
+            if (monthlySales && monthlySales.list && monthlySales.list.length > 0) {
+                // Utiliser les données mensuelles pour afficher le trend
+                setSalesTrend(monthlySales.list.map(m => ({
+                    name: m.month || 'Mois',
+                    value: m.revenue || 0
+                })))
+            } else {
+                // Fallback: derniers 7 jours depuis les ventes
+                const last7Days = getLast7DaysSales(sales)
+                setSalesTrend(last7Days)
+            }
+
+            // Top Vendeurs - calculer à partir des ventes et des utilisateurs
+            const users = usersRes.data || []
+            const vendeurs = users.filter(u => u.role === 'VENDEUR')
+            const vendeurStats = vendeurs.map(v => {
+                const vendeurSales = sales.filter(s => s.userId === v.id)
+                return {
+                    id: v.id,
+                    name: v.username || v.name || 'Vendeur',
+                    ventes: vendeurSales.length,
+                    revenue: vendeurSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0)
                 }
-            })
-            setTopProducts(Object.values(productSales).sort((a, b) => b.value - a.value).slice(0, 5))
-
-            // Sales by category (we need to match products with categories)
-            const productCategoryMap = {}
-            products.forEach(p => {
-                productCategoryMap[p.id] = p.categoryName || 'Autre'
-            })
-
-            const categorySales = {}
-            sales.forEach(sale => {
-                if (sale.lignes && Array.isArray(sale.lignes)) {
-                    sale.lignes.forEach(ligne => {
-                        const catName = productCategoryMap[ligne.productId] || 'Autre'
-                        const amount = ligne.lineTotal || 0
-                        if (categorySales[catName]) {
-                            categorySales[catName].value += amount
-                        } else {
-                            categorySales[catName] = { name: catName, value: amount }
-                        }
-                    })
-                }
-            })
-            setSalesByCategory(Object.values(categorySales))
-
-            // Sales trend (last 7 days mock)
-            const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
-            setSalesTrend(days.map(day => ({
-                name: day,
-                value: Math.floor(Math.random() * 50000) + 10000
-            })))
+            }).sort((a, b) => b.revenue - a.revenue)
+            setTopVendeurs(vendeurStats.slice(0, 3))
 
         } catch (error) {
             console.error('Error fetching dashboard data:', error)
         } finally {
             setLoading(false)
         }
+    }
+
+    // Helper pour calculer les ventes des 7 derniers jours
+    const getLast7DaysSales = (sales) => {
+        const days = []
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date()
+            date.setDate(date.getDate() - i)
+            const dateStr = date.toISOString().split('T')[0]
+            const daySales = sales.filter(s => s.saleDate?.startsWith(dateStr))
+            const revenue = daySales.reduce((sum, s) => sum + (s.totalAmount || 0), 0)
+            days.push({
+                name: date.toLocaleDateString('fr-FR', { weekday: 'short' }),
+                value: revenue
+            })
+        }
+        return days
     }
 
     if (loading) return <Loading />
@@ -297,54 +338,37 @@ export default function AdminDashboard() {
                     </Card>
                 </motion.div>
 
-                {/* Monthly Goals */}
+                {/* Top Vendeurs */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.45 }}
                 >
                     <Card className="p-6 h-full">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-semibold text-dark-900 dark:text-white flex items-center gap-2">
-                                <Target className="w-5 h-5 text-primary-500" />
-                                Objectifs du mois
-                            </h3>
+                        <div className="flex items-center gap-2 mb-4">
+                            <Crown className="w-5 h-5 text-yellow-500" />
+                            <h3 className="font-semibold text-dark-900 dark:text-white">Top Vendeurs</h3>
                         </div>
-                        <div className="space-y-4">
-                            {[
-                                { label: 'Ventes', current: stats.sales, target: 100, color: 'success' },
-                                { label: 'Nouveaux clients', current: stats.users, target: 50, color: 'primary' },
-                                { label: 'Produits vendus', current: stats.products * 3, target: 200, color: 'warning' },
-                            ].map((goal) => {
-                                const percent = Math.min((goal.current / goal.target) * 100, 100)
+                        <div className="space-y-3">
+                            {topVendeurs.length > 0 ? topVendeurs.map((vendeur, idx) => {
+                                const medals = [Crown, Medal, Award]
+                                const medalColors = ['text-yellow-500', 'text-gray-400', 'text-orange-500']
+                                const MedalIcon = medals[idx] || Medal
                                 return (
-                                    <div key={goal.label}>
-                                        <div className="flex items-center justify-between text-sm mb-1.5">
-                                            <span className="text-dark-600 dark:text-dark-400">{goal.label}</span>
-                                            <span className="font-medium text-dark-900 dark:text-white">
-                                                {goal.current}/{goal.target}
-                                            </span>
+                                    <div key={vendeur.id} className="flex items-center gap-3 p-2 rounded-xl bg-dark-50 dark:bg-dark-800">
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${idx === 0 ? 'bg-yellow-100 dark:bg-yellow-900/30' : idx === 1 ? 'bg-gray-100 dark:bg-gray-800' : 'bg-orange-100 dark:bg-orange-900/30'}`}>
+                                            <MedalIcon className={`w-5 h-5 ${medalColors[idx]}`} />
                                         </div>
-                                        <div className="h-2 bg-dark-100 dark:bg-dark-700 rounded-full overflow-hidden">
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${percent}%` }}
-                                                transition={{ duration: 1, delay: 0.5 }}
-                                                className={`h-full bg-gradient-to-r from-${goal.color}-500 to-${goal.color}-400 rounded-full`}
-                                            />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-dark-900 dark:text-white truncate">{vendeur.name}</p>
+                                            <p className="text-xs text-dark-500">{vendeur.ventes} ventes</p>
                                         </div>
+                                        <p className="font-bold text-success-600">{formatCurrency(vendeur.revenue)}</p>
                                     </div>
                                 )
-                            })}
-                        </div>
-                        <div className="mt-4 pt-4 border-t border-dark-100 dark:border-dark-700">
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-dark-500">Performance globale</span>
-                                <span className="flex items-center gap-1 text-success-600 font-medium">
-                                    <Zap className="w-4 h-4" />
-                                    78%
-                                </span>
-                            </div>
+                            }) : (
+                                <p className="text-center text-dark-400 py-4">Aucun vendeur</p>
+                            )}
                         </div>
                     </Card>
                 </motion.div>

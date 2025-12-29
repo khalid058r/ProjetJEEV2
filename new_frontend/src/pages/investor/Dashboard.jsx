@@ -5,7 +5,7 @@ import {
     TrendingUp, TrendingDown, DollarSign, BarChart3, PieChart,
     ArrowUpRight, Package, ShoppingCart, Eye
 } from 'lucide-react'
-import { saleApi, productApi, categoryApi } from '../../api'
+import { saleApi, productApi, categoryApi, analyticsApi } from '../../api'
 import { StatCard, Card, Loading, EmptyState } from '../../components/ui'
 import { AreaChartComponent, PieChartComponent, BarChartComponent } from '../../components/charts'
 import { formatCurrency, formatNumber, formatCompactNumber } from '../../utils/formatters'
@@ -16,7 +16,8 @@ export default function InvestorDashboard() {
         totalRevenue: 0,
         totalSales: 0,
         avgOrderValue: 0,
-        productCount: 0
+        productCount: 0,
+        growthRate: 0
     })
     const [revenueData, setRevenueData] = useState([])
     const [categoryData, setCategoryData] = useState([])
@@ -29,76 +30,97 @@ export default function InvestorDashboard() {
 
     const fetchDashboardData = async () => {
         try {
-            const [salesRes, productsRes, categoriesRes] = await Promise.all([
-                saleApi.getAll(),
-                productApi.getAll(),
-                categoryApi.getAll()
+            setLoading(true)
+
+            // 🚀 Utiliser les endpoints Analytics du backend pour de meilleures performances
+            const [
+                dashboardRes,
+                kpiRes,
+                monthlySalesRes,
+                categoryStatsRes,
+                bestSellersRes
+            ] = await Promise.all([
+                analyticsApi.getDashboard().catch(() => ({ data: null })),
+                analyticsApi.getKPI().catch(() => ({ data: null })),
+                analyticsApi.getMonthlySales().catch(() => ({ data: null })),
+                analyticsApi.getCategoryStats().catch(() => ({ data: [] })),
+                analyticsApi.getBestSellers(5).catch(() => ({ data: [] }))
             ])
 
-            const sales = salesRes.data || []
-            const products = productsRes.data || []
-            const categories = categoriesRes.data || []
+            const dashboard = dashboardRes.data
+            const kpi = kpiRes.data
+            const monthlySales = monthlySalesRes.data
+            // Backend retourne: { value: [...], Count: n }
+            const categoryStats = categoryStatsRes.data?.value || categoryStatsRes.data || []
+            const bestSellers = bestSellersRes.data?.value || bestSellersRes.data || []
 
-            // Calculate stats
-            const totalRevenue = sales.reduce((sum, s) => sum + (s.totalAmount || 0), 0)
-            setStats({
-                totalRevenue,
-                totalSales: sales.length,
-                avgOrderValue: sales.length > 0 ? totalRevenue / sales.length : 0,
-                productCount: products.length
-            })
+            // Stats depuis le backend - structure: dashboard.kpi.*, kpi.totals.*, kpi.sales.*
+            if (dashboard || kpi) {
+                const totalRevenue = kpi?.sales?.totalRevenue || 0
+                const totalSales = kpi?.sales?.salesCount || 0
+                setStats({
+                    totalRevenue,
+                    totalSales,
+                    avgOrderValue: kpi?.sales?.averageBasket || (totalSales > 0 ? totalRevenue / totalSales : 0),
+                    productCount: dashboard?.kpi?.totalProducts || kpi?.totals?.products || 0,
+                    growthRate: 12.5 // Pas encore calculé par le backend
+                })
+            } else {
+                // Fallback: charger les données brutes
+                const [salesRes, productsRes] = await Promise.all([
+                    saleApi.getAll(),
+                    productApi.getAll()
+                ])
+                const sales = salesRes.data || []
+                const products = productsRes.data || []
+                const totalRevenue = sales.reduce((sum, s) => sum + (s.totalAmount || 0), 0)
 
-            // Revenue by month
-            const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
-            setRevenueData(months.map((name, i) => ({
-                name,
-                revenue: Math.floor(Math.random() * 80000) + 40000,
-                profit: Math.floor(Math.random() * 30000) + 15000
-            })))
+                setStats({
+                    totalRevenue,
+                    totalSales: sales.length,
+                    avgOrderValue: sales.length > 0 ? totalRevenue / sales.length : 0,
+                    productCount: products.length,
+                    growthRate: 12.5
+                })
+            }
 
-            // Build product category map
-            const productCategoryMap = {}
-            products.forEach(p => {
-                productCategoryMap[p.id] = p.categoryName || 'Autre'
-            })
+            // Revenus mensuels depuis le backend
+            // Backend retourne: { list: [{ month: "2025-12", revenue: 1234 }], map: {...} }
+            if (monthlySales && monthlySales.list && monthlySales.list.length > 0) {
+                setRevenueData(monthlySales.list.map(m => ({
+                    name: m.month || 'Mois',
+                    revenue: m.revenue || 0,
+                    profit: Math.round((m.revenue || 0) * 0.35) // Estimation marge 35%
+                })))
+            } else {
+                // Fallback: données simulées
+                const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+                setRevenueData(months.map((name) => ({
+                    name,
+                    revenue: Math.floor(Math.random() * 80000) + 40000,
+                    profit: Math.floor(Math.random() * 30000) + 15000
+                })))
+            }
 
-            // Revenue by category (from lignes)
-            const catRevenue = {}
-            sales.forEach(sale => {
-                if (sale.lignes && Array.isArray(sale.lignes)) {
-                    sale.lignes.forEach(ligne => {
-                        const catName = productCategoryMap[ligne.productId] || 'Autre'
-                        catRevenue[catName] = (catRevenue[catName] || 0) + (ligne.lineTotal || 0)
-                    })
-                }
-            })
-            setCategoryData(Object.entries(catRevenue).map(([name, value]) => ({ name, value })))
+            // Revenus par catégorie depuis le backend
+            const categoryArray = Array.isArray(categoryStats) ? categoryStats : []
+            if (categoryArray.length > 0) {
+                setCategoryData(categoryArray.map(c => ({
+                    name: c.categoryName || c.name || 'Catégorie',
+                    value: c.totalRevenue || c.revenue || 0
+                })))
+            }
 
-            // Top performers (from lignes)
-            const productPerformance = {}
-            sales.forEach(sale => {
-                if (sale.lignes && Array.isArray(sale.lignes)) {
-                    sale.lignes.forEach(ligne => {
-                        const name = ligne.productTitle || 'Produit'
-                        if (productPerformance[name]) {
-                            productPerformance[name].revenue += ligne.lineTotal || 0
-                            productPerformance[name].sales += 1
-                        } else {
-                            productPerformance[name] = {
-                                name,
-                                revenue: ligne.lineTotal || 0,
-                                sales: 1,
-                                margin: Math.floor(Math.random() * 30) + 15
-                            }
-                        }
-                    })
-                }
-            })
-            setTopPerformers(
-                Object.values(productPerformance)
-                    .sort((a, b) => b.revenue - a.revenue)
-                    .slice(0, 5)
-            )
+            // Top produits depuis le backend
+            const bestSellersArray = Array.isArray(bestSellers) ? bestSellers : []
+            if (bestSellersArray.length > 0) {
+                setTopPerformers(bestSellersArray.map(p => ({
+                    name: p.title || p.productName || p.name || 'Produit',
+                    revenue: p.revenue || p.totalRevenue || 0,
+                    sales: p.quantitySold || p.totalSold || p.quantity || 0,
+                    margin: Math.floor(Math.random() * 30) + 15 // Marge simulée
+                })))
+            }
 
         } catch (error) {
             console.error('Error:', error)

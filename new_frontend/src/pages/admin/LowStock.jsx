@@ -5,7 +5,7 @@ import {
     AlertTriangle, Package, TrendingDown, ArrowLeft, Edit2,
     Eye, RefreshCw, Bell, Download, Filter, Search
 } from 'lucide-react'
-import { productApi, categoryApi } from '../../api'
+import { productApi, categoryApi, analyticsApi } from '../../api'
 import { Button, Card, Badge, Loading, EmptyState, SearchInput, Modal, Input } from '../../components/ui'
 import { formatCurrency, getStockStatus } from '../../utils/formatters'
 import { getOptimizedImageUrl } from '../../utils/cloudinary'
@@ -26,16 +26,38 @@ export default function LowStock() {
 
     useEffect(() => {
         fetchData()
-    }, [])
+    }, [threshold])
 
     const fetchData = async () => {
         try {
             setLoading(true)
-            const [productsRes, categoriesRes] = await Promise.all([
-                productApi.getAll(),
+
+            // 🚀 Utiliser l'endpoint Analytics optimisé pour les produits à stock faible
+            const [lowStockRes, categoriesRes] = await Promise.all([
+                analyticsApi.getLowStockProducts(threshold).catch(() => null),
                 categoryApi.getAll()
             ])
-            setProducts(productsRes.data || [])
+
+            // Si l'API Analytics fonctionne, utiliser ses données
+            // Backend retourne: { value: [...], Count: n }
+            const lowStockData = lowStockRes?.data?.value || lowStockRes?.data
+            if (lowStockData && Array.isArray(lowStockData)) {
+                // L'API retourne déjà les produits filtrés et triés
+                setProducts(lowStockData.map(p => ({
+                    id: p.productId || p.id,
+                    title: p.title || p.productName,
+                    stock: p.stock || p.currentStock || 0,
+                    price: p.price,
+                    categoryId: p.categoryId,
+                    categoryName: p.categoryName,
+                    imageUrl: p.imageUrl
+                })))
+            } else {
+                // Fallback: charger tous les produits et filtrer localement
+                const productsRes = await productApi.getAll()
+                setProducts(productsRes.data || [])
+            }
+
             setCategories(categoriesRes.data || [])
         } catch (error) {
             toast.error('Erreur lors du chargement')

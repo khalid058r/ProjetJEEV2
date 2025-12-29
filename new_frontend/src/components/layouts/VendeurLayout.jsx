@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     LayoutDashboard, ShoppingCart, PlusCircle, TrendingUp,
-    History, LogOut, Menu, X, Moon, Sun, Bell, ChevronDown, User, Settings
+    History, LogOut, Menu, X, Moon, Sun, Bell, ChevronDown, User, Settings, BarChart3, FileText
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -13,8 +13,9 @@ const navigation = [
     { name: 'Dashboard', href: '/vendeur', icon: LayoutDashboard },
     { name: 'Nouvelle Vente', href: '/vendeur/new-sale', icon: PlusCircle },
     { name: 'Mes Ventes', href: '/vendeur/my-sales', icon: ShoppingCart },
-    { name: 'Historique', href: '/vendeur/history', icon: History },
-    { name: 'Performance', href: '/vendeur/performance', icon: TrendingUp },
+    { name: 'Statistiques', href: '/vendeur/stats', icon: BarChart3 },
+    { name: 'Rapports', href: '/vendeur/reports', icon: FileText },
+    { name: 'Mon Profil', href: '/vendeur/profile', icon: User },
 ]
 
 export default function VendeurLayout() {

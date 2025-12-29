@@ -3,7 +3,8 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     LayoutDashboard, BarChart3, PieChart, LineChart, FileText,
-    Layers, Download, LogOut, Menu, X, Moon, Sun, Bell, ChevronDown, User, Brain
+    Layers, Download, LogOut, Menu, X, Moon, Sun, Bell, ChevronDown, User, Brain,
+    TrendingUp, AlertTriangle, Database, GitCompare, Package
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -11,11 +12,14 @@ import { Avatar } from '../ui'
 
 const navigation = [
     { name: 'Dashboard', href: '/analyst', icon: LayoutDashboard },
-    { name: 'Analytique', href: '/analyst/analytics', icon: BarChart3 },
     { name: 'Prédictions IA', href: '/analyst/predictions', icon: Brain },
+    { name: 'Tendances', href: '/analyst/trends', icon: TrendingUp },
+    { name: 'Explorateur', href: '/analyst/explorer', icon: Database },
+    { name: 'Comparaison', href: '/analyst/compare', icon: GitCompare },
+    { name: 'Produits', href: '/analyst/products', icon: Package },
+    { name: 'Alertes', href: '/analyst/alerts', icon: AlertTriangle },
     { name: 'Rapports', href: '/analyst/reports', icon: FileText },
-    { name: 'Workspace', href: '/analyst/workspace', icon: Layers },
-    { name: 'Exports', href: '/analyst/exports', icon: Download },
+    { name: 'Profil', href: '/analyst/profile', icon: User },
 ]
 
 export default function AnalystLayout() {

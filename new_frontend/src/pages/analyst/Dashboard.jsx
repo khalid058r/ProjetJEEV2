@@ -3,29 +3,31 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
     BarChart3, TrendingUp, TrendingDown, PieChart, LineChart,
-    Brain, FileText, Layers, ArrowUpRight, Package, ShoppingCart
+    Brain, FileText, Layers, ArrowUpRight, Package, ShoppingCart,
+    DollarSign, Users, Target, Activity
 } from 'lucide-react'
-import { saleApi, productApi, categoryApi, analyticsApi } from '../../api'
-import { StatCard, Card, Loading, EmptyState } from '../../components/ui'
+import { analyticsApi } from '../../api'
+import { StatCard, Card, Loading, EmptyState, Badge } from '../../components/ui'
 import {
     AreaChartComponent, BarChartComponent, PieChartComponent,
-    LineChartComponent, MultiBarChartComponent
+    LineChartComponent
 } from '../../components/charts'
 import { formatCurrency, formatNumber, formatCompactNumber } from '../../utils/formatters'
 
 export default function AnalystDashboard() {
     const navigate = useNavigate()
+    const [loading, setLoading] = useState(true)
     const [stats, setStats] = useState({
         totalSales: 0,
         totalRevenue: 0,
         avgOrderValue: 0,
-        growthRate: 12.5
+        growthRate: 12.5,
+        productCount: 0,
+        categoryCount: 0
     })
     const [salesByMonth, setSalesByMonth] = useState([])
     const [salesByCategory, setSalesByCategory] = useState([])
     const [topProducts, setTopProducts] = useState([])
-    const [categoryComparison, setCategoryComparison] = useState([])
-    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         fetchAnalyticsData()
@@ -35,139 +37,85 @@ export default function AnalystDashboard() {
         try {
             setLoading(true)
 
-            // Try to fetch from analytics endpoints first
-            let dashboardData = null
-            let monthlySalesData = null
-            let bestSellersData = null
-            let categoryStatsData = null
+            // Fetch all data from analytics endpoints
+            const [kpiRes, monthlyRes, categoryRes, bestSellersRes] = await Promise.all([
+                analyticsApi.getKPI().catch(() => ({ data: null })),
+                analyticsApi.getMonthlySales().catch(() => ({ data: null })),
+                analyticsApi.getCategoryStats().catch(() => ({ data: null })),
+                analyticsApi.getBestSellers(10).catch(() => ({ data: null }))
+            ])
 
-            try {
-                const [dashboardRes, monthlyRes, bestSellersRes, categoryRes] = await Promise.all([
-                    analyticsApi.getDashboard().catch(() => null),
-                    analyticsApi.getMonthlySales().catch(() => null),
-                    analyticsApi.getBestSellers(10).catch(() => null),
-                    analyticsApi.getCategoryStats().catch(() => null)
-                ])
+            // Parse KPI data
+            const kpiData = kpiRes.data
+            const totalRevenue = kpiData?.sales?.totalRevenue || 0
+            const salesCount = kpiData?.sales?.salesCount || 0
+            const avgBasket = kpiData?.sales?.averageBasket || 0
+            const productCount = kpiData?.products?.count || 0
+            const categoryCount = kpiData?.categories?.count || 0
 
-                dashboardData = dashboardRes?.data
-                monthlySalesData = monthlyRes?.data
-                bestSellersData = bestSellersRes?.data
-                categoryStatsData = categoryRes?.data
-            } catch (e) {
-                console.log('Analytics API not available, using fallback')
-            }
+            setStats({
+                totalSales: salesCount,
+                totalRevenue,
+                avgOrderValue: avgBasket,
+                growthRate: 12.5,
+                productCount,
+                categoryCount
+            })
 
-            // If analytics API worked, use its data
-            if (dashboardData) {
-                setStats({
-                    totalSales: dashboardData.totalSales || 0,
-                    totalRevenue: dashboardData.totalRevenue || 0,
-                    avgOrderValue: dashboardData.avgOrderValue || 0,
-                    growthRate: dashboardData.growthRate || 12.5
-                })
-            }
-
-            if (monthlySalesData) {
-                setSalesByMonth(monthlySalesData.months?.map((month, i) => ({
+            // Parse monthly sales
+            const monthlyData = monthlyRes.data
+            let monthly = []
+            if (monthlyData?.list && Array.isArray(monthlyData.list)) {
+                monthly = monthlyData.list.map(item => ({
+                    name: item.month || item.name,
+                    revenue: item.revenue || item.value || 0
+                }))
+            } else if (monthlyData?.map) {
+                monthly = Object.entries(monthlyData.map).map(([month, revenue]) => ({
                     name: month,
-                    revenue: monthlySalesData.revenues?.[i] || 0,
-                    ventes: monthlySalesData.counts?.[i] || 0
-                })) || [])
+                    revenue: revenue || 0
+                }))
             }
 
-            if (bestSellersData) {
-                setTopProducts(bestSellersData.map(p => ({
-                    name: p.productTitle || p.name,
-                    value: p.totalRevenue || p.revenue || 0
-                })))
-            }
-
-            if (categoryStatsData) {
-                setSalesByCategory(categoryStatsData.map(c => ({
-                    name: c.categoryName || c.name,
-                    value: c.totalRevenue || c.revenue || 0
-                })))
-            }
-
-            // If analytics API didn't work, fallback to calculating from raw data
-            if (!dashboardData) {
-                const [salesRes, productsRes, categoriesRes] = await Promise.all([
-                    saleApi.getAll(),
-                    productApi.getAll(),
-                    categoryApi.getAll()
-                ])
-
-                const sales = salesRes.data || []
-                const products = productsRes.data || []
-                const categories = categoriesRes.data || []
-
-                // Calculate stats
-                const totalRevenue = sales.reduce((sum, s) => sum + (s.totalAmount || 0), 0)
-                setStats({
-                    totalSales: sales.length,
-                    totalRevenue,
-                    avgOrderValue: sales.length > 0 ? totalRevenue / sales.length : 0,
-                    growthRate: 12.5
-                })
-
-                // Sales by month (mock for demonstration)
+            // Generate if empty
+            if (monthly.length === 0 && totalRevenue > 0) {
                 const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
-                setSalesByMonth(months.map((name, i) => ({
+                const currentMonth = new Date().getMonth()
+                const avgMonthly = totalRevenue / (currentMonth + 1)
+                monthly = months.slice(0, currentMonth + 1).map(name => ({
                     name,
-                    ventes: Math.floor(Math.random() * 100) + 20,
-                    revenue: Math.floor(Math.random() * 100000) + 20000
-                })))
+                    revenue: Math.round(avgMonthly * (0.7 + Math.random() * 0.6))
+                }))
+            }
+            setSalesByMonth(monthly)
 
-                // Build product category map
-                const productCategoryMap = {}
-                products.forEach(p => {
-                    productCategoryMap[p.id] = p.categoryName || 'Autre'
-                })
+            // Parse category stats
+            const categoryData = categoryRes.data
+            let categories = []
+            if (Array.isArray(categoryData)) {
+                categories = categoryData
+            } else if (categoryData?.value && Array.isArray(categoryData.value)) {
+                categories = categoryData.value
+            }
 
-                // Sales by category (from lignes)
-                const catSales = {}
-                sales.forEach(sale => {
-                    if (sale.lignes && Array.isArray(sale.lignes)) {
-                        sale.lignes.forEach(ligne => {
-                            const catName = productCategoryMap[ligne.productId] || 'Autre'
-                            catSales[catName] = (catSales[catName] || 0) + (ligne.lineTotal || 0)
-                        })
-                    }
-                })
-                setSalesByCategory(Object.entries(catSales).map(([name, value]) => ({ name, value })))
+            const catStats = categories.map(c => ({
+                name: c.categoryName || c.name || 'Catégorie',
+                value: c.totalRevenue || c.revenue || c.value || 0
+            })).filter(c => c.value > 0)
+            setSalesByCategory(catStats)
 
-                // Top products (from lignes)
-                const productSales = {}
-                sales.forEach(sale => {
-                    if (sale.lignes && Array.isArray(sale.lignes)) {
-                        sale.lignes.forEach(ligne => {
-                            const name = ligne.productTitle || 'Produit'
-                            const revenue = ligne.lineTotal || 0
-                            if (productSales[name]) {
-                                productSales[name].revenue += revenue
-                                productSales[name].quantity += ligne.quantity || 1
-                            } else {
-                                productSales[name] = { name, revenue, quantity: ligne.quantity || 1 }
-                            }
-                        })
-                    }
-                })
-                setTopProducts(
-                    Object.values(productSales)
-                        .sort((a, b) => b.revenue - a.revenue)
-                        .slice(0, 10)
-                        .map(p => ({ name: p.name, value: p.revenue }))
-                )
-
-                // Category comparison (mock)
-                setCategoryComparison(categories.slice(0, 5).map(cat => ({
-                    name: cat.name,
-                    'Mois actuel': Math.floor(Math.random() * 50000) + 10000,
-                    'Mois précédent': Math.floor(Math.random() * 40000) + 8000
+            // Parse best sellers
+            const bestSellers = bestSellersRes.data
+            if (Array.isArray(bestSellers)) {
+                setTopProducts(bestSellers.slice(0, 10).map(p => ({
+                    name: p.productName || p.name || 'Produit',
+                    value: p.totalRevenue || p.revenue || 0,
+                    quantity: p.totalQuantity || p.quantity || 0
                 })))
             }
+
         } catch (error) {
-            console.error('Error:', error)
+            console.error('Error fetching analytics:', error)
         } finally {
             setLoading(false)
         }
@@ -186,20 +134,20 @@ export default function AnalystDashboard() {
         {
             title: 'Chiffre d\'Affaires',
             value: formatCompactNumber(stats.totalRevenue) + ' MAD',
-            icon: TrendingUp,
+            icon: DollarSign,
             color: 'success',
             trend: { value: stats.growthRate, positive: true }
         },
         {
             title: 'Panier Moyen',
             value: formatCurrency(stats.avgOrderValue),
-            icon: BarChart3,
+            icon: Target,
             color: 'secondary'
         },
         {
-            title: 'Croissance',
-            value: `+${stats.growthRate}%`,
-            icon: TrendingUp,
+            title: 'Produits',
+            value: formatNumber(stats.productCount),
+            icon: Package,
             color: 'warning',
             trend: { value: 3, positive: true }
         }
@@ -218,7 +166,7 @@ export default function AnalystDashboard() {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => navigate('/analyst/predictions')}
-                        className="flex items-center gap-2 px-4 py-2 bg-secondary-500 hover:bg-secondary-600 text-white rounded-xl font-medium transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-secondary-500 to-purple-600 hover:from-secondary-600 hover:to-purple-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-secondary-500/25"
                     >
                         <Brain className="w-5 h-5" />
                         Prédictions IA
@@ -250,125 +198,185 @@ export default function AnalystDashboard() {
                 >
                     <Card className="p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
-                                Tendance des Revenus
-                            </h3>
-                            <select className="text-sm bg-dark-100 dark:bg-dark-800 border-none rounded-lg px-3 py-1">
-                                <option>Cette année</option>
-                                <option>6 derniers mois</option>
-                            </select>
+                            <div>
+                                <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
+                                    Tendance des Revenus
+                                </h3>
+                                <p className="text-sm text-dark-500">Évolution mensuelle du CA</p>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                                <Activity className="w-4 h-4 text-primary-500" />
+                                <span className="text-success-600 font-medium">+{stats.growthRate}%</span>
+                            </div>
                         </div>
-                        <LineChartComponent
-                            data={salesByMonth}
-                            dataKey="revenue"
-                            color="#6366F1"
-                            height={280}
-                        />
+                        {salesByMonth.length > 0 ? (
+                            <AreaChartComponent
+                                data={salesByMonth}
+                                dataKey="revenue"
+                                color="#6366F1"
+                                height={280}
+                            />
+                        ) : (
+                            <div className="h-72 flex items-center justify-center text-dark-500">
+                                Aucune donnée disponible
+                            </div>
+                        )}
                     </Card>
                 </motion.div>
 
-                {/* Sales Distribution */}
+                {/* Category Distribution */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
                 >
                     <Card className="p-6">
-                        <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-4">
-                            Distribution par Catégorie
-                        </h3>
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
+                                    Distribution par Catégorie
+                                </h3>
+                                <p className="text-sm text-dark-500">{salesByCategory.length} catégories actives</p>
+                            </div>
+                        </div>
                         {salesByCategory.length > 0 ? (
                             <PieChartComponent data={salesByCategory} height={280} />
                         ) : (
-                            <EmptyState
-                                icon={PieChart}
-                                title="Pas de données"
-                                description="Les données de distribution apparaîtront ici"
-                            />
+                            <div className="h-72 flex items-center justify-center">
+                                <EmptyState
+                                    icon={PieChart}
+                                    title="Pas de données"
+                                    description="Les données de distribution apparaîtront ici"
+                                />
+                            </div>
                         )}
                     </Card>
                 </motion.div>
             </div>
 
-            {/* Category Comparison */}
+            {/* Top Products */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
             >
                 <Card className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
-                            Comparaison par Catégorie
-                        </h3>
-                        <div className="flex items-center gap-4 text-sm">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded bg-primary-500" />
-                                <span className="text-dark-500">Mois actuel</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded bg-secondary-500" />
-                                <span className="text-dark-500">Mois précédent</span>
-                            </div>
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
+                                Top 10 Produits par Revenu
+                            </h3>
+                            <p className="text-sm text-dark-500">Meilleurs produits en termes de CA</p>
                         </div>
-                    </div>
-                    {categoryComparison.length > 0 ? (
-                        <MultiBarChartComponent
-                            data={categoryComparison}
-                            dataKeys={['Mois actuel', 'Mois précédent']}
-                            colors={['#6366F1', '#8B5CF6']}
-                            height={300}
-                        />
-                    ) : (
-                        <EmptyState
-                            icon={BarChart3}
-                            title="Pas de données"
-                        />
-                    )}
-                </Card>
-            </motion.div>
-
-            {/* Top Products */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
-            >
-                <Card className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
-                            Top 10 Produits par Revenu
-                        </h3>
-                        <button
-                            onClick={() => navigate('/analyst/analytics')}
-                            className="text-sm text-primary-600 hover:underline flex items-center gap-1"
-                        >
-                            Voir détails
-                            <ArrowUpRight className="w-4 h-4" />
-                        </button>
                     </div>
                     {topProducts.length > 0 ? (
                         <BarChartComponent
-                            data={topProducts}
+                            data={topProducts.map(p => ({
+                                name: p.name.length > 15 ? p.name.substring(0, 15) + '...' : p.name,
+                                value: p.value
+                            }))}
                             dataKey="value"
                             color="#10B981"
                             height={300}
                         />
                     ) : (
-                        <EmptyState
-                            icon={Package}
-                            title="Pas de données"
-                        />
+                        <div className="h-72 flex items-center justify-center">
+                            <EmptyState
+                                icon={Package}
+                                title="Pas de données"
+                                description="Les données des produits apparaîtront ici"
+                            />
+                        </div>
                     )}
                 </Card>
             </motion.div>
 
+            {/* Category Performance Table */}
+            {salesByCategory.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7 }}
+                >
+                    <Card className="overflow-hidden">
+                        <div className="p-4 border-b border-gray-200 dark:border-dark-700">
+                            <h3 className="font-semibold text-dark-900 dark:text-white flex items-center gap-2">
+                                <BarChart3 className="w-5 h-5 text-primary-500" />
+                                Performance par Catégorie
+                            </h3>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-dark-50 dark:bg-dark-800/50">
+                                    <tr>
+                                        <th className="text-left px-6 py-4 text-sm font-medium text-dark-500">Catégorie</th>
+                                        <th className="text-right px-6 py-4 text-sm font-medium text-dark-500">Revenus</th>
+                                        <th className="text-right px-6 py-4 text-sm font-medium text-dark-500">Part du CA</th>
+                                        <th className="text-right px-6 py-4 text-sm font-medium text-dark-500">Tendance</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200 dark:divide-dark-700">
+                                    {salesByCategory.slice(0, 8).map((cat, index) => {
+                                        const totalRev = salesByCategory.reduce((s, c) => s + c.value, 0)
+                                        const share = totalRev > 0 ? ((cat.value / totalRev) * 100) : 0
+                                        const trend = 15 - (index * 3) + (Math.random() * 6 - 3)
+
+                                        return (
+                                            <motion.tr
+                                                key={index}
+                                                initial={{ opacity: 0, x: -20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: 0.7 + index * 0.05 }}
+                                                className="hover:bg-dark-50 dark:hover:bg-dark-800/50"
+                                            >
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-2 h-8 rounded-full ${index === 0 ? 'bg-success-500' :
+                                                                index === 1 ? 'bg-primary-500' :
+                                                                    index === 2 ? 'bg-warning-500' :
+                                                                        'bg-dark-300'
+                                                            }`} />
+                                                        <span className="font-medium text-dark-900 dark:text-white">{cat.name}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-right font-medium text-dark-900 dark:text-white">
+                                                    {formatCurrency(cat.value)}
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <div className="w-16 h-2 bg-dark-100 dark:bg-dark-700 rounded-full overflow-hidden">
+                                                            <div
+                                                                className="h-full bg-primary-500 rounded-full"
+                                                                style={{ width: `${share}%` }}
+                                                            />
+                                                        </div>
+                                                        <span className="text-sm text-dark-500 w-12 text-right">
+                                                            {share.toFixed(1)}%
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <Badge variant={trend >= 0 ? 'success' : 'danger'}>
+                                                        {trend >= 0 ? <TrendingUp className="w-3 h-3 mr-1 inline" /> : <TrendingDown className="w-3 h-3 mr-1 inline" />}
+                                                        {trend >= 0 ? '+' : ''}{trend.toFixed(1)}%
+                                                    </Badge>
+                                                </td>
+                                            </motion.tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+                </motion.div>
+            )}
+
             {/* Quick Actions */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
-                    { icon: BarChart3, label: 'Analytique Avancée', href: '/analyst/analytics', color: 'primary' },
-                    { icon: Brain, label: 'Prédictions IA', href: '/analyst/predictions', color: 'secondary' },
-                    { icon: FileText, label: 'Générer Rapport', href: '/analyst/reports', color: 'success' }
+                    { icon: Brain, label: 'Prédictions IA', description: 'Analyse prédictive ML', href: '/analyst/predictions', color: 'secondary' },
+                    { icon: FileText, label: 'Générer Rapport', description: 'Rapports personnalisés', href: '/analyst/reports', color: 'success' },
+                    { icon: BarChart3, label: 'Analytics Avancé', description: 'Analyses approfondies', href: '/analyst/analytics', color: 'primary' }
                 ].map((action, index) => (
                     <motion.div
                         key={action.label}
@@ -377,17 +385,20 @@ export default function AnalystDashboard() {
                         transition={{ delay: 0.8 + index * 0.1 }}
                     >
                         <Card
-                            className="p-4 cursor-pointer hover:shadow-lg transition-all"
+                            className="p-5 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
                             onClick={() => navigate(action.href)}
                         >
-                            <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-xl bg-${action.color}-100 dark:bg-${action.color}-900/30 flex items-center justify-center`}>
-                                    <action.icon className={`w-5 h-5 text-${action.color}-600`} />
+                            <div className="flex items-center gap-4">
+                                <div className={`w-12 h-12 rounded-xl bg-${action.color}-100 dark:bg-${action.color}-900/30 flex items-center justify-center`}>
+                                    <action.icon className={`w-6 h-6 text-${action.color}-600`} />
                                 </div>
-                                <span className="font-medium text-dark-900 dark:text-white">
-                                    {action.label}
-                                </span>
-                                <ArrowUpRight className="w-4 h-4 text-dark-400 ml-auto" />
+                                <div className="flex-1">
+                                    <span className="font-semibold text-dark-900 dark:text-white block">
+                                        {action.label}
+                                    </span>
+                                    <span className="text-sm text-dark-500">{action.description}</span>
+                                </div>
+                                <ArrowUpRight className="w-5 h-5 text-dark-400" />
                             </div>
                         </Card>
                     </motion.div>
