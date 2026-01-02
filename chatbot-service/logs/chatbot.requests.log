@@ -1,0 +1,8 @@
+2026-01-01 16:16:39 | [92mINFO[0m | chatbot.requests | [92m[REQUEST] User:1 Role:ADMIN Message:'de moi dernier'[0m
+2026-01-01 16:16:41 | [92mINFO[0m | chatbot.requests | [92m[RESPONSE] ✅ User:1 Intent:unknown Time:2495ms[0m
+2026-01-01 16:34:42 | [92mINFO[0m | chatbot.requests | [92m[REQUEST] User:1 Role:ADMIN Message:'L'utilisateur cherche 'un produit' mais aucun produit n'a été trouvé. Suggère des alternatives ou de...'[0m
+2026-01-01 16:34:43 | [92mINFO[0m | chatbot.requests | [92m[RESPONSE] ✅ User:1 Intent:unknown Time:1168ms[0m
+2026-01-01 16:35:45 | [92mINFO[0m | chatbot.requests | [92m[REQUEST] User:1 Role:ADMIN Message:'le chiffre d afaire'[0m
+2026-01-01 16:35:47 | [92mINFO[0m | chatbot.requests | [92m[RESPONSE] ✅ User:1 Intent:unknown Time:1782ms[0m
+2026-01-01 16:36:00 | [92mINFO[0m | chatbot.requests | [92m[REQUEST] User:1 Role:ADMIN Message:'L'utilisateur cherche 'la valeur de stock' mais aucun produit n'a été trouvé. Suggère des alternativ...'[0m
+2026-01-01 16:36:02 | [92mINFO[0m | chatbot.requests | [92m[RESPONSE] ✅ User:1 Intent:unknown Time:1253ms[0m

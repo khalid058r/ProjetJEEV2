@@ -1,0 +1,65 @@
+2025-12-29 18:39:51,634 - app.services.search_service - WARNING - Recherche sémantique désactivée (sentence-transformers manquant)
+2025-12-29 18:39:54,958 - app.main - INFO - ======================================================================
+2025-12-29 18:39:55,431 - app.main - INFO - ======================================================================
+2025-12-29 18:39:55,547 - app.main - INFO - ======================================================================
+2025-12-29 19:02:08,341 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-12-29 19:02:09,151 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-12-29 19:02:09,371 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-12-29 19:02:09,374 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-12-29 19:02:15,457 - app.main - INFO - ======================================================================
+2025-12-29 19:02:15,896 - app.main - INFO - ======================================================================
+2025-12-29 19:02:15,966 - app.main - INFO - ======================================================================
+2025-12-29 19:02:58,673 - httpx - INFO - HTTP Request: GET http://localhost:8080/api/api/health "HTTP/1.1 500 "
+2025-12-29 19:02:58,766 - app.main - INFO - POST /api/etl/upload-and-import - 200 - 1624.04ms
+2025-12-29 19:03:11,953 - httpx - INFO - HTTP Request: GET http://localhost:8080/api/api/health "HTTP/1.1 500 "
+2025-12-29 19:03:11,960 - app.main - INFO - GET /api/health - 200 - 105.38ms
+2025-12-29 19:05:31,457 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-12-29 19:05:31,583 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-12-29 19:05:34,327 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-12-29 19:05:34,336 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-12-29 19:05:40,488 - app.main - INFO - ======================================================================
+2025-12-29 19:05:40,615 - app.main - INFO - ======================================================================
+2025-12-29 19:05:42,103 - app.main - INFO - ======================================================================
+2025-12-29 19:06:11,293 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-12-29 19:06:11,387 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-12-29 19:06:11,465 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-12-29 19:06:11,465 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-12-29 19:06:15,179 - app.main - INFO - ======================================================================
+2025-12-29 19:06:15,252 - app.main - INFO - ======================================================================
+2025-12-29 19:06:15,486 - app.main - INFO - ======================================================================
+2025-12-29 19:06:45,215 - httpx - INFO - HTTP Request: GET http://localhost:8080/api/api/products?page=0&size=1 "HTTP/1.1 500 "
+2025-12-29 19:06:45,301 - app.main - INFO - POST /api/etl/upload-and-import - 200 - 1987.24ms
+2025-12-29 19:07:05,603 - httpx - INFO - HTTP Request: GET http://localhost:8080/api/api/products?page=0&size=1 "HTTP/1.1 500 "
+2025-12-29 19:07:05,752 - app.main - INFO - POST /api/etl/upload-and-import - 200 - 741.41ms
+2025-12-29 19:07:12,831 - httpx - INFO - HTTP Request: GET http://localhost:8080/api/api/products?page=0&size=1 "HTTP/1.1 500 "
+2025-12-29 19:07:12,839 - app.main - INFO - GET /api/health - 200 - 30.86ms
+2025-12-29 19:07:16,308 - httpx - INFO - HTTP Request: GET http://localhost:8080/api/api/products?page=0&size=1 "HTTP/1.1 500 "
+2025-12-29 19:07:16,311 - app.main - INFO - GET /api/health - 200 - 18.39ms
+2025-12-29 19:23:21,541 - app.services.search_service - WARNING - Recherche sémantique désactivée (sentence-transformers manquant)
+2025-12-29 19:24:19,122 - app.main - INFO - ======================================================================
+2025-12-29 19:24:19,186 - app.main - INFO - ======================================================================
+2025-12-29 19:24:19,528 - app.main - INFO - ======================================================================
+2025-12-29 19:43:41,014 - app.services.search_service - WARNING - Recherche sémantique désactivée (sentence-transformers manquant)
+2025-12-29 19:43:45,949 - app.main - INFO - ======================================================================
+2025-12-29 19:43:46,099 - app.main - INFO - ======================================================================
+2025-12-29 19:43:46,204 - app.main - INFO - ======================================================================
+2025-12-29 19:45:02,092 - httpx - INFO - HTTP Request: GET http://localhost:8080/api/api/products?page=0&size=1 "HTTP/1.1 500 "
+2025-12-29 19:45:02,157 - httpx - INFO - HTTP Request: GET http://localhost:8080/api/api/categories "HTTP/1.1 500 "
+2025-12-29 19:45:02,222 - httpx - INFO - HTTP Request: GET http://localhost:8080/api/api/health "HTTP/1.1 500 "
+2025-12-29 19:45:02,239 - app.main - INFO - GET /api/health - 200 - 2677.58ms
+2025-12-29 19:48:30,958 - httpx - INFO - HTTP Request: GET http://localhost:8080/api/api/products?page=0&size=1 "HTTP/1.1 500 "
+2025-12-29 19:48:31,074 - httpx - INFO - HTTP Request: GET http://localhost:8080/api/api/categories "HTTP/1.1 500 "
+2025-12-29 19:48:31,147 - httpx - INFO - HTTP Request: GET http://localhost:8080/api/api/health "HTTP/1.1 500 "
+2025-12-29 19:48:31,174 - app.main - INFO - GET /api/health - 200 - 1006.04ms
+2025-12-29 19:51:35,736 - app.main - INFO - GET /api/test-java - 404 - 86.35ms
+2025-12-29 19:51:50,392 - app.main - INFO - GET /api/test-java - 404 - 1.67ms
+2025-12-29 19:54:56,048 - app.services.search_service - WARNING - Recherche sémantique désactivée (sentence-transformers manquant)
+2025-12-29 19:55:00,884 - app.main - INFO - ======================================================================
+2025-12-29 19:55:00,942 - app.main - INFO - ======================================================================
+2025-12-29 19:55:01,258 - app.main - INFO - ======================================================================
+2025-12-29 19:55:11,765 - app.services.search_service - WARNING - Recherche sémantique désactivée (sentence-transformers manquant)
+2025-12-29 19:55:17,166 - app.main - INFO - ======================================================================
+2025-12-29 19:55:17,198 - app.main - INFO - ======================================================================
+2025-12-29 19:55:17,369 - app.main - INFO - ======================================================================
+2025-12-29 19:56:03,721 - httpx - INFO - HTTP Request: GET http://localhost:8080/api/api/products?page=0&size=1 "HTTP/1.1 500 "
+2025-12-29 19:56:03,817 - app.main - INFO - POST /api/etl/upload-and-import - 200 - 3534.40ms

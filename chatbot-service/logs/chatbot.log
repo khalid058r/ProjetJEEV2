@@ -1,0 +1,25 @@
+2026-01-01 15:42:34 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-01 16:16:39 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[REQUEST] User:1 Role:ADMIN Message:'de moi dernier'[0m[0m
+2026-01-01 16:16:41 | [92m[92mINFO[0m[0m | chatbot.llm | [92m[92m[LLM] Model:llama-3.3-70b-versatile Time:2495ms[0m[0m
+2026-01-01 16:16:41 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[RESPONSE] ✅ User:1 Intent:unknown Time:2495ms[0m[0m
+2026-01-01 16:33:24 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-01 16:33:38 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-01 16:34:42 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[REQUEST] User:1 Role:ADMIN Message:'L'utilisateur cherche 'un produit' mais aucun produit n'a été trouvé. Suggère des alternatives ou de...'[0m[0m
+2026-01-01 16:34:43 | [92m[92mINFO[0m[0m | chatbot.llm | [92m[92m[LLM] Model:llama-3.3-70b-versatile Time:1168ms[0m[0m
+2026-01-01 16:34:43 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[RESPONSE] ✅ User:1 Intent:unknown Time:1168ms[0m[0m
+2026-01-01 16:35:45 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[REQUEST] User:1 Role:ADMIN Message:'le chiffre d afaire'[0m[0m
+2026-01-01 16:35:47 | [92m[92mINFO[0m[0m | chatbot.llm | [92m[92m[LLM] Model:llama-3.3-70b-versatile Time:1782ms[0m[0m
+2026-01-01 16:35:47 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[RESPONSE] ✅ User:1 Intent:unknown Time:1782ms[0m[0m
+2026-01-01 16:36:00 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[REQUEST] User:1 Role:ADMIN Message:'L'utilisateur cherche 'la valeur de stock' mais aucun produit n'a été trouvé. Suggère des alternativ...'[0m[0m
+2026-01-01 16:36:02 | [92m[92mINFO[0m[0m | chatbot.llm | [92m[92m[LLM] Model:llama-3.3-70b-versatile Time:1253ms[0m[0m
+2026-01-01 16:36:02 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[RESPONSE] ✅ User:1 Intent:unknown Time:1253ms[0m[0m
+2026-01-01 16:36:25 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-01 16:41:47 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-01 16:42:58 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-01 16:43:11 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-01 18:20:04 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-01 18:20:38 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-01 18:21:09 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-01 18:21:48 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-01 18:22:37 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-01 18:23:10 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m

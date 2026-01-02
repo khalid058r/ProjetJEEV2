@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { NotificationProvider } from './context/NotificationContext'
 import AppRouter from './router/AppRouter'
+import { ChatBot } from './components/chatbot'
 
 export default function App() {
     return (
@@ -12,6 +13,7 @@ export default function App() {
                 <AuthProvider>
                     <NotificationProvider>
                         <AppRouter />
+                        <ChatBot />
                         <Toaster
                             position="top-right"
                             toastOptions={{
