@@ -25,7 +25,7 @@ export default function MySales() {
     const fetchSales = async () => {
         try {
             setLoading(true)
-            const response = await saleApi.getAll()
+            const response = await saleApi.getAll().catch(() => ({ data: [] }))
             const allSales = response.data || []
 
             // Filter by current user

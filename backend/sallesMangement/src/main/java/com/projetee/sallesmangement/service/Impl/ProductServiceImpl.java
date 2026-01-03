@@ -132,4 +132,10 @@ public class ProductServiceImpl implements ProductService {
 
         repo.delete(product);
     }
+    @Override
+    public List<ProductResponse> search(String query) {
+        return repo.findByTitleContainingIgnoreCase(query).stream()
+                .map(mapper::toResponse)
+                .toList();
+    }
 }

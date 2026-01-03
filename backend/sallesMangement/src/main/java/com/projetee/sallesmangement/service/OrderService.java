@@ -39,9 +39,24 @@ public interface OrderService {
     // ============ MÉTHODES POUR VENDEURS ============
 
     /**
+     * Liste toutes les commandes Click & Collect.
+     */
+    List<OrderResponse> getAllOnlineOrders();
+
+    /**
      * Liste les commandes en attente de préparation.
      */
     List<OrderResponse> getPendingOrders();
+
+    /**
+     * Confirme une commande.
+     */
+    OrderResponse confirmOrder(Long orderId, Long vendorId);
+
+    /**
+     * Met une commande en préparation.
+     */
+    OrderResponse processOrder(Long orderId, Long vendorId);
 
     /**
      * Marque une commande comme prête à récupérer.
@@ -52,4 +67,9 @@ public interface OrderService {
      * Marque une commande comme récupérée par le client.
      */
     OrderResponse markAsCompleted(Long orderId, Long vendorId);
+
+    /**
+     * Rejette une commande avec une raison.
+     */
+    OrderResponse rejectOrder(Long orderId, Long vendorId, String reason);
 }

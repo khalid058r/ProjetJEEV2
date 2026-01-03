@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-
 @Entity
 @Table(name = "cart_items")
 @Getter
@@ -18,7 +17,6 @@ public class CartItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "cart_id", nullable = false)

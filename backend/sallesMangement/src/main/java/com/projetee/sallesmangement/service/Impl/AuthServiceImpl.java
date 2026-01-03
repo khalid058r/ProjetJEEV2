@@ -3,6 +3,7 @@ package com.projetee.sallesmangement.service.Impl;
 import com.projetee.sallesmangement.dto.auth.LoginRequest;
 import com.projetee.sallesmangement.dto.auth.LoginResponse;
 import com.projetee.sallesmangement.dto.auth.RegisterRequest;
+import com.projetee.sallesmangement.entity.Role;
 import com.projetee.sallesmangement.entity.User;
 import com.projetee.sallesmangement.exception.BadRequestException;
 import com.projetee.sallesmangement.exception.ResourceNotFoundException;
@@ -25,12 +26,19 @@ public class AuthServiceImpl implements AuthService {
     public LoginResponse register(RegisterRequest request) {
 
         if (userRepo.existsByEmailIgnoreCase(request.getEmail())) {
-            throw new BadRequestException("Email already used");
+            throw new BadRequestException("Cet email est déjà utilisé");
         }
 
         User user = userMapper.toEntity(request);
         user.setPassword(encoder.encode(request.getPassword()));
-        user.setActive(false);
+
+        // Les clients (ACHETEUR) sont automatiquement actifs
+        // Les autres rôles nécessitent une validation admin
+        if (user.getRole() == Role.ACHETEUR) {
+            user.setActive(true);
+        } else {
+            user.setActive(false);
+        }
 
         user = userRepo.save(user);
         return userMapper.toLoginResponse(user);
@@ -40,14 +48,14 @@ public class AuthServiceImpl implements AuthService {
     public LoginResponse login(LoginRequest request) {
 
         User user = userRepo.findByEmail(request.getEmail())
-                .orElseThrow(() -> new BadRequestException("Invalid email or password"));
+                .orElseThrow(() -> new BadRequestException("Email ou mot de passe incorrect"));
 
         if (!encoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BadRequestException("Invalid email or password");
+            throw new BadRequestException("Email ou mot de passe incorrect");
         }
 
         if (!user.isActive()) {
-            throw new BadRequestException("Account not validated by admin");
+            throw new BadRequestException("Compte en attente de validation par un administrateur");
         }
 
         return userMapper.toLoginResponse(user);

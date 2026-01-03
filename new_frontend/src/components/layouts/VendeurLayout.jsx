@@ -3,14 +3,15 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     LayoutDashboard, ShoppingCart, PlusCircle, TrendingUp,
-    History, LogOut, Menu, X, Moon, Sun, Bell, ChevronDown, User, Settings, BarChart3, FileText
+    History, LogOut, Menu, X, Moon, Sun, Bell, ChevronDown, User, Settings, BarChart3, FileText, ShoppingBag
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
-import { Avatar } from '../ui'
+import { Avatar, NotificationBell } from '../ui'
 
 const navigation = [
     { name: 'Dashboard', href: '/vendeur', icon: LayoutDashboard },
+    { name: 'Commandes C&C', href: '/vendeur/orders', icon: ShoppingBag },
     { name: 'Nouvelle Vente', href: '/vendeur/new-sale', icon: PlusCircle },
     { name: 'Mes Ventes', href: '/vendeur/my-sales', icon: ShoppingCart },
     { name: 'Statistiques', href: '/vendeur/stats', icon: BarChart3 },
@@ -154,9 +155,8 @@ export default function VendeurLayout() {
                                 Nouvelle Vente
                             </button>
 
-                            <button className="relative p-2 hover:bg-dark-100 dark:hover:bg-dark-800 rounded-xl">
-                                <Bell className="w-5 h-5 text-dark-600 dark:text-dark-400" />
-                            </button>
+                            {/* Notification Bell Component */}
+                            <NotificationBell />
 
                             <button
                                 onClick={toggleDarkMode}

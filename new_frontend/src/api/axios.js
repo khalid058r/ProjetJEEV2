@@ -50,7 +50,14 @@ api.interceptors.response.use(
         } else if (error.response?.status === 404) {
             // Don't show toast for 404, handle in component
         } else if (error.response?.status >= 500) {
-            toast.error('Erreur serveur. Veuillez réessayer.')
+            // Only show error toast if not a silent/expected failure
+            // Dashboard API calls are expected to sometimes fail during initial load
+            const isSilentEndpoint = ['/sales', '/analytics'].some(ep =>
+                error.config?.url?.includes(ep)
+            )
+            if (!isSilentEndpoint) {
+                toast.error('Erreur serveur. Veuillez réessayer.')
+            }
         }
 
         return Promise.reject(error)

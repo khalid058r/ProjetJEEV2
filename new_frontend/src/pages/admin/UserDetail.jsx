@@ -44,7 +44,7 @@ export default function UserDetail() {
             setLoading(true)
             const [userRes, salesRes] = await Promise.all([
                 userApi.getById(id),
-                saleApi.getAll()
+                saleApi.getAll().catch(() => ({ data: [] }))
             ])
 
             const userData = userRes.data
@@ -323,18 +323,18 @@ export default function UserDetail() {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         {userStats.topProducts.map((product, index) => (
-                            <div key={product.name} className="p-4 bg-dark-50 dark:bg-dark-800 rounded-xl">
+                            <div key={product.title || product.name} className="p-4 bg-dark-50 dark:bg-dark-800 rounded-xl">
                                 <div className="flex items-center gap-2 mb-2">
                                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? 'bg-warning-500 text-white' :
-                                            index === 1 ? 'bg-gray-400 text-white' :
-                                                index === 2 ? 'bg-amber-700 text-white' :
-                                                    'bg-dark-200 dark:bg-dark-700 text-dark-600'
+                                        index === 1 ? 'bg-gray-400 text-white' :
+                                            index === 2 ? 'bg-amber-700 text-white' :
+                                                'bg-dark-200 dark:bg-dark-700 text-dark-600'
                                         }`}>
                                         {index + 1}
                                     </div>
                                     <span className="text-xs text-dark-500">#{index + 1}</span>
                                 </div>
-                                <p className="font-medium text-dark-900 dark:text-white text-sm truncate">{product.name}</p>
+                                <p className="font-medium text-dark-900 dark:text-white text-sm truncate">{product.title || product.name}</p>
                                 <p className="text-xs text-dark-500 mt-1">{product.quantity} vendus</p>
                                 <p className="text-sm font-bold text-success-600 mt-1">{formatCurrency(product.revenue)}</p>
                             </div>

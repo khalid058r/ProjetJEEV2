@@ -405,9 +405,9 @@ export default function AdminDashboard() {
                             </button>
                         </div>
                         <div className="divide-y divide-warning-100 dark:divide-warning-900">
-                            {lowStockProducts.slice(0, 3).map((product) => (
+                            {lowStockProducts.slice(0, 3).map((product, index) => (
                                 <div
-                                    key={product.id}
+                                    key={product.id || index}
                                     className="flex items-center justify-between p-4 hover:bg-warning-50/50 dark:hover:bg-warning-900/20 cursor-pointer transition-colors"
                                     onClick={() => navigate(`/admin/products/${product.id}`)}
                                 >

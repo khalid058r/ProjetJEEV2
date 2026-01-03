@@ -103,10 +103,10 @@ export default function Workspace() {
         try {
             setLoading(true)
             const [productsRes, salesRes, usersRes, categoriesRes] = await Promise.all([
-                productApi.getAll(),
-                saleApi.getAll(),
-                userApi.getAll(),
-                categoryApi.getAll()
+                productApi.getAll().catch(() => ({ data: [] })),
+                saleApi.getAll().catch(() => ({ data: [] })),
+                userApi.getAll().catch(() => ({ data: [] })),
+                categoryApi.getAll().catch(() => ({ data: [] }))
             ])
             setData({
                 products: productsRes.data || [],
@@ -115,7 +115,7 @@ export default function Workspace() {
                 categories: categoriesRes.data || []
             })
         } catch (error) {
-            toast.error('Erreur lors du chargement')
+            console.error('Erreur lors du chargement:', error)
         } finally {
             setLoading(false)
         }
@@ -468,7 +468,7 @@ export default function Workspace() {
                     >
                         <div className="space-y-2">
                             {topProducts.length > 0 ? topProducts.map((product, idx) => (
-                                <div key={product.name} className="flex items-center gap-3">
+                                <div key={product.title || product.name} className="flex items-center gap-3">
                                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${idx === 0 ? 'bg-amber-100 text-amber-600' :
                                         idx === 1 ? 'bg-gray-100 text-gray-600' :
                                             idx === 2 ? 'bg-orange-100 text-orange-600' :
@@ -477,7 +477,7 @@ export default function Workspace() {
                                         {idx + 1}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-dark-900 dark:text-white truncate">{product.name}</p>
+                                        <p className="text-sm font-medium text-dark-900 dark:text-white truncate">{product.title || product.name}</p>
                                     </div>
                                     <p className="text-sm font-bold text-success-600">{formatCurrency(product.value)}</p>
                                 </div>

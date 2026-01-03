@@ -40,12 +40,12 @@ public class ShopController {
     public ResponseEntity<List<ProductResponse>> getAvailableProducts() {
         // Réutilise le service existant
         List<ProductResponse> products = productService.getAll();
-        
+
         // Filtrer les produits avec stock > 0
         List<ProductResponse> available = products.stream()
                 .filter(p -> p.getStock() != null && p.getStock() > 0)
                 .toList();
-        
+
         return ResponseEntity.ok(available);
     }
 
@@ -56,8 +56,7 @@ public class ShopController {
     public ResponseEntity<Page<ProductResponse>> getProductsPage(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
-            @RequestParam(defaultValue = "title") String sortBy
-    ) {
+            @RequestParam(defaultValue = "title") String sortBy) {
         return ResponseEntity.ok(productService.getPaginated(page, size, sortBy));
     }
 
@@ -76,12 +75,11 @@ public class ShopController {
     @GetMapping("/profile")
     public ResponseEntity<CustomerProfileResponse> getProfile(
             @RequestHeader("X-User-Id") Long userId,
-            @RequestHeader("X-User-Role") Role role
-    ) {
+            @RequestHeader("X-User-Role") Role role) {
         if (role != Role.ACHETEUR) {
             throw new BadRequestException("Only customers can access profile");
         }
-        
+
         // Pour l'instant on retourne juste l'ID
         // L'implémentation complète nécessiterait un service dédié
         CustomerProfileResponse response = new CustomerProfileResponse();

@@ -25,8 +25,9 @@ export const chatbotApi = {
 
     // Suggestions
     getSuggestions: (role) =>
-        fetch(`${CHATBOT_URL}/suggestions?role=${role}`)
-            .then(res => res.json()),
+        fetch(`${CHATBOT_URL}/suggestions?role=${role}`, { signal: AbortSignal.timeout(3000) })
+            .then(res => res.json())
+            .catch(() => ({ success: false, suggestions: [] })),
 
     // Analyse AI
     analyze: (prompt, contextType = 'general') =>
@@ -38,7 +39,9 @@ export const chatbotApi = {
 
     // Health check
     healthCheck: () =>
-        fetch(`${CHATBOT_URL}/health`).then(res => res.json()),
+        fetch(`${CHATBOT_URL}/health`, { signal: AbortSignal.timeout(3000) })
+            .then(res => res.json())
+            .catch(() => ({ status: 'unavailable' })),
 
     // Alertes
     getAlerts: (limit = 10) =>

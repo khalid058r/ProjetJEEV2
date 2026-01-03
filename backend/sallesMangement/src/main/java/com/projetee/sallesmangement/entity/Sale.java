@@ -8,7 +8,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-
 @Entity
 @Getter
 @Setter
@@ -26,7 +25,6 @@ public class Sale {
 
     @NotNull
     private Double totalAmount;
-
 
     @ManyToOne
     @ToString.Exclude
@@ -49,24 +47,19 @@ public class Sale {
     @Builder.Default
     private SaleType saleType = SaleType.IN_STORE;
 
-
     @ManyToOne
     @JoinColumn(name = "customer_id")
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private User customer;
 
-
     @Column(length = 20)
     private String pickupCode;
 
     private LocalDateTime estimatedPickupTime;
 
-
     private LocalDateTime actualPickupTime;
-
 
     @Column(length = 500)
     private String notes;
 }
-

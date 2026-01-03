@@ -4,7 +4,7 @@ import { Loading } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
 
 // Layouts
-import { AdminLayout, VendeurLayout, AnalystLayout, InvestorLayout, AuthLayout } from '../components/layouts'
+import { AdminLayout, VendeurLayout, AnalystLayout, InvestorLayout, AuthLayout, ClientLayout } from '../components/layouts'
 
 // Lazy load pages for better performance
 const Login = lazy(() => import('../pages/auth/Login'))
@@ -21,8 +21,10 @@ const AdminSaleDetail = lazy(() => import('../pages/admin/SaleDetail'))
 const AdminUsers = lazy(() => import('../pages/admin/Users'))
 const AdminUserDetail = lazy(() => import('../pages/admin/UserDetail'))
 const AdminLowStock = lazy(() => import('../pages/admin/LowStock'))
+const AdminStock = lazy(() => import('../pages/admin/Stock'))
 const AdminWorkspace = lazy(() => import('../pages/admin/Workspace'))
 const AdminReports = lazy(() => import('../pages/admin/Reports'))
+const AdminOrders = lazy(() => import('../pages/admin/Orders'))
 const AdminAnalytics = lazy(() => import('../pages/admin/Analytics'))
 const AdminProfile = lazy(() => import('../pages/admin/Profile'))
 
@@ -30,6 +32,7 @@ const AdminProfile = lazy(() => import('../pages/admin/Profile'))
 const VendeurDashboard = lazy(() => import('../pages/vendeur/Dashboard'))
 const VendeurNewSale = lazy(() => import('../pages/vendeur/NewSale'))
 const VendeurMySales = lazy(() => import('../pages/vendeur/MySales'))
+const VendeurOrders = lazy(() => import('../pages/vendeur/Orders'))
 const VendeurStats = lazy(() => import('../pages/vendeur/Stats'))
 const VendeurProfile = lazy(() => import('../pages/vendeur/Profile'))
 const VendeurReports = lazy(() => import('../pages/vendeur/Reports'))
@@ -53,6 +56,21 @@ const InvestorPerformance = lazy(() => import('../pages/investor/Performance'))
 const InvestorPortfolio = lazy(() => import('../pages/investor/Portfolio'))
 const InvestorReports = lazy(() => import('../pages/investor/Reports'))
 const InvestorProfile = lazy(() => import('../pages/investor/Profile'))
+
+// Client (Acheteur) Pages
+const ClientHome = lazy(() => import('../pages/client/Home'))
+const ClientCatalog = lazy(() => import('../pages/client/Catalog'))
+const ClientProductDetail = lazy(() => import('../pages/client/ProductDetail'))
+const ClientCart = lazy(() => import('../pages/client/Cart'))
+const ClientCheckout = lazy(() => import('../pages/client/Checkout'))
+const ClientOrders = lazy(() => import('../pages/client/Orders'))
+const ClientOrderDetail = lazy(() => import('../pages/client/OrderDetail'))
+const ClientProfile = lazy(() => import('../pages/client/Profile'))
+const ClientLoyalty = lazy(() => import('../pages/client/Loyalty'))
+
+// Client Auth Pages
+const ClientLogin = lazy(() => import('../pages/auth/ClientLogin'))
+const ClientRegister = lazy(() => import('../pages/auth/ClientRegister'))
 
 // Suspense wrapper
 const SuspenseWrapper = ({ children }) => (
@@ -131,7 +149,8 @@ const RoleRedirect = () => {
         case 'vendeur': return <Navigate to="/vendeur" replace />
         case 'analyste': return <Navigate to="/analyst" replace />
         case 'investisseur': return <Navigate to="/investor" replace />
-        default: return <Navigate to="/login" replace />
+        case 'acheteur': return <Navigate to="/shop" replace />
+        default: return <Navigate to="/shop" replace /> // Default to shop for guests/unknown roles
     }
 }
 
@@ -157,11 +176,15 @@ export default function AppRouter() {
             {/* Root redirect */}
             <Route path="/" element={<RoleRedirect />} />
 
-            {/* Auth routes (guest only) */}
+            {/* Back-office Auth routes (guest only) */}
             <Route element={<GuestRoute><AuthLayout /></GuestRoute>}>
                 <Route path="/login" element={<SuspenseWrapper><Login /></SuspenseWrapper>} />
                 <Route path="/register" element={<SuspenseWrapper><Register /></SuspenseWrapper>} />
             </Route>
+
+            {/* Client Auth routes (standalone pages) */}
+            <Route path="/client/login" element={<SuspenseWrapper><ClientLogin /></SuspenseWrapper>} />
+            <Route path="/client/register" element={<SuspenseWrapper><ClientRegister /></SuspenseWrapper>} />
 
             {/* Admin routes */}
             <Route
@@ -192,8 +215,10 @@ export default function AppRouter() {
 
                 {/* Additional Admin Pages */}
                 <Route path="low-stock" element={<SuspenseWrapper><AdminLowStock /></SuspenseWrapper>} />
+                <Route path="stock" element={<SuspenseWrapper><AdminStock /></SuspenseWrapper>} />
                 <Route path="workspace" element={<SuspenseWrapper><AdminWorkspace /></SuspenseWrapper>} />
                 <Route path="reports" element={<SuspenseWrapper><AdminReports /></SuspenseWrapper>} />
+                <Route path="orders" element={<SuspenseWrapper><AdminOrders /></SuspenseWrapper>} />
                 <Route path="analytics" element={<SuspenseWrapper><AdminAnalytics /></SuspenseWrapper>} />
                 <Route path="profile" element={<SuspenseWrapper><AdminProfile /></SuspenseWrapper>} />
             </Route>
@@ -210,6 +235,7 @@ export default function AppRouter() {
                 <Route index element={<SuspenseWrapper><VendeurDashboard /></SuspenseWrapper>} />
                 <Route path="new-sale" element={<SuspenseWrapper><VendeurNewSale /></SuspenseWrapper>} />
                 <Route path="my-sales" element={<SuspenseWrapper><VendeurMySales /></SuspenseWrapper>} />
+                <Route path="orders" element={<SuspenseWrapper><VendeurOrders /></SuspenseWrapper>} />
                 <Route path="stats" element={<SuspenseWrapper><VendeurStats /></SuspenseWrapper>} />
                 <Route path="reports" element={<SuspenseWrapper><VendeurReports /></SuspenseWrapper>} />
                 <Route path="profile" element={<SuspenseWrapper><VendeurProfile /></SuspenseWrapper>} />
@@ -252,6 +278,51 @@ export default function AppRouter() {
                 <Route path="portfolio" element={<SuspenseWrapper><InvestorPortfolio /></SuspenseWrapper>} />
                 <Route path="reports" element={<SuspenseWrapper><InvestorReports /></SuspenseWrapper>} />
                 <Route path="profile" element={<SuspenseWrapper><InvestorProfile /></SuspenseWrapper>} />
+            </Route>
+
+            {/* Client (Acheteur) routes - public shop access */}
+            <Route element={<ClientLayout />}>
+                <Route path="/boutique" element={<SuspenseWrapper><ClientHome /></SuspenseWrapper>} />
+                <Route path="/shop" element={<SuspenseWrapper><ClientCatalog /></SuspenseWrapper>} />
+                <Route path="/shop/:id" element={<SuspenseWrapper><ClientProductDetail /></SuspenseWrapper>} />
+            </Route>
+
+            {/* Client protected routes - requires acheteur role */}
+            <Route
+                path="/cart"
+                element={
+                    <ProtectedRoute allowedRoles={['acheteur']}>
+                        <ClientLayout />
+                    </ProtectedRoute>
+                }
+            >
+                <Route index element={<SuspenseWrapper><ClientCart /></SuspenseWrapper>} />
+            </Route>
+
+            <Route
+                path="/checkout"
+                element={
+                    <ProtectedRoute allowedRoles={['acheteur']}>
+                        <ClientLayout />
+                    </ProtectedRoute>
+                }
+            >
+                <Route index element={<SuspenseWrapper><ClientCheckout /></SuspenseWrapper>} />
+            </Route>
+
+            <Route
+                path="/account"
+                element={
+                    <ProtectedRoute allowedRoles={['acheteur']}>
+                        <ClientLayout />
+                    </ProtectedRoute>
+                }
+            >
+                <Route index element={<SuspenseWrapper><ClientProfile /></SuspenseWrapper>} />
+                <Route path="profile" element={<SuspenseWrapper><ClientProfile /></SuspenseWrapper>} />
+                <Route path="orders" element={<SuspenseWrapper><ClientOrders /></SuspenseWrapper>} />
+                <Route path="orders/:id" element={<SuspenseWrapper><ClientOrderDetail /></SuspenseWrapper>} />
+                <Route path="loyalty" element={<SuspenseWrapper><ClientLoyalty /></SuspenseWrapper>} />
             </Route>
 
             {/* 404 */}

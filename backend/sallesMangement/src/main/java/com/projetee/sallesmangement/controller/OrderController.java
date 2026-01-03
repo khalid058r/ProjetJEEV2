@@ -16,7 +16,8 @@ import java.util.List;
  * Contrôleur pour la gestion des commandes Click & Collect.
  * 
  * - Clients (ACHETEUR): créer, voir, annuler leurs commandes
- * - Vendeurs (VENDEUR/ADMIN): voir commandes en attente, marquer comme prêt/complété
+ * - Vendeurs (VENDEUR/ADMIN): voir commandes en attente, marquer comme
+ * prêt/complété
  */
 @RestController
 @RequestMapping("/api/orders")
@@ -34,8 +35,7 @@ public class OrderController {
     public ResponseEntity<OrderResponse> createOrder(
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Role") Role role,
-            @Valid @RequestBody CreateOrderRequest request
-    ) {
+            @Valid @RequestBody CreateOrderRequest request) {
         validateCustomerRole(role);
         OrderResponse order = orderService.createOrder(userId, request);
         return ResponseEntity
@@ -50,8 +50,7 @@ public class OrderController {
     public ResponseEntity<OrderResponse> getOrder(
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Role") Role role,
-            @PathVariable Long orderId
-    ) {
+            @PathVariable Long orderId) {
         validateCustomerRole(role);
         return ResponseEntity.ok(orderService.getOrder(userId, orderId));
     }
@@ -62,8 +61,7 @@ public class OrderController {
     @GetMapping("/history")
     public ResponseEntity<OrderHistoryResponse> getOrderHistory(
             @RequestHeader("X-User-Id") Long userId,
-            @RequestHeader("X-User-Role") Role role
-    ) {
+            @RequestHeader("X-User-Role") Role role) {
         validateCustomerRole(role);
         return ResponseEntity.ok(orderService.getOrderHistory(userId));
     }
@@ -75,8 +73,7 @@ public class OrderController {
     public ResponseEntity<OrderResponse> cancelOrder(
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Role") Role role,
-            @PathVariable Long orderId
-    ) {
+            @PathVariable Long orderId) {
         validateCustomerRole(role);
         return ResponseEntity.ok(orderService.cancelOrder(userId, orderId));
     }
@@ -86,12 +83,22 @@ public class OrderController {
      */
     @GetMapping("/pickup/{pickupCode}")
     public ResponseEntity<OrderResponse> getOrderByPickupCode(
-            @PathVariable String pickupCode
-    ) {
+            @PathVariable String pickupCode) {
         return ResponseEntity.ok(orderService.getOrderByPickupCode(pickupCode));
     }
 
     // ============ ENDPOINTS VENDEUR (ADMIN/VENDEUR) ============
+
+    /**
+     * Liste toutes les commandes Click & Collect.
+     */
+    @GetMapping("/all")
+    public ResponseEntity<List<OrderResponse>> getAllOrders(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") Role role) {
+        validateVendorRole(role);
+        return ResponseEntity.ok(orderService.getAllOnlineOrders());
+    }
 
     /**
      * Liste les commandes en attente de préparation.
@@ -99,10 +106,33 @@ public class OrderController {
     @GetMapping("/pending")
     public ResponseEntity<List<OrderResponse>> getPendingOrders(
             @RequestHeader("X-User-Id") Long userId,
-            @RequestHeader("X-User-Role") Role role
-    ) {
+            @RequestHeader("X-User-Role") Role role) {
         validateVendorRole(role);
         return ResponseEntity.ok(orderService.getPendingOrders());
+    }
+
+    /**
+     * Confirme une commande.
+     */
+    @PostMapping("/{orderId}/confirm")
+    public ResponseEntity<OrderResponse> confirmOrder(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") Role role,
+            @PathVariable Long orderId) {
+        validateVendorRole(role);
+        return ResponseEntity.ok(orderService.confirmOrder(orderId, userId));
+    }
+
+    /**
+     * Met une commande en préparation.
+     */
+    @PostMapping("/{orderId}/process")
+    public ResponseEntity<OrderResponse> processOrder(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") Role role,
+            @PathVariable Long orderId) {
+        validateVendorRole(role);
+        return ResponseEntity.ok(orderService.processOrder(orderId, userId));
     }
 
     /**
@@ -112,8 +142,7 @@ public class OrderController {
     public ResponseEntity<OrderResponse> markAsReady(
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Role") Role role,
-            @PathVariable Long orderId
-    ) {
+            @PathVariable Long orderId) {
         validateVendorRole(role);
         return ResponseEntity.ok(orderService.markAsReady(orderId, userId));
     }
@@ -125,10 +154,23 @@ public class OrderController {
     public ResponseEntity<OrderResponse> markAsCompleted(
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Role") Role role,
-            @PathVariable Long orderId
-    ) {
+            @PathVariable Long orderId) {
         validateVendorRole(role);
         return ResponseEntity.ok(orderService.markAsCompleted(orderId, userId));
+    }
+
+    /**
+     * Rejette une commande.
+     */
+    @PostMapping("/{orderId}/reject")
+    public ResponseEntity<OrderResponse> rejectOrder(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") Role role,
+            @PathVariable Long orderId,
+            @RequestBody(required = false) RejectOrderRequest request) {
+        validateVendorRole(role);
+        String reason = request != null ? request.getReason() : null;
+        return ResponseEntity.ok(orderService.rejectOrder(orderId, userId, reason));
     }
 
     // ============ VALIDATION ============

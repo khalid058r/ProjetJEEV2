@@ -63,10 +63,8 @@ public class User {
     @Builder.Default
     private Integer loyaltyPoints = 0;
 
-
     @Column(length = 20)
     private String phone;
-
 
     @OneToMany(mappedBy = "customer")
     @JsonIgnore
@@ -80,4 +78,3 @@ public class User {
     @EqualsAndHashCode.Exclude
     private Cart cart;
 }
-

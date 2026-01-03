@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     Plus, Edit2, Trash2, Users as UsersIcon, Shield,
     Mail, Calendar, MoreVertical, Search, UserCheck, UserX, Power, Eye,
-    ChevronLeft, ChevronRight
+    ChevronLeft, ChevronRight, ShoppingBag, Briefcase
 } from 'lucide-react'
 import { userApi } from '../../api'
 import { Button, Card, Modal, Input, Badge, Loading, EmptyState, ConfirmDialog, SearchInput, Avatar } from '../../components/ui'
@@ -13,11 +13,13 @@ import toast from 'react-hot-toast'
 
 export default function Users() {
     const navigate = useNavigate()
+    const [searchParams, setSearchParams] = useSearchParams()
     const [users, setUsers] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
     const [roleFilter, setRoleFilter] = useState('')
     const [statusFilter, setStatusFilter] = useState('')
+    const [userTypeFilter, setUserTypeFilter] = useState(searchParams.get('type') || 'backoffice') // 'backoffice' or 'clients'
     const [showModal, setShowModal] = useState(false)
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [selectedUser, setSelectedUser] = useState(null)
@@ -34,12 +36,16 @@ export default function Users() {
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(10)
 
-    const roles = [
+    const backOfficeRoles = [
         { value: 'ADMIN', label: 'Administrateur', color: 'danger' },
         { value: 'VENDEUR', label: 'Vendeur', color: 'success' },
         { value: 'ANALYSTE', label: 'Analyste', color: 'secondary' },
         { value: 'INVESTISSEUR', label: 'Investisseur', color: 'warning' }
     ]
+
+    const roles = userTypeFilter === 'clients'
+        ? [{ value: 'ACHETEUR', label: 'Client', color: 'primary' }]
+        : backOfficeRoles
 
     useEffect(() => {
         fetchUsers()
@@ -58,6 +64,11 @@ export default function Users() {
     }
 
     const filteredUsers = users.filter(user => {
+        // Filter by user type first
+        const isClient = user.role === 'ACHETEUR'
+        if (userTypeFilter === 'clients' && !isClient) return false
+        if (userTypeFilter === 'backoffice' && isClient) return false
+
         const matchesSearch =
             user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.email?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -78,10 +89,20 @@ export default function Users() {
     // Reset to page 1 when filters change
     useEffect(() => {
         setCurrentPage(1)
-    }, [searchQuery, roleFilter, statusFilter])
+    }, [searchQuery, roleFilter, statusFilter, userTypeFilter])
+
+    // Update URL when user type changes
+    useEffect(() => {
+        setSearchParams({ type: userTypeFilter })
+        setRoleFilter('') // Reset role filter when switching type
+    }, [userTypeFilter])
 
     const getRoleBadge = (role) => {
-        const roleConfig = roles.find(r => r.value === role) || { label: role, color: 'default' }
+        const allRoles = [
+            ...backOfficeRoles,
+            { value: 'ACHETEUR', label: 'Client', color: 'primary' }
+        ]
+        const roleConfig = allRoles.find(r => r.value === role) || { label: role, color: 'default' }
         return <Badge variant={roleConfig.color}>{roleConfig.label}</Badge>
     }
 
@@ -197,22 +218,62 @@ export default function Users() {
         count: users.filter(u => u.role === role.value).length
     }))
 
+    // Total counts
+    const backOfficeCount = users.filter(u => u.role !== 'ACHETEUR').length
+    const clientsCount = users.filter(u => u.role === 'ACHETEUR').length
+
     return (
         <div className="space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-dark-900 dark:text-white">Utilisateurs</h1>
-                    <p className="text-dark-500">{users.length} utilisateurs au total</p>
+                    <h1 className="text-2xl font-bold text-dark-900 dark:text-white">
+                        {userTypeFilter === 'clients' ? 'Clients' : 'Collaborateurs'}
+                    </h1>
+                    <p className="text-dark-500">
+                        {userTypeFilter === 'clients'
+                            ? `${clientsCount} clients inscrits`
+                            : `${backOfficeCount} collaborateurs`}
+                    </p>
                 </div>
-                <Button onClick={() => handleOpenModal()}>
-                    <Plus className="w-5 h-5 mr-2" />
-                    Nouvel Utilisateur
-                </Button>
+                {userTypeFilter === 'backoffice' && (
+                    <Button onClick={() => handleOpenModal()}>
+                        <Plus className="w-5 h-5 mr-2" />
+                        Nouvel Utilisateur
+                    </Button>
+                )}
+            </div>
+
+            {/* User Type Tabs */}
+            <div className="flex gap-2 p-1 bg-gray-100 dark:bg-dark-800 rounded-xl w-fit">
+                <button
+                    onClick={() => setUserTypeFilter('backoffice')}
+                    className={`
+                        flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
+                        ${userTypeFilter === 'backoffice'
+                            ? 'bg-white dark:bg-dark-700 text-indigo-600 shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'}
+                    `}
+                >
+                    <Briefcase className="w-4 h-4" />
+                    Back-Office ({backOfficeCount})
+                </button>
+                <button
+                    onClick={() => setUserTypeFilter('clients')}
+                    className={`
+                        flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
+                        ${userTypeFilter === 'clients'
+                            ? 'bg-white dark:bg-dark-700 text-emerald-600 shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'}
+                    `}
+                >
+                    <ShoppingBag className="w-4 h-4" />
+                    Clients ({clientsCount})
+                </button>
             </div>
 
             {/* Role Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className={`grid gap-4 ${userTypeFilter === 'clients' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 sm:grid-cols-4'}`}>
                 {roleStats.map((role) => (
                     <Card
                         key={role.value}
@@ -407,8 +468,8 @@ export default function Users() {
                                             key={page}
                                             onClick={() => setCurrentPage(page)}
                                             className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${currentPage === page
-                                                    ? 'bg-primary-500 text-white'
-                                                    : 'text-dark-600 hover:bg-dark-100 dark:hover:bg-dark-700'
+                                                ? 'bg-primary-500 text-white'
+                                                : 'text-dark-600 hover:bg-dark-100 dark:hover:bg-dark-700'
                                                 }`}
                                         >
                                             {page}

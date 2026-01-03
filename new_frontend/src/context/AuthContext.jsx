@@ -65,7 +65,9 @@ export function AuthProvider({ children }) {
         try {
             setLoading(true)
             const response = await authApi.register(userData)
-            toast.success('Compte créé avec succès! Veuillez vous connecter.')
+            // Les clients ACHETEUR sont automatiquement actifs
+            const isClient = userData.role === 'ACHETEUR'
+            toast.success(isClient ? 'Compte créé ! Connexion en cours...' : 'Compte créé ! En attente de validation admin.')
             return response.data
         } catch (error) {
             const message = error.response?.data?.message || 'Erreur lors de l\'inscription'
@@ -95,8 +97,9 @@ export function AuthProvider({ children }) {
             VENDEUR: '/vendeur',
             ANALYSTE: '/analyst',
             INVESTISSEUR: '/investor',
+            ACHETEUR: '/shop',
         }
-        return paths[role] || '/admin'
+        return paths[role] || '/shop'
     }
 
     const value = {

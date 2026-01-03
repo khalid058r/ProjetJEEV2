@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Entity
 @Table(name = "carts")
 @Getter
@@ -21,13 +20,11 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     @OneToOne(optional = false)
     @JoinColumn(name = "customer_id", nullable = false, unique = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private User customer;
-
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -35,10 +32,8 @@ public class Cart {
     @EqualsAndHashCode.Exclude
     private List<CartItem> items = new ArrayList<>();
 
-
     @Column(nullable = false)
     private LocalDateTime createdAt;
-
 
     private LocalDateTime updatedAt;
 
@@ -50,7 +45,6 @@ public class Cart {
                 .mapToDouble(CartItem::getLineTotal)
                 .sum();
     }
-
 
     public Integer getTotalItems() {
         if (items == null || items.isEmpty()) {

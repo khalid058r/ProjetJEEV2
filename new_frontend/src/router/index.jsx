@@ -25,11 +25,13 @@ const AdminUserDetail = lazy(() => import('../pages/admin/UserDetail'))
 const AdminLowStock = lazy(() => import('../pages/admin/LowStock'))
 const AdminWorkspace = lazy(() => import('../pages/admin/Workspace'))
 const AdminReports = lazy(() => import('../pages/admin/Reports'))
+const AdminOrders = lazy(() => import('../pages/admin/Orders'))
 
 // Vendeur Pages
 const VendeurDashboard = lazy(() => import('../pages/vendeur/Dashboard'))
 const VendeurNewSale = lazy(() => import('../pages/vendeur/NewSale'))
 const VendeurMySales = lazy(() => import('../pages/vendeur/MySales'))
+const VendeurOrders = lazy(() => import('../pages/vendeur/Orders'))
 
 // Analyst Pages
 const AnalystDashboard = lazy(() => import('../pages/analyst/Dashboard'))
@@ -223,6 +225,14 @@ export const router = createBrowserRouter([
                         <AdminReports />
                     </SuspenseWrapper>
                 )
+            },
+            {
+                path: 'orders',
+                element: (
+                    <SuspenseWrapper>
+                        <AdminOrders />
+                    </SuspenseWrapper>
+                )
             }
         ]
     },
@@ -259,6 +269,14 @@ export const router = createBrowserRouter([
                 element: (
                     <SuspenseWrapper>
                         <VendeurMySales />
+                    </SuspenseWrapper>
+                )
+            },
+            {
+                path: 'orders',
+                element: (
+                    <SuspenseWrapper>
+                        <VendeurOrders />
                     </SuspenseWrapper>
                 )
             }
@@ -378,6 +396,12 @@ export const router = createBrowserRouter([
         path: '*',
         element: <NotFound />
     }
-])
+], {
+    // React Router v7 future flags - opt-in to new behavior
+    future: {
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+    }
+})
 
 export default router

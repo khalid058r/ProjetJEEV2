@@ -132,20 +132,28 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public String calculateLoyaltyTier(Integer points) {
-        if (points == null) return "BRONZE";
-        
-        if (points >= 10000) return "PLATINUM";
-        if (points >= 5000) return "GOLD";
-        if (points >= 1000) return "SILVER";
+        if (points == null)
+            return "BRONZE";
+
+        if (points >= 10000)
+            return "PLATINUM";
+        if (points >= 5000)
+            return "GOLD";
+        if (points >= 1000)
+            return "SILVER";
         return "BRONZE";
     }
 
     private int calculatePointsToNextTier(Integer points) {
-        if (points == null) points = 0;
+        if (points == null)
+            points = 0;
 
-        if (points >= 10000) return 0; // Déjà PLATINUM
-        if (points >= 5000) return 10000 - points;
-        if (points >= 1000) return 5000 - points;
+        if (points >= 10000)
+            return 0; // Déjà PLATINUM
+        if (points >= 5000)
+            return 10000 - points;
+        if (points >= 1000)
+            return 5000 - points;
         return 1000 - points;
     }
 

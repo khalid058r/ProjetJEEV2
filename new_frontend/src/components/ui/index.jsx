@@ -1111,3 +1111,6 @@ export default {
     AlertBox,
     NotificationCenter,
 }
+
+// Export NotificationBell component
+export { default as NotificationBell } from './NotificationBell'

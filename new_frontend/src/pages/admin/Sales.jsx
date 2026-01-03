@@ -61,8 +61,8 @@ export default function Sales() {
         try {
             setLoading(true)
             const [salesRes, productsRes, usersRes, categoriesRes] = await Promise.all([
-                saleApi.getAll(),
-                productApi.getAll(),
+                saleApi.getAll().catch(() => ({ data: [] })),
+                productApi.getAll().catch(() => ({ data: [] })),
                 userApi.getAll().catch(() => ({ data: [] })),
                 categoryApi.getAll().catch(() => ({ data: [] }))
             ])

@@ -314,7 +314,7 @@ export default function AdminAnalytics() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="font-medium text-dark-900 dark:text-white text-sm truncate">
-                                                {product.name}
+                                                {product.title || product.name}
                                             </p>
                                             <p className="text-xs text-dark-500">
                                                 {product.sales} ventes

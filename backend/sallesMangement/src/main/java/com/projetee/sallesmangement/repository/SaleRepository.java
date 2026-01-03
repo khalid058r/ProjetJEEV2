@@ -17,6 +17,7 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
     // ============ MÉTHODES EXISTANTES (NE PAS MODIFIER) ============
 
     List<Sale> findByUserId(Long userId);
+
     Page<Sale> findByUserId(Long userId, Pageable pageable);
 
     List<Sale> findByStatus(SaleStatus status);
@@ -35,8 +36,7 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
     List<Sale> findByStatusAndDateBetween(
             @Param("status") SaleStatus status,
             @Param("start") LocalDate start,
-            @Param("end") LocalDate end
-    );
+            @Param("end") LocalDate end);
 
     // ============ NOUVELLES MÉTHODES POUR CLICK & COLLECT ============
 
@@ -44,18 +44,25 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
      * Trouve les commandes d'un client (ONLINE).
      */
     List<Sale> findByCustomerId(Long customerId);
+
     Page<Sale> findByCustomerId(Long customerId, Pageable pageable);
 
     /**
      * Trouve les commandes par type (IN_STORE ou ONLINE).
      */
     List<Sale> findBySaleType(SaleType saleType);
+
     Page<Sale> findBySaleType(SaleType saleType, Pageable pageable);
 
     /**
      * Trouve les commandes en attente de préparation (pour vendeurs).
      */
     List<Sale> findBySaleTypeAndStatus(SaleType saleType, SaleStatus status);
+
+    /**
+     * Trouve les commandes par type et statuts multiples.
+     */
+    List<Sale> findBySaleTypeAndStatusIn(SaleType saleType, List<SaleStatus> statuses);
 
     /**
      * Trouve une commande par son code de retrait.

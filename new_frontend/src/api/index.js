@@ -1,4 +1,14 @@
 import api from './axios'
+import { stockApi } from './stock'
+
+// Shop & Client APIs
+export { shopApi } from './shop'
+export { cartApi } from './cart'
+export { ordersApi } from './orders'
+export { customerApi } from './customer'
+// export { stockApi } from './stock' // Removed to avoid conflict, we export it below via named export of imported var if needed
+
+export { stockApi }
 
 export const authApi = {
     login: (credentials) => api.post('/auth/login', credentials),
@@ -10,14 +20,15 @@ export const authApi = {
 
 export const productApi = {
     getAll: (params) => api.get('/products', { params }),
-    getById: (id) => api.get(`/products/${id}`),
+    getId: (id) => api.get(`/products/${id}`),
     create: (data) => api.post('/products', data),
     update: (id, data) => api.put(`/products/${id}`, data),
     delete: (id) => api.delete(`/products/${id}`),
     search: (query) => api.get('/products/search', { params: { q: query } }),
-    getByCategory: (categoryId) => api.get(`/products/category/${categoryId}`),
-    getLowStock: () => api.get('/products/low-stock'),
-    getTopSelling: (limit = 10) => api.get('/products/top-selling', { params: { limit } }),
+    getByCategory: (categoryId) => api.get(`/categories/${categoryId}/products`),
+    // Redirection vers Analytics API pour la consistance des données
+    getLowStock: () => api.get('/analytics/products/low-stock'),
+    getTopSelling: (limit = 10) => api.get('/analytics/products/best-sellers', { params: { limit } }),
 }
 
 export const categoryApi = {
@@ -91,4 +102,5 @@ export default {
     sales: saleApi,
     users: userApi,
     analytics: analyticsApi,
+    stock: stockApi,
 }

@@ -151,9 +151,9 @@ export default function Performance() {
             if (Array.isArray(bestSellers)) {
                 products = bestSellers.slice(0, 5).map((p, index) => ({
                     rank: index + 1,
-                    name: p.productName || p.name || `Produit ${index + 1}`,
-                    revenue: p.totalRevenue || p.revenue || 0,
-                    quantity: p.totalQuantity || p.quantity || 0,
+                    name: p.title || p.productName || p.name || `Produit ${index + 1}`,
+                    revenue: p.revenue || p.totalRevenue || 0,
+                    quantity: p.quantitySold || p.totalQuantity || p.quantity || 0,
                     growth: 20 - (index * 4) + (Math.random() * 6 - 3)
                 }))
             }
@@ -311,9 +311,9 @@ export default function Performance() {
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-2 h-8 rounded-full ${index === 0 ? 'bg-success-500' :
-                                                        index === 1 ? 'bg-primary-500' :
-                                                            index === 2 ? 'bg-warning-500' :
-                                                                'bg-dark-300'
+                                                    index === 1 ? 'bg-primary-500' :
+                                                        index === 2 ? 'bg-warning-500' :
+                                                            'bg-dark-300'
                                                     }`} />
                                                 <div>
                                                     <p className="font-medium text-dark-900 dark:text-white">{cat.name}</p>
@@ -341,9 +341,9 @@ export default function Performance() {
                                                 animate={{ width: `${cat.share}%` }}
                                                 transition={{ duration: 0.8, delay: 0.6 + index * 0.05 }}
                                                 className={`h-full rounded-full ${index === 0 ? 'bg-success-500' :
-                                                        index === 1 ? 'bg-primary-500' :
-                                                            index === 2 ? 'bg-warning-500' :
-                                                                'bg-dark-400'
+                                                    index === 1 ? 'bg-primary-500' :
+                                                        index === 2 ? 'bg-warning-500' :
+                                                            'bg-dark-400'
                                                     }`}
                                             />
                                         </div>
@@ -383,9 +383,9 @@ export default function Performance() {
                                     >
                                         <div className="flex items-center gap-4">
                                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${index === 0 ? 'bg-gradient-to-br from-warning-400 to-warning-600 text-white' :
-                                                    index === 1 ? 'bg-gradient-to-br from-dark-300 to-dark-400 text-white' :
-                                                        index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white' :
-                                                            'bg-dark-100 dark:bg-dark-800 text-dark-600 dark:text-dark-400'
+                                                index === 1 ? 'bg-gradient-to-br from-dark-300 to-dark-400 text-white' :
+                                                    index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white' :
+                                                        'bg-dark-100 dark:bg-dark-800 text-dark-600 dark:text-dark-400'
                                                 }`}>
                                                 #{product.rank}
                                             </div>

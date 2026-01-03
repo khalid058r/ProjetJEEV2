@@ -23,4 +23,6 @@ public interface UserService {
     UserResponse deactivate(Long id);
 
     void delete(Long id);
+
+    UserResponse updatePassword(Long id, String currentPassword, String newPassword);
 }

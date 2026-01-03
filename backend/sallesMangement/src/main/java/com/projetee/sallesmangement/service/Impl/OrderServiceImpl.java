@@ -67,7 +67,7 @@ public class OrderServiceImpl implements OrderService {
 
             // Vérifier le stock final
             if (product.getStock() < cartItem.getQuantity()) {
-                throw new BadRequestException("Not enough stock for: " + product.getTitle() + 
+                throw new BadRequestException("Not enough stock for: " + product.getTitle() +
                         ". Available: " + product.getStock());
             }
 
@@ -191,8 +191,19 @@ public class OrderServiceImpl implements OrderService {
     // ============ MÉTHODES POUR VENDEURS ============
 
     @Override
+    public List<OrderResponse> getAllOnlineOrders() {
+        List<Sale> onlineOrders = saleRepo.findBySaleType(SaleType.ONLINE);
+        return onlineOrders.stream()
+                .map(o -> mapToResponse(o, 0))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<OrderResponse> getPendingOrders() {
-        List<Sale> pending = saleRepo.findBySaleTypeAndStatus(SaleType.ONLINE, SaleStatus.PENDING_PICKUP);
+        // Récupérer toutes les commandes non complétées et non annulées
+        List<Sale> pending = saleRepo.findBySaleTypeAndStatusIn(
+                SaleType.ONLINE,
+                List.of(SaleStatus.PENDING_PICKUP, SaleStatus.CREATED, SaleStatus.CONFIRMED, SaleStatus.READY_PICKUP));
         return pending.stream()
                 .map(o -> mapToResponse(o, 0))
                 .collect(Collectors.toList());
@@ -200,27 +211,54 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
+    public OrderResponse confirmOrder(Long orderId, Long vendorId) {
+        User vendor = getVendorOrThrow(vendorId);
+        Sale order = getOnlineOrderOrThrow(orderId);
+
+        if (order.getStatus() != SaleStatus.CREATED && order.getStatus() != SaleStatus.PENDING_PICKUP) {
+            throw new BadRequestException("Order cannot be confirmed in current status: " + order.getStatus());
+        }
+
+        order.setStatus(SaleStatus.CONFIRMED);
+        order.setUser(vendor);
+        saleRepo.save(order);
+
+        return mapToResponse(order, 0);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse processOrder(Long orderId, Long vendorId) {
+        User vendor = getVendorOrThrow(vendorId);
+        Sale order = getOnlineOrderOrThrow(orderId);
+
+        if (order.getStatus() != SaleStatus.CONFIRMED && order.getStatus() != SaleStatus.CREATED
+                && order.getStatus() != SaleStatus.PENDING_PICKUP) {
+            throw new BadRequestException("Order cannot be processed in current status: " + order.getStatus());
+        }
+
+        order.setStatus(SaleStatus.PENDING_PICKUP);
+        order.setUser(vendor);
+        saleRepo.save(order);
+
+        return mapToResponse(order, 0);
+    }
+
+    @Override
+    @Transactional
     public OrderResponse markAsReady(Long orderId, Long vendorId) {
-        User vendor = userRepo.findById(vendorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
+        User vendor = getVendorOrThrow(vendorId);
+        Sale order = getOnlineOrderOrThrow(orderId);
 
-        if (vendor.getRole() != Role.ADMIN && vendor.getRole() != Role.VENDEUR) {
-            throw new BadRequestException("Only vendors can mark orders as ready");
-        }
-
-        Sale order = saleRepo.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
-
-        if (order.getSaleType() != SaleType.ONLINE) {
-            throw new BadRequestException("This is not an online order");
-        }
-
-        if (order.getStatus() != SaleStatus.PENDING_PICKUP) {
-            throw new BadRequestException("Order is not pending pickup");
+        // Permettre de marquer prête depuis plusieurs statuts
+        if (order.getStatus() != SaleStatus.PENDING_PICKUP &&
+                order.getStatus() != SaleStatus.CONFIRMED &&
+                order.getStatus() != SaleStatus.CREATED) {
+            throw new BadRequestException("Order cannot be marked as ready in current status: " + order.getStatus());
         }
 
         order.setStatus(SaleStatus.READY_PICKUP);
-        order.setUser(vendor); // Le vendeur qui a préparé
+        order.setUser(vendor);
         saleRepo.save(order);
 
         return mapToResponse(order, 0);
@@ -229,19 +267,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderResponse markAsCompleted(Long orderId, Long vendorId) {
-        User vendor = userRepo.findById(vendorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
-
-        if (vendor.getRole() != Role.ADMIN && vendor.getRole() != Role.VENDEUR) {
-            throw new BadRequestException("Only vendors can mark orders as completed");
-        }
-
-        Sale order = saleRepo.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
-
-        if (order.getSaleType() != SaleType.ONLINE) {
-            throw new BadRequestException("This is not an online order");
-        }
+        User vendor = getVendorOrThrow(vendorId);
+        Sale order = getOnlineOrderOrThrow(orderId);
 
         if (order.getStatus() != SaleStatus.READY_PICKUP) {
             throw new BadRequestException("Order is not ready for pickup");
@@ -254,7 +281,66 @@ public class OrderServiceImpl implements OrderService {
         return mapToResponse(order, 0);
     }
 
+    @Override
+    @Transactional
+    public OrderResponse rejectOrder(Long orderId, Long vendorId, String reason) {
+        User vendor = getVendorOrThrow(vendorId);
+        Sale order = getOnlineOrderOrThrow(orderId);
+
+        if (order.getStatus() == SaleStatus.COMPLETED) {
+            throw new BadRequestException("Cannot reject a completed order");
+        }
+        if (order.getStatus() == SaleStatus.CANCELLED) {
+            throw new BadRequestException("Order is already cancelled");
+        }
+
+        // Restaurer le stock
+        for (LigneVente lv : order.getLignesVente()) {
+            Product p = lv.getProduct();
+            p.setStock(p.getStock() + lv.getQuantity());
+            productRepo.save(p);
+        }
+
+        // Retirer les points de fidélité
+        int pointsToRemove = (int) Math.floor(order.getTotalAmount());
+        User customer = order.getCustomer();
+        if (customer != null) {
+            customer.setLoyaltyPoints(Math.max(0, customer.getLoyaltyPoints() - pointsToRemove));
+            userRepo.save(customer);
+        }
+
+        order.setStatus(SaleStatus.CANCELLED);
+        order.setNotes((order.getNotes() != null ? order.getNotes() + " | " : "") + "Rejeté: "
+                + (reason != null ? reason : "Sans raison"));
+        order.setUser(vendor);
+        saleRepo.save(order);
+
+        return mapToResponse(order, -pointsToRemove);
+    }
+
     // ============ MÉTHODES PRIVÉES ============
+
+    private User getVendorOrThrow(Long vendorId) {
+        User vendor = userRepo.findById(vendorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
+
+        if (vendor.getRole() != Role.ADMIN && vendor.getRole() != Role.VENDEUR) {
+            throw new BadRequestException("Only vendors can manage orders");
+        }
+
+        return vendor;
+    }
+
+    private Sale getOnlineOrderOrThrow(Long orderId) {
+        Sale order = saleRepo.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        if (order.getSaleType() != SaleType.ONLINE) {
+            throw new BadRequestException("This is not an online order");
+        }
+
+        return order;
+    }
 
     private User getCustomerOrThrow(Long customerId) {
         User user = userRepo.findById(customerId)

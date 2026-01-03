@@ -28,6 +28,12 @@ public class ProductController {
                 .body(response);
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductResponse>> search(@RequestParam("q") String query) {
+        return ResponseEntity.ok(service.search(query));
+    }
+
+
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> get(@PathVariable Long id) {
         return ResponseEntity.ok(service.get(id));

@@ -110,6 +110,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserResponse updatePassword(Long id, String currentPassword, String newPassword) {
+        User user = repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+
+        if (!encoder.matches(currentPassword, user.getPassword())) {
+             throw new BadRequestException("Current password incorrect");
+        }
+
+        user.setPassword(encoder.encode(newPassword));
+        return mapper.toResponse(repo.save(user));
+    }
+
+    @Override
     public void delete(Long id) {
         User user = repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));

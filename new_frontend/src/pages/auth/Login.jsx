@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, Briefcase } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { Button, Input } from '../../components/ui'
 
@@ -26,8 +26,14 @@ export default function Login() {
 
         try {
             const user = await login(formData.email, formData.password)
-            // Navigate based on role - backend returns role in UPPERCASE
             const role = user?.role?.toLowerCase()
+
+            // Vérifier si c'est un utilisateur back-office
+            if (role === 'acheteur') {
+                setError('Ce compte est un compte client. Utilisez le portail client.')
+                return
+            }
+
             const routes = {
                 admin: '/admin',
                 vendeur: '/vendeur',
@@ -59,11 +65,15 @@ export default function Login() {
 
             {/* Header */}
             <div className="text-center lg:text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 rounded-full mb-3">
+                    <Briefcase className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                    <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">Portail Employé</span>
+                </div>
                 <h2 className="text-3xl font-bold text-dark-900 dark:text-white mb-2">
-                    Bienvenue ! 👋
+                    Espace Collaborateur 👋
                 </h2>
                 <p className="text-dark-500">
-                    Connectez-vous à votre compte pour continuer
+                    Connectez-vous à votre compte professionnel
                 </p>
             </div>
 
@@ -186,6 +196,13 @@ export default function Login() {
                     Créer un compte
                 </Link>
             </p>
+
+            {/* Client portal link */}
+            <div className="pt-4 border-t border-gray-200 dark:border-dark-700 text-center">
+                <Link to="/client/login" className="text-sm text-dark-500 hover:text-dark-700 dark:hover:text-dark-300">
+                    Vous êtes client ? <span className="text-emerald-600 dark:text-emerald-400">Accès Espace Client</span>
+                </Link>
+            </div>
         </div>
     )
 }

@@ -68,8 +68,8 @@ export default function InvestorDashboard() {
             } else {
                 // Fallback: charger les données brutes
                 const [salesRes, productsRes] = await Promise.all([
-                    saleApi.getAll(),
-                    productApi.getAll()
+                    saleApi.getAll().catch(() => ({ data: [] })),
+                    productApi.getAll().catch(() => ({ data: [] }))
                 ])
                 const sales = salesRes.data || []
                 const products = productsRes.data || []

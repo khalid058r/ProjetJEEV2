@@ -19,5 +19,7 @@ public interface ProductService {
     ProductResponse update(Long id, ProductRequest request);
 
     void delete(Long id);
+
+    List<ProductResponse> search(String query);
 }
 

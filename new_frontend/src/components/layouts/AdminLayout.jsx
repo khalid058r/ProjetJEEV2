@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
     LayoutDashboard, Package, FolderTree, ShoppingCart, Users,
     BarChart3, Settings, LogOut, Menu, X, Moon, Sun,
-    ChevronDown, Search, User, AlertTriangle, Layout, FileText
+    ChevronDown, Search, User, AlertTriangle, Layout, FileText,
+    ShoppingBag, Warehouse
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -16,8 +17,10 @@ const navigation = [
     { name: 'Produits', href: '/admin/products', icon: Package },
     { name: 'Catégories', href: '/admin/categories', icon: FolderTree },
     { name: 'Ventes', href: '/admin/sales', icon: ShoppingCart },
-    { name: 'Utilisateurs', href: '/admin/users', icon: Users },
+    { name: 'Commandes C&C', href: '/admin/orders', icon: ShoppingBag },
+    { name: 'Gestion Stock', href: '/admin/stock', icon: Warehouse },
     { name: 'Stock Faible', href: '/admin/low-stock', icon: AlertTriangle },
+    { name: 'Utilisateurs', href: '/admin/users', icon: Users },
     { name: 'Workspace', href: '/admin/workspace', icon: Layout },
     { name: 'Rapports', href: '/admin/reports', icon: FileText },
     { name: 'Analytique', href: '/admin/analytics', icon: BarChart3 },

@@ -22,7 +22,12 @@ import ChatMessage from './ChatMessage'
 import QuickActions from './QuickActions'
 
 const ChatBot = () => {
-    const { user } = useAuth()
+    const { user, isAuthenticated } = useAuth()
+
+    // Ne pas afficher le chatbot pour les clients (ACHETEUR) ou si non connecté
+    const isBackOfficeUser = isAuthenticated && user?.role &&
+        ['ADMIN', 'VENDEUR', 'ANALYSTE', 'INVESTISSEUR'].includes(user.role.toUpperCase())
+
     const [isOpen, setIsOpen] = useState(false)
     const [isMinimized, setIsMinimized] = useState(false)
     const [messages, setMessages] = useState([])
@@ -43,11 +48,13 @@ const ChatBot = () => {
         scrollToBottom()
     }, [messages])
 
-    // Check connection and load suggestions on mount
+    // Check connection and load suggestions on mount (only for back-office users)
     useEffect(() => {
-        checkConnection()
-        loadSuggestions()
-    }, [user?.role])
+        if (isBackOfficeUser) {
+            checkConnection()
+            loadSuggestions()
+        }
+    }, [user?.role, isBackOfficeUser])
 
     // Add welcome message when chat opens
     useEffect(() => {
@@ -175,16 +182,20 @@ const ChatBot = () => {
         setIsMinimized(!isMinimized)
     }
 
+    // Ne pas afficher le chatbot pour les non back-office users
+    if (!isBackOfficeUser) {
+        return null
+    }
+
     return (
         <>
             {/* Chat Button */}
             <motion.button
                 onClick={toggleChat}
-                className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-lg transition-all duration-300 ${
-                    isOpen
+                className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-lg transition-all duration-300 ${isOpen
                         ? 'bg-gray-600 dark:bg-gray-700'
                         : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700'
-                }`}
+                    }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={{ opacity: 0, y: 20 }}
@@ -227,9 +238,8 @@ const ChatBot = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className={`fixed bottom-24 right-6 z-50 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden ${
-                            isMinimized ? 'w-80 h-16' : 'w-96 h-[600px]'
-                        }`}
+                        className={`fixed bottom-24 right-6 z-50 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden ${isMinimized ? 'w-80 h-16' : 'w-96 h-[600px]'
+                            }`}
                         style={{ maxHeight: 'calc(100vh - 120px)' }}
                     >
                         {/* Header */}
@@ -237,9 +247,8 @@ const ChatBot = () => {
                             <div className="flex items-center gap-3">
                                 <div className="relative">
                                     <Bot className="w-8 h-8 text-white" />
-                                    <span className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
-                                        isConnected ? 'bg-green-400' : 'bg-red-400'
-                                    }`} />
+                                    <span className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${isConnected ? 'bg-green-400' : 'bg-red-400'
+                                        }`} />
                                 </div>
                                 <div>
                                     <h3 className="text-white font-semibold">Assistant IA</h3>

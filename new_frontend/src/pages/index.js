@@ -13,3 +13,6 @@ export * from './analyst'
 
 // Investor pages
 export * from './investor'
+
+// Client (Acheteur) pages
+export * from './client'

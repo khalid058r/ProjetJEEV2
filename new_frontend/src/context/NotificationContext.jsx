@@ -1,9 +1,36 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import { useAuth } from './AuthContext'
 
 const NotificationContext = createContext(null)
 
+// Son de notification
+const playNotificationSound = () => {
+    try {
+        // Créer un son simple avec Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+        const oscillator = audioContext.createOscillator()
+        const gainNode = audioContext.createGain()
+
+        oscillator.connect(gainNode)
+        gainNode.connect(audioContext.destination)
+
+        oscillator.frequency.value = 800
+        oscillator.type = 'sine'
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+
+        oscillator.start(audioContext.currentTime)
+        oscillator.stop(audioContext.currentTime + 0.3)
+    } catch (e) {
+        // Ignorer si audio non supporté
+    }
+}
+
 export function NotificationProvider({ children }) {
     const [notifications, setNotifications] = useState([])
+    const { user } = useAuth()
+    const lastOrderCheckRef = useRef(null)
+    const pollingIntervalRef = useRef(null)
 
     // Load from localStorage on mount
     useEffect(() => {
@@ -82,6 +109,49 @@ export function NotificationProvider({ children }) {
             link: `/admin/users/${user.id}`,
             category: 'users'
         }),
+
+        // Click & Collect notifications
+        newOrder: (order) => {
+            playNotificationSound()
+            return addNotification({
+                type: 'order',
+                title: '🛒 Nouvelle commande !',
+                message: `Commande #${order.id} - ${order.customerName || 'Client'} - ${order.totalAmount?.toFixed(2)} MAD`,
+                link: `/vendeur/orders`,
+                category: 'orders',
+                orderId: order.id,
+                priority: 'high'
+            })
+        },
+        orderReady: (order) => {
+            playNotificationSound()
+            return addNotification({
+                type: 'success',
+                title: '📦 Commande prête !',
+                message: `Votre commande #${order.id} est prête à retirer. Code: ${order.pickupCode}`,
+                link: `/account/orders/${order.id}`,
+                category: 'orders',
+                orderId: order.id,
+                pickupCode: order.pickupCode,
+                priority: 'high'
+            })
+        },
+        orderCompleted: (order) => addNotification({
+            type: 'success',
+            title: '✅ Commande récupérée',
+            message: `Commande #${order.id} finalisée avec succès`,
+            link: `/account/orders/${order.id}`,
+            category: 'orders',
+            orderId: order.id
+        }),
+        orderCancelled: (order) => addNotification({
+            type: 'error',
+            title: '❌ Commande annulée',
+            message: `La commande #${order.id} a été annulée`,
+            link: `/account/orders/${order.id}`,
+            category: 'orders',
+            orderId: order.id
+        }),
     }
 
     const value = {
@@ -92,7 +162,8 @@ export function NotificationProvider({ children }) {
         markAsRead,
         markAllAsRead,
         clearAll,
-        notify
+        notify,
+        playSound: playNotificationSound
     }
 
     return (

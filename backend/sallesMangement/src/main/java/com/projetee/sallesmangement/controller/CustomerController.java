@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * Contrôleur REST pour la gestion du profil client (ACHETEUR).
- * Permet aux clients de gérer leur profil et consulter leurs points de fidélité.
+ * Permet aux clients de gérer leur profil et consulter leurs points de
+ * fidélité.
  */
 @RestController
 @RequestMapping("/api/customer")

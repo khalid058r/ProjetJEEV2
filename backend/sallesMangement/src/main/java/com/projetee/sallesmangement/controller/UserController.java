@@ -48,12 +48,21 @@ public class UserController {
         return ResponseEntity.ok(service.getPaginated(page, size, sortBy));
     }
 
-    @PutMapping("/{id}")
     public ResponseEntity<UserResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody UserRequest request
     ) {
         return ResponseEntity.ok(service.update(id, request));
+    }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<UserResponse> updatePassword(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, String> request
+    ) {
+        String currentPassword = request.get("currentPassword");
+        String newPassword = request.get("newPassword");
+        return ResponseEntity.ok(service.updatePassword(id, currentPassword, newPassword));
     }
 
     @PatchMapping("/{id}/activate")

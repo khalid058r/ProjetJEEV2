@@ -37,8 +37,8 @@ export default function ProductDetail() {
             setLoading(true)
             const [productRes, salesRes, categoriesRes] = await Promise.all([
                 productApi.getById(id),
-                saleApi.getAll(),
-                categoryApi.getAll()
+                saleApi.getAll().catch(() => ({ data: [] })),
+                categoryApi.getAll().catch(() => ({ data: [] }))
             ])
 
             const prod = productRes.data
