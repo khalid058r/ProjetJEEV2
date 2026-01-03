@@ -5,7 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -25,8 +26,12 @@ public class LigneVente {
     private Double lineTotal;
 
     @ManyToOne(optional = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Product product;
 
     @ManyToOne(optional = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Sale sale;
 }

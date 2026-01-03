@@ -8,7 +8,8 @@ import lombok.*;
 import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -37,13 +38,18 @@ public class Product {
 
 
     @ManyToOne(optional = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Category category;
 
     @NotNull
+    @Builder.Default
     private Integer stock = 0;
 
     @OneToMany(mappedBy = "product")
     @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<LigneVente> lignesVente;
 
 }

@@ -9,9 +9,20 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Entité User - Représente tous les utilisateurs du système.
+ * 
+ * Rôles supportés:
+ * - ADMIN: Administrateur système
+ * - VENDEUR: Vendeur en magasin
+ * - ANALYSTE: Accès aux analytics
+ * - ACHETEUR: Client e-commerce (Click & Collect)
+ * - INVESTISSEUR: Accès lecture aux KPIs
+ */
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -37,11 +48,36 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    @Builder.Default
     private boolean active = true;
 
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "user")
     @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<Sale> sales;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer loyaltyPoints = 0;
+
+
+    @Column(length = 20)
+    private String phone;
+
+
+    @OneToMany(mappedBy = "customer")
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<Sale> orders;
+
+    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Cart cart;
 }
+

@@ -7,7 +7,8 @@ import lombok.*;
 import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -25,5 +26,7 @@ public class Category {
 
     @OneToMany(mappedBy = "category")
     @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<Product> products;
 }
