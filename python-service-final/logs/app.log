@@ -4952,3 +4952,18 @@ fastapi.exceptions.ResponseValidationError: 2 validation errors:
 2026-01-05 17:25:59,588 - app.main - INFO - GET /api/recommendations/upsell/15 - 200 - 17.80ms
 2026-01-05 17:25:59,607 - httpx - INFO - HTTP Request: GET http://localhost:8080/api/api/products?page=0&size=1000 "HTTP/1.1 500 "
 2026-01-05 17:25:59,612 - app.main - INFO - GET /api/recommendations/crosssell/15 - 200 - 18.16ms
+2026-01-05 17:52:09,609 - app.main - INFO - [STOP] ARRET DU SERVICE
+2026-01-05 17:52:31,130 - app.services.ml_service_v2 - INFO - œ… ModÃ¨le de prix charge©
+2026-01-05 17:52:31,151 - app.services.ml_service_v2 - INFO - œ… ModÃ¨le de demande charge©
+2026-01-05 17:52:31,177 - app.services.ml_service_v2 - INFO - œ… ModÃ¨le bestseller charge©
+2026-01-05 17:52:31,179 - app.services.ml_service_v2 - INFO - œ… Scaler charge©
+2026-01-05 17:52:31,181 - app.services.ml_service_v2 - INFO - œ… Label encoders charge©s
+2026-01-05 17:52:31,185 - app.services.ml_service_v2 - INFO - œ… Feature columns charge©es
+2026-01-05 17:52:31,186 - app.services.ml_service_v2 - INFO - ðŸ“Š ModÃ¨les ML charge©s depuis data\models
+2026-01-05 17:52:31,220 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2026-01-05 17:52:31,383 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2026-01-05 17:52:31,408 - app.services.ml_service_v2 - INFO - œ… Index FAISS charge©
+2026-01-05 17:52:31,412 - app.services.ml_service_v2 - INFO - œ… 513 product IDs charge©s
+2026-01-05 17:52:31,416 - app.services.ml_service_v2 - INFO - œ… Embeddings shape: (513, 256)
+2026-01-05 17:52:31,460 - app.services.ml_service_v2 - INFO - œ… 513 produits charge©s depuis data\uploads\amazon_dataset.csv
+2026-01-05 17:52:31,623 - app.services.ml_service - INFO - [OK] Scikit-learn disponible
