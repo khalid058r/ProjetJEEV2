@@ -11,10 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Service client pour communiquer avec le service Python ML
- * Gère les prédictions ML, recommandations et analytics
- */
+
 @Service
 @Slf4j
 public class PythonMLClient {
@@ -28,13 +25,6 @@ public class PythonMLClient {
         this.restTemplate = restTemplate;
     }
 
-    // =====================================================
-    // PRÉDICTIONS ML
-    // =====================================================
-
-    /**
-     * Prédit le prix optimal pour un produit
-     */
     public PricePredictionResponse predictPrice(ProductInputDTO product) {
         String url = pythonMlServiceUrl + "/api/ml/v2/predict/price";
         log.info("📊 Appel ML prédiction prix: {}", url);
@@ -47,10 +37,10 @@ public class PythonMLClient {
             ResponseEntity<PricePredictionResponse> response = restTemplate.postForEntity(
                     url, request, PricePredictionResponse.class);
 
-            log.info("✅ Prédiction prix reçue");
+            log.info(" Prédiction prix reçue");
             return response.getBody();
         } catch (RestClientException e) {
-            log.error("❌ Erreur prédiction prix: {}", e.getMessage());
+            log.error("Erreur prédiction prix: {}", e.getMessage());
             return PricePredictionResponse.builder()
                     .success(false)
                     .error("Service ML indisponible: " + e.getMessage())
@@ -63,7 +53,7 @@ public class PythonMLClient {
      */
     public DemandPredictionResponse predictDemand(ProductInputDTO product) {
         String url = pythonMlServiceUrl + "/api/ml/v2/predict/demand";
-        log.info("📊 Appel ML prédiction demande: {}", url);
+        log.info("Appel ML prédiction demande: {}", url);
 
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -73,10 +63,10 @@ public class PythonMLClient {
             ResponseEntity<DemandPredictionResponse> response = restTemplate.postForEntity(
                     url, request, DemandPredictionResponse.class);
 
-            log.info("✅ Prédiction demande reçue");
+            log.info("Prédiction demande reçue");
             return response.getBody();
         } catch (RestClientException e) {
-            log.error("❌ Erreur prédiction demande: {}", e.getMessage());
+            log.error("Erreur prédiction demande: {}", e.getMessage());
             return DemandPredictionResponse.builder()
                     .success(false)
                     .error("Service ML indisponible: " + e.getMessage())
@@ -84,12 +74,9 @@ public class PythonMLClient {
         }
     }
 
-    /**
-     * Prédit si un produit sera un bestseller
-     */
     public BestsellerPredictionResponse predictBestseller(ProductInputDTO product) {
         String url = pythonMlServiceUrl + "/api/ml/v2/predict/bestseller";
-        log.info("📊 Appel ML prédiction bestseller: {}", url);
+        log.info("Appel ML prédiction bestseller: {}", url);
 
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -99,10 +86,10 @@ public class PythonMLClient {
             ResponseEntity<BestsellerPredictionResponse> response = restTemplate.postForEntity(
                     url, request, BestsellerPredictionResponse.class);
 
-            log.info("✅ Prédiction bestseller reçue");
+            log.info("Prédiction bestseller reçue");
             return response.getBody();
         } catch (RestClientException e) {
-            log.error("❌ Erreur prédiction bestseller: {}", e.getMessage());
+            log.error("Erreur prédiction bestseller: {}", e.getMessage());
             return BestsellerPredictionResponse.builder()
                     .success(false)
                     .error("Service ML indisponible: " + e.getMessage())
@@ -110,17 +97,10 @@ public class PythonMLClient {
         }
     }
 
-    // =====================================================
-    // RECOMMANDATIONS
-    // =====================================================
-
-    /**
-     * Obtient des produits similaires
-     */
     @SuppressWarnings("unchecked")
     public RecommendationResponse getSimilarProducts(Long productId, int limit) {
         String url = pythonMlServiceUrl + "/api/recommendations/similar/" + productId + "?limit=" + limit;
-        log.info("🔍 Appel recommandations similaires: {}", url);
+        log.info(" Appel recommandations similaires: {}", url);
 
         try {
             ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
@@ -145,7 +125,7 @@ public class PythonMLClient {
                     .error("Réponse invalide du service")
                     .build();
         } catch (Exception e) {
-            log.error("❌ Erreur recommandations similaires: {}", e.getMessage());
+            log.error("Erreur recommandations similaires: {}", e.getMessage());
             return RecommendationResponse.builder()
                     .success(false)
                     .error("Service ML indisponible ou erreur de données: " + e.getMessage())
@@ -153,13 +133,10 @@ public class PythonMLClient {
         }
     }
 
-    /**
-     * Obtient des produits pour upsell
-     */
     @SuppressWarnings("unchecked")
     public RecommendationResponse getUpsellProducts(Long productId, int limit) {
         String url = pythonMlServiceUrl + "/api/recommendations/upsell/" + productId + "?limit=" + limit;
-        log.info("💰 Appel recommandations upsell: {}", url);
+        log.info(" Appel recommandations upsell: {}", url);
 
         try {
             ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
@@ -184,7 +161,7 @@ public class PythonMLClient {
                     .error("Réponse invalide du service")
                     .build();
         } catch (Exception e) {
-            log.error("❌ Erreur recommandations upsell: {}", e.getMessage());
+            log.error("Erreur recommandations upsell: {}", e.getMessage());
             return RecommendationResponse.builder()
                     .success(false)
                     .error("Service ML indisponible ou erreur de données: " + e.getMessage())
@@ -192,9 +169,7 @@ public class PythonMLClient {
         }
     }
 
-    /**
-     * Obtient des produits pour cross-sell
-     */
+
     @SuppressWarnings("unchecked")
     public RecommendationResponse getCrossSellProducts(Long productId, int limit) {
         String url = pythonMlServiceUrl + "/api/recommendations/crosssell/" + productId + "?limit=" + limit;
@@ -223,7 +198,7 @@ public class PythonMLClient {
                     .error("Réponse invalide du service")
                     .build();
         } catch (Exception e) {
-            log.error("❌ Erreur recommandations cross-sell: {}", e.getMessage());
+            log.error("Erreur recommandations cross-sell: {}", e.getMessage());
             return RecommendationResponse.builder()
                     .success(false)
                     .error("Service ML indisponible ou erreur de données: " + e.getMessage())
@@ -231,13 +206,6 @@ public class PythonMLClient {
         }
     }
 
-    // =====================================================
-    // ANALYTICS
-    // =====================================================
-
-    /**
-     * Obtient les KPIs analytics
-     */
     @SuppressWarnings("unchecked")
     public AnalyticsKPIsResponse getKPIs() {
         String url = pythonMlServiceUrl + "/api/analytics/kpis";
@@ -260,7 +228,7 @@ public class PythonMLClient {
                     .message("Réponse invalide")
                     .build();
         } catch (Exception e) {
-            log.error("❌ Erreur KPIs: {}", e.getMessage());
+            log.error(" Erreur KPIs: {}", e.getMessage());
             return AnalyticsKPIsResponse.builder()
                     .success(false)
                     .message("Service ML indisponible: " + e.getMessage())
@@ -268,13 +236,10 @@ public class PythonMLClient {
         }
     }
 
-    /**
-     * Obtient l'analyse des tendances
-     */
     @SuppressWarnings("unchecked")
     public Map<String, Object> getTrends() {
         String url = pythonMlServiceUrl + "/api/analytics/trends";
-        log.info("📊 Appel analyse tendances: {}", url);
+        log.info("Appel analyse tendances: {}", url);
 
         try {
             ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
@@ -285,16 +250,9 @@ public class PythonMLClient {
         }
     }
 
-    // =====================================================
-    // HEALTH CHECK
-    // =====================================================
-
-    /**
-     * Vérifie si le service Python est disponible
-     */
     public boolean isServiceAvailable() {
         String url = pythonMlServiceUrl + "/api/health";
-        log.debug("🏥 Health check: {}", url);
+        log.debug(" Health check: {}", url);
 
         try {
             ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
@@ -305,9 +263,6 @@ public class PythonMLClient {
         }
     }
 
-    /**
-     * Obtient les détails de santé du service
-     */
     @SuppressWarnings("unchecked")
     public Map<String, Object> getServiceHealth() {
         String url = pythonMlServiceUrl + "/api/health";
@@ -323,9 +278,6 @@ public class PythonMLClient {
         }
     }
 
-    // =====================================================
-    // HELPERS
-    // =====================================================
 
     private RecommendedProduct mapToRecommendedProduct(Map<String, Object> map) {
         return RecommendedProduct.builder()

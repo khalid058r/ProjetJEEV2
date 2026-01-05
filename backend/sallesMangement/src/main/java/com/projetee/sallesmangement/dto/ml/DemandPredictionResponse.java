@@ -5,9 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO pour la réponse de prédiction de demande
- */
+
 @Data
 @Builder
 @NoArgsConstructor

@@ -20,17 +20,16 @@ public class StockMovement {
     private Product product;
 
     @Column(nullable = false)
-    private Integer quantity; // Positive for ADD, Negative for REMOVE/ADJUST if relative
+    private Integer quantity;
 
     @Enumerated(EnumType.STRING)
-    private MovementType type; // IN, OUT, ADJUSTMENT
+    private MovementType type;
 
     private String reason;
 
     @Column(nullable = false)
     private LocalDateTime date;
 
-    // Enum interne ou externe, ici interne pour simplicité
     public enum MovementType {
         IN, OUT, ADJUSTMENT, SALE, RETURN
     }

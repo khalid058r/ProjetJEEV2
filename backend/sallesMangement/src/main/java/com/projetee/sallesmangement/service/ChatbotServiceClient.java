@@ -13,10 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Service client pour communiquer avec le chatbot-service (Flask)
- * Gère les conversations avec le LLM (Groq/Ollama)
- */
+
 @Service
 @Slf4j
 public class ChatbotServiceClient {
@@ -30,17 +27,10 @@ public class ChatbotServiceClient {
         this.restTemplate = restTemplate;
     }
 
-    // =====================================================
-    // CHAT
-    // =====================================================
-
-    /**
-     * Envoie un message au chatbot
-     */
     @SuppressWarnings("unchecked")
     public ChatResponse sendMessage(ChatRequest request) {
         String url = chatbotServiceUrl + "/api/chat";
-        log.info("💬 Appel chatbot: {}", url);
+        log.info("Appel chatbot: {}", url);
 
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -74,7 +64,7 @@ public class ChatbotServiceClient {
                     .error("Réponse invalide du chatbot")
                     .build();
         } catch (RestClientException e) {
-            log.error("❌ Erreur chatbot: {}", e.getMessage());
+            log.error("Erreur chatbot: {}", e.getMessage());
             return ChatResponse.builder()
                     .response("Désolé, le service de chat est temporairement indisponible.")
                     .error(e.getMessage())
@@ -88,7 +78,7 @@ public class ChatbotServiceClient {
     @SuppressWarnings("unchecked")
     public Map<String, Object> clearHistory(String userId) {
         String url = chatbotServiceUrl + "/api/chat/clear";
-        log.info("🧹 Effacement historique pour: {}", userId);
+        log.info("Effacement historique pour: {}", userId);
 
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -100,18 +90,11 @@ public class ChatbotServiceClient {
             ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
             return response.getBody();
         } catch (RestClientException e) {
-            log.error("❌ Erreur effacement historique: {}", e.getMessage());
+            log.error(" Erreur effacement historique: {}", e.getMessage());
             return Map.of("success", false, "error", e.getMessage());
         }
     }
 
-    // =====================================================
-    // QUICK ACTIONS
-    // =====================================================
-
-    /**
-     * Recherche rapide de produits via le chatbot
-     */
     @SuppressWarnings("unchecked")
     public Map<String, Object> quickSearch(String query, int limit) {
         String url = chatbotServiceUrl + "/api/quick/search?q=" + query + "&limit=" + limit;
@@ -126,9 +109,7 @@ public class ChatbotServiceClient {
         }
     }
 
-    /**
-     * Top produits via le chatbot
-     */
+
     @SuppressWarnings("unchecked")
     public Map<String, Object> getTopProducts(int limit, String sortBy) {
         String url = chatbotServiceUrl + "/api/quick/top-products?limit=" + limit + "&sort=" + sortBy;
@@ -143,13 +124,6 @@ public class ChatbotServiceClient {
         }
     }
 
-    // =====================================================
-    // HEALTH CHECK
-    // =====================================================
-
-    /**
-     * Vérifie si le chatbot-service est disponible
-     */
     public boolean isServiceAvailable() {
         String url = chatbotServiceUrl + "/api/health";
         log.debug("🏥 Health check chatbot: {}", url);
@@ -163,9 +137,6 @@ public class ChatbotServiceClient {
         }
     }
 
-    /**
-     * Obtient les détails de santé du service
-     */
     @SuppressWarnings("unchecked")
     public Map<String, Object> getServiceHealth() {
         String url = chatbotServiceUrl + "/api/health";
@@ -181,9 +152,6 @@ public class ChatbotServiceClient {
         }
     }
 
-    /**
-     * Obtient les statistiques du cache
-     */
     @SuppressWarnings("unchecked")
     public Map<String, Object> getCacheStats() {
         String url = chatbotServiceUrl + "/api/cache/stats";

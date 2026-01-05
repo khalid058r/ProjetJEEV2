@@ -4,9 +4,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-/**
- * DTO pour mettre à jour la quantité d'un article.
- */
 @Data
 public class UpdateCartItemRequest {
 

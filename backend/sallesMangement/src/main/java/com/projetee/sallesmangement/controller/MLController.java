@@ -14,10 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Controller pour les endpoints de Machine Learning
- * Proxy vers le service Python ML pour les prédictions
- */
 @RestController
 @RequestMapping("/api/ml")
 @RequiredArgsConstructor
@@ -28,14 +24,10 @@ public class MLController {
     private final PythonMLClient pythonMLClient;
     private final ProductRepository productRepository;
 
-    // =====================================================
-    // PRÉDICTIONS
-    // =====================================================
-
     @PostMapping("/predict/price")
     @Operation(summary = "Prédire le prix optimal d'un produit")
     public ResponseEntity<PricePredictionResponse> predictPrice(@RequestBody ProductInputDTO product) {
-        log.info("🔮 Demande prédiction prix pour: {}", product.getName());
+        log.info("Demande prédiction prix pour: {}", product.getName());
         PricePredictionResponse response = pythonMLClient.predictPrice(product);
         return ResponseEntity.ok(response);
     }
@@ -43,7 +35,7 @@ public class MLController {
     @PostMapping("/predict/demand")
     @Operation(summary = "Prédire la demande d'un produit")
     public ResponseEntity<DemandPredictionResponse> predictDemand(@RequestBody ProductInputDTO product) {
-        log.info("📊 Demande prédiction demande pour: {}", product.getName());
+        log.info("Demande prédiction demande pour: {}", product.getName());
         DemandPredictionResponse response = pythonMLClient.predictDemand(product);
         return ResponseEntity.ok(response);
     }
@@ -51,14 +43,11 @@ public class MLController {
     @PostMapping("/predict/bestseller")
     @Operation(summary = "Prédire si un produit sera un bestseller")
     public ResponseEntity<BestsellerPredictionResponse> predictBestseller(@RequestBody ProductInputDTO product) {
-        log.info("⭐ Demande prédiction bestseller pour: {}", product.getName());
+        log.info(" Demande prédiction bestseller pour: {}", product.getName());
         BestsellerPredictionResponse response = pythonMLClient.predictBestseller(product);
         return ResponseEntity.ok(response);
     }
 
-    // =====================================================
-    // PRÉDICTIONS PAR ID PRODUIT (utilise données DB)
-    // =====================================================
 
     @GetMapping("/predict/price/{productId}")
     @Operation(summary = "Prédire le prix optimal pour un produit existant par son ID")
@@ -80,7 +69,7 @@ public class MLController {
     @GetMapping("/predict/demand/{productId}")
     @Operation(summary = "Prédire la demande pour un produit existant par son ID")
     public ResponseEntity<?> predictDemandForProduct(@PathVariable Long productId) {
-        log.info("📊 Demande prédiction demande pour produit ID: {}", productId);
+        log.info("Demande prédiction demande pour produit ID: {}", productId);
 
         Optional<Product> productOpt = productRepository.findById(productId);
         if (productOpt.isEmpty()) {
@@ -97,7 +86,7 @@ public class MLController {
     @GetMapping("/predict/bestseller/{productId}")
     @Operation(summary = "Prédire si un produit existant sera un bestseller")
     public ResponseEntity<?> predictBestsellerForProduct(@PathVariable Long productId) {
-        log.info("⭐ Demande prédiction bestseller pour produit ID: {}", productId);
+        log.info("Demande prédiction bestseller pour produit ID: {}", productId);
 
         Optional<Product> productOpt = productRepository.findById(productId);
         if (productOpt.isEmpty()) {
@@ -114,7 +103,7 @@ public class MLController {
     @GetMapping("/predict/all/{productId}")
     @Operation(summary = "Obtenir toutes les prédictions pour un produit")
     public ResponseEntity<?> getAllPredictionsForProduct(@PathVariable Long productId) {
-        log.info("🔮📊⭐ Demande toutes prédictions pour produit ID: {}", productId);
+        log.info("Demande toutes prédictions pour produit ID: {}", productId);
 
         Optional<Product> productOpt = productRepository.findById(productId);
         if (productOpt.isEmpty()) {
@@ -136,10 +125,6 @@ public class MLController {
                 "bestsellerPrediction", bestsellerPred));
     }
 
-    // =====================================================
-    // HEALTH
-    // =====================================================
-
     @GetMapping("/health")
     @Operation(summary = "Vérifier la disponibilité du service ML")
     public ResponseEntity<Map<String, Object>> getMLServiceHealth() {
@@ -150,10 +135,6 @@ public class MLController {
                 "mlServiceAvailable", available,
                 "details", health));
     }
-
-    // =====================================================
-    // HELPERS
-    // =====================================================
 
     private ProductInputDTO mapProductToInput(Product product) {
         return ProductInputDTO.builder()

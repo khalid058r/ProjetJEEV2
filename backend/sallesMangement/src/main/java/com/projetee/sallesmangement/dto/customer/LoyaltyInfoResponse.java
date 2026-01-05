@@ -4,9 +4,6 @@ import lombok.Data;
 
 import java.util.List;
 
-/**
- * DTO pour les informations de fidélité client.
- */
 @Data
 public class LoyaltyInfoResponse {
     private Long customerId;

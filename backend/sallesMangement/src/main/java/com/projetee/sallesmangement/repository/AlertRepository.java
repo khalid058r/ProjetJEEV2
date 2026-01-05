@@ -14,7 +14,6 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
 
     List<Alert> findByIsReadFalseOrderByCreatedAtDesc();
 
-    // Alertes récentes (7 derniers jours)
     @Query("SELECT a FROM Alert a WHERE a.createdAt >= :date ORDER BY a.createdAt DESC")
     List<Alert> findRecentAlerts(@Param("date") LocalDateTime date);
 

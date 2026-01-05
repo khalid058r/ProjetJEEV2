@@ -4,9 +4,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-/**
- * DTO pour ajouter un article au panier.
- */
+
 @Data
 public class AddToCartRequest {
 

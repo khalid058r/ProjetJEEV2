@@ -4,9 +4,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-/**
- * DTO pour la mise à jour du profil client.
- */
 @Data
 public class UpdateProfileRequest {
 

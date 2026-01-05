@@ -104,13 +104,11 @@ public interface AnalyticsRepository extends JpaRepository<Product, Long> {
             "ORDER BY (p.rating * p.reviewCount) DESC")
     List<Product> findPotentialBestSellers();
 
-    // Prix moyen des top 10 par catégorie (pour recommandation prix)
     @Query("SELECT AVG(p.price) FROM Product p " +
             "WHERE p.category.id = :categoryId " +
             "AND p.rank <= 10")
     Double getAveragePriceTop10InCategory(@Param("categoryId") Long categoryId);
 
-    // ============ ALERTES ============
 
     @Query("SELECT p FROM Product p " +
             "WHERE p.rank <= 10 " +

@@ -20,8 +20,6 @@ public class AnalyticsController {
 
     private final AnalyticsService analyticsService;
 
-    // ============ DASHBOARD ============
-
     @GetMapping("/dashboard")
     public ResponseEntity<DashboardResponse> getDashboard() {
         return ResponseEntity.ok(analyticsService.getDashboard());
@@ -32,23 +30,19 @@ public class AnalyticsController {
         return ResponseEntity.ok(analyticsService.getGlobalKPI());
     }
 
-    // ============ FILTRES ============
-
     @PostMapping("/products/filter")
     public ResponseEntity<ProductFilterResponse> filterProducts(
             @Valid @RequestBody ProductFilterRequest request) {
         return ResponseEntity.ok(analyticsService.filterProducts(request));
     }
 
-    // ============ CATÉGORIE ============
+
 
     @GetMapping("/category/{id}")
     public ResponseEntity<CategoryAnalysisResponse> analyzeCategory(
             @PathVariable Long id) {
         return ResponseEntity.ok(analyticsService.analyzeCategoryById(id));
     }
-
-    // ============ EXPORT ============
 
     @PostMapping("/export/csv")
     public ResponseEntity<byte[]> exportCSV(
@@ -71,8 +65,6 @@ public class AnalyticsController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(data);
     }
-
-    // ============ DETAILED REPORTS ============
 
     @PostMapping("/export/pdf/sales")
     public ResponseEntity<byte[]> exportSalesPDF(@RequestBody(required = false) ProductFilterRequest request) {
@@ -122,14 +114,10 @@ public class AnalyticsController {
                 .body(data);
     }
 
-    // ============ STATISTIQUES ============
-
     @GetMapping("/statistics")
     public ResponseEntity<GlobalStatisticsResponse> getStatistics() {
         return ResponseEntity.ok(analyticsService.getGlobalStatistics());
     }
-
-    // ============ VENTES ============
 
     @GetMapping("/sales/monthly")
     public ResponseEntity<MonthlySalesResponse> getMonthlySales() {
@@ -176,8 +164,6 @@ public class AnalyticsController {
     public ResponseEntity<BasketStatsResponse> getBasketStats() {
         return ResponseEntity.ok(analyticsService.getBasketStats());
     }
-
-    // ============ VENDEUR ============
 
     @GetMapping("/vendeur/kpi")
     public ResponseEntity<KPIResponse> getVendeurKPI(

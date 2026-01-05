@@ -7,9 +7,7 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 import java.util.Map;
 
-/**
- * DTO pour la réponse du chat
- */
+
 @Data
 @Builder
 @NoArgsConstructor

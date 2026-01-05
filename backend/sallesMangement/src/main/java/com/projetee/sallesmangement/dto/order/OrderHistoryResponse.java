@@ -4,9 +4,6 @@ import lombok.Data;
 
 import java.util.List;
 
-/**
- * DTO pour la liste des commandes d'un client.
- */
 @Data
 public class OrderHistoryResponse {
 

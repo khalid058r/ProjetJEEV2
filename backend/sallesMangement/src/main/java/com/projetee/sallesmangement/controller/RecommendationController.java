@@ -26,7 +26,7 @@ public class RecommendationController {
             @PathVariable Long productId,
             @RequestParam(defaultValue = "5") int limit) {
 
-        log.info("🔍 Demande produits similaires pour ID: {} (limit: {})", productId, limit);
+        log.info(" Demande produits similaires pour ID: {} (limit: {})", productId, limit);
         RecommendationResponse response = pythonMLClient.getSimilarProducts(productId, limit);
         return ResponseEntity.ok(response);
     }
@@ -37,7 +37,7 @@ public class RecommendationController {
             @PathVariable Long productId,
             @RequestParam(defaultValue = "5") int limit) {
 
-        log.info("💰 Demande produits upsell pour ID: {} (limit: {})", productId, limit);
+        log.info("Demande produits upsell pour ID: {} (limit: {})", productId, limit);
         RecommendationResponse response = pythonMLClient.getUpsellProducts(productId, limit);
         return ResponseEntity.ok(response);
     }
@@ -48,7 +48,7 @@ public class RecommendationController {
             @PathVariable Long productId,
             @RequestParam(defaultValue = "5") int limit) {
 
-        log.info("🛒 Demande produits cross-sell pour ID: {} (limit: {})", productId, limit);
+        log.info("Demande produits cross-sell pour ID: {} (limit: {})", productId, limit);
         RecommendationResponse response = pythonMLClient.getCrossSellProducts(productId, limit);
         return ResponseEntity.ok(response);
     }
@@ -59,7 +59,7 @@ public class RecommendationController {
             @PathVariable Long productId,
             @RequestParam(defaultValue = "5") int limit) {
 
-        log.info("📦 Demande toutes recommandations pour ID: {} (limit: {})", productId, limit);
+        log.info("Demande toutes recommandations pour ID: {} (limit: {})", productId, limit);
 
         try {
             RecommendationResponse similar = pythonMLClient.getSimilarProducts(productId, limit);
@@ -72,7 +72,7 @@ public class RecommendationController {
                     "upsell", upsell != null ? upsell : RecommendationResponse.builder().success(false).error("Null response").build(),
                     "crossSell", crossSell != null ? crossSell : RecommendationResponse.builder().success(false).error("Null response").build()));
         } catch (Exception e) {
-            log.error("❌ Erreur critique dans le contrôleur de recommandations: {}", e.getMessage(), e);
+            log.error("Erreur critique dans le contrôleur de recommandations: {}", e.getMessage(), e);
             // Return a safe fallback response instead of 500
             RecommendationResponse errorResponse = RecommendationResponse.builder()
                     .success(false)

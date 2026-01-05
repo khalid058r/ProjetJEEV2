@@ -25,10 +25,10 @@ public class SaleController {
     @PostMapping
     public ResponseEntity<SaleResponse> create(
             @Valid @RequestBody SaleRequest request,
-            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId, // ✅ AJOUTÉ
-            @RequestHeader(value = "X-User-Role", required = false) Role headerRole // ✅ AJOUTÉ
+            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
+            @RequestHeader(value = "X-User-Role", required = false) Role headerRole
     ) {
-        // ✅ VALIDATION: userId du body doit matcher header
+
         if (headerUserId == null || headerRole == null) {
             throw new BadRequestException("Missing authentication headers");
         }
@@ -56,7 +56,6 @@ public class SaleController {
     public ResponseEntity<List<SaleResponse>> getAll(
             @RequestHeader(value = "X-User-Id", required = false) Long userId,
             @RequestHeader(value = "X-User-Role", required = false) Role role) {
-        // Si pas d'authentification, retourner liste vide
         if (userId == null || role == null) {
             return ResponseEntity.ok(List.of());
         }
@@ -69,7 +68,6 @@ public class SaleController {
             @RequestHeader(value = "X-User-Role", required = false) Role role,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        // Si pas d'authentification, retourner page vide
         if (userId == null || role == null) {
             return ResponseEntity.ok(Page.empty());
         }
@@ -79,7 +77,6 @@ public class SaleController {
     @GetMapping("/recent")
     public ResponseEntity<List<SaleResponse>> getRecent(
             @RequestParam(defaultValue = "10") int limit) {
-        // Retourne les ventes récentes (sans authentification pour analytics)
         return ResponseEntity.ok(service.getRecent(limit));
     }
 

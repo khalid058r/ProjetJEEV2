@@ -5,9 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO pour la requête de chat
- */
+
 @Data
 @Builder
 @NoArgsConstructor

@@ -2,9 +2,6 @@ package com.projetee.sallesmangement.dto.customer;
 
 import lombok.Data;
 
-/**
- * DTO pour le profil client.
- */
 @Data
 public class CustomerProfileResponse {
     private Long id;

@@ -21,20 +21,13 @@ public class CustomerController {
 
     private final CustomerService customerService;
 
-    /**
-     * Récupère le profil du client connecté.
-     * GET /api/customer/profile
-     */
+
     @GetMapping("/profile")
     public ResponseEntity<CustomerProfileResponse> getProfile(
             @RequestHeader("X-User-Id") Long userId) {
         return ResponseEntity.ok(customerService.getProfile(userId));
     }
 
-    /**
-     * Met à jour le profil du client connecté.
-     * PUT /api/customer/profile
-     */
     @PutMapping("/profile")
     public ResponseEntity<CustomerProfileResponse> updateProfile(
             @RequestHeader("X-User-Id") Long userId,
@@ -42,10 +35,6 @@ public class CustomerController {
         return ResponseEntity.ok(customerService.updateProfile(userId, request));
     }
 
-    /**
-     * Récupère les informations de fidélité du client.
-     * GET /api/customer/loyalty
-     */
     @GetMapping("/loyalty")
     public ResponseEntity<LoyaltyInfoResponse> getLoyaltyInfo(
             @RequestHeader("X-User-Id") Long userId) {

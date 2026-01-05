@@ -37,7 +37,7 @@ public class ChatbotController {
     @Operation(summary = "Effacer l'historique de conversation")
     public ResponseEntity<Map<String, Object>> clearHistory(@RequestBody Map<String, String> request) {
         String userId = request.getOrDefault("userId", "anonymous");
-        log.info("🧹 Effacement historique pour: {}", userId);
+        log.info("Effacement historique pour: {}", userId);
 
         Map<String, Object> response = chatbotServiceClient.clearHistory(userId);
         return ResponseEntity.ok(response);
@@ -48,7 +48,7 @@ public class ChatbotController {
     public ResponseEntity<Map<String, Object>> quickSearch(
             @RequestParam String q,
             @RequestParam(defaultValue = "5") int limit) {
-        log.info("🔍 Recherche rapide: {}", q);
+        log.info("Recherche rapide: {}", q);
 
         Map<String, Object> response = chatbotServiceClient.quickSearch(q, limit);
         return ResponseEntity.ok(response);
@@ -59,7 +59,7 @@ public class ChatbotController {
     public ResponseEntity<Map<String, Object>> topProducts(
             @RequestParam(defaultValue = "5") int limit,
             @RequestParam(defaultValue = "sales") String sort) {
-        log.info("🏆 Top produits: limit={}, sort={}", limit, sort);
+        log.info("Top produits: limit={}, sort={}", limit, sort);
 
         Map<String, Object> response = chatbotServiceClient.getTopProducts(limit, sort);
         return ResponseEntity.ok(response);

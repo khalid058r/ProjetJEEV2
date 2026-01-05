@@ -6,9 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.Map;
 
-/**
- * DTO pour les KPIs analytics
- */
+
 @Data
 @Builder
 @NoArgsConstructor

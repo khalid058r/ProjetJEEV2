@@ -9,16 +9,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Entité User - Représente tous les utilisateurs du système.
- * 
- * Rôles supportés:
- * - ADMIN: Administrateur système
- * - VENDEUR: Vendeur en magasin
- * - ANALYSTE: Accès aux analytics
- * - ACHETEUR: Client e-commerce (Click & Collect)
- * - INVESTISSEUR: Accès lecture aux KPIs
- */
+
 @Entity
 @Table(name = "users")
 @Getter

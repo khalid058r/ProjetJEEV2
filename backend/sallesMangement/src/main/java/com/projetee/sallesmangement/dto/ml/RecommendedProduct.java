@@ -5,9 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO pour un produit recommandé
- */
 @Data
 @Builder
 @NoArgsConstructor

@@ -5,9 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO pour les données d'entrée du modèle ML de prédiction
- */
+
 @Data
 @Builder
 @NoArgsConstructor

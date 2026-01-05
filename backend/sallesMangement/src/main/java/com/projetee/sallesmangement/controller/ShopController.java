@@ -13,10 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Contrôleur pour la boutique en ligne (catalogue produits pour clients).
- * Accessible à tous les utilisateurs authentifiés, mais optimisé pour ACHETEUR.
- */
 @RestController
 @RequestMapping("/api/shop")
 @RequiredArgsConstructor
@@ -25,17 +21,11 @@ public class ShopController {
     private final ProductService productService;
     private final CategoryService categoryService;
 
-    /**
-     * Liste toutes les catégories.
-     */
     @GetMapping("/categories")
     public ResponseEntity<List<CategoryResponse>> getAllCategories() {
         return ResponseEntity.ok(categoryService.getAll());
     }
 
-    /**
-     * Liste tous les produits disponibles (avec stock > 0).
-     */
     @GetMapping("/products")
     public ResponseEntity<List<ProductResponse>> getAvailableProducts() {
         // Réutilise le service existant
@@ -49,9 +39,6 @@ public class ShopController {
         return ResponseEntity.ok(available);
     }
 
-    /**
-     * Liste les produits avec pagination.
-     */
     @GetMapping("/products/page")
     public ResponseEntity<Page<ProductResponse>> getProductsPage(
             @RequestParam(defaultValue = "0") int page,
@@ -60,18 +47,11 @@ public class ShopController {
         return ResponseEntity.ok(productService.getPaginated(page, size, sortBy));
     }
 
-    /**
-     * Récupère un produit par son ID.
-     */
     @GetMapping("/products/{id}")
     public ResponseEntity<ProductResponse> getProduct(@PathVariable Long id) {
         return ResponseEntity.ok(productService.get(id));
     }
 
-    /**
-     * Récupère le profil du client (points de fidélité, etc.).
-     * Cet endpoint pourrait être étendu avec plus d'infos.
-     */
     @GetMapping("/profile")
     public ResponseEntity<CustomerProfileResponse> getProfile(
             @RequestHeader("X-User-Id") Long userId,
@@ -88,9 +68,6 @@ public class ShopController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * DTO simple pour le profil client.
-     */
     @lombok.Data
     public static class CustomerProfileResponse {
         private Long userId;

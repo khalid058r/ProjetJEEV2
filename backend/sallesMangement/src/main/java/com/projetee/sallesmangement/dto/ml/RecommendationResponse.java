@@ -6,9 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.List;
 
-/**
- * DTO pour la réponse de recommandation de produits
- */
+
 @Data
 @Builder
 @NoArgsConstructor

@@ -38,9 +38,6 @@ public class CartController {
         return ResponseEntity.ok(cartService.addToCart(userId, request));
     }
 
-    /**
-     * Met à jour la quantité d'un article.
-     */
     @PutMapping("/items/{itemId}")
     public ResponseEntity<CartResponse> updateCartItem(
             @RequestHeader("X-User-Id") Long userId,
@@ -52,9 +49,6 @@ public class CartController {
         return ResponseEntity.ok(cartService.updateCartItem(userId, itemId, request));
     }
 
-    /**
-     * Supprime un article du panier.
-     */
     @DeleteMapping("/items/{itemId}")
     public ResponseEntity<CartResponse> removeFromCart(
             @RequestHeader("X-User-Id") Long userId,
@@ -65,9 +59,6 @@ public class CartController {
         return ResponseEntity.ok(cartService.removeFromCart(userId, itemId));
     }
 
-    /**
-     * Vide le panier.
-     */
     @DeleteMapping
     public ResponseEntity<Void> clearCart(
             @RequestHeader("X-User-Id") Long userId,
@@ -78,9 +69,6 @@ public class CartController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Compte le nombre d'articles dans le panier.
-     */
     @GetMapping("/count")
     public ResponseEntity<Integer> getCartItemCount(
             @RequestHeader("X-User-Id") Long userId,

@@ -4,9 +4,6 @@ import lombok.Data;
 
 import java.util.List;
 
-/**
- * DTO pour la réponse du panier complet.
- */
 @Data
 public class CartResponse {
 
