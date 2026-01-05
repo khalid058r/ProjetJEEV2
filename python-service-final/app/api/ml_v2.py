@@ -16,41 +16,80 @@ router = APIRouter(prefix="/api/ml/v2", tags=["ML V2 - Modèles Entraînés"])
 # ============================================================================
 
 class ProductInput(BaseModel):
-    """Données produit pour les prédictions"""
+    """Données produit pour les prédictions (compatible avec Java ProductInputDTO)"""
     id: Optional[str] = None
-    title: Optional[str] = None
+    name: Optional[str] = None  # Java envoie 'name'
+    title: Optional[str] = None  # Pour compatibilité
     price: float = Field(default=0, ge=0)
     rating: float = Field(default=0, ge=0, le=5)
-    reviews: int = Field(default=0, ge=0)
+    reviews: int = Field(default=0, ge=0)  # Pour compatibilité
+    reviewCount: int = Field(default=0, ge=0)  # Java envoie 'reviewCount'
     category: Optional[str] = None
     description: Optional[str] = None
+    stock: int = Field(default=0, ge=0)
+    rank: int = Field(default=0, ge=0)
+    
+    @property
+    def product_name(self) -> str:
+        """Retourne le nom du produit (name ou title)"""
+        return self.name or self.title or "Unknown"
+    
+    @property
+    def review_count(self) -> int:
+        """Retourne le nombre de reviews (reviewCount ou reviews)"""
+        return self.reviewCount or self.reviews or 0
 
 
 class PricePredictionResponse(BaseModel):
     """Réponse prédiction de prix"""
-    predicted_price: float
-    confidence: float
-    confidence_interval: Dict[str, float]
-    model_used: str
-    features_used: List[str]
+    success: bool = True
+    predicted_price: float = Field(alias="predictedPrice", default=0)
+    confidence: float = 0.85
+    confidence_interval: Optional[Dict[str, float]] = Field(alias="confidenceInterval", default=None)
+    price_range: Optional[Dict[str, float]] = Field(alias="priceRange", default=None)
+    model_used: str = Field(alias="modelUsed", default="RandomForest")
+    features_used: List[str] = Field(alias="featuresUsed", default=[])
+    recommendation: Optional[str] = None
+    error: Optional[str] = None
+
+    class Config:
+        populate_by_name = True
 
 
 class DemandPredictionResponse(BaseModel):
     """Réponse prédiction de demande"""
-    predicted_demand: float
-    daily_forecast: List[Dict[str, Any]]
-    trend: str
-    confidence: float
-    model_used: str
+    success: bool = True
+    predicted_demand: float = Field(alias="predictedDemand", default=0)
+    predicted_demand_total: Optional[float] = None
+    predicted_demand_daily_avg: Optional[float] = None
+    daily_forecast: List[Dict[str, Any]] = Field(alias="dailyForecast", default=[])
+    trend: str = "stable"
+    confidence: float = 0.80
+    current_stock: Optional[int] = None
+    days_of_stock: Optional[float] = None
+    urgency: Optional[str] = None
+    recommendation: Optional[str] = None
+    model_used: str = Field(alias="modelUsed", default="GradientBoosting")
+    error: Optional[str] = None
+
+    class Config:
+        populate_by_name = True
 
 
 class BestsellerPredictionResponse(BaseModel):
     """Réponse prédiction bestseller"""
-    is_bestseller: bool
-    probability: float
-    confidence: str
-    factors: List[str]
-    model_used: str
+    success: bool = True
+    is_bestseller: bool = Field(alias="isBestseller", default=False)
+    probability: float = 0.5
+    bestseller_probability: Optional[float] = Field(alias="bestsellerProbability", default=None)
+    confidence: str = "medium"
+    factors: List[str] = []
+    recommendation: Optional[str] = None
+    model_used: str = Field(alias="modelUsed", default="RandomForest")
+    error: Optional[str] = None
+
+    class Config:
+        populate_by_name = True
 
 
 class SemanticSearchResult(BaseModel):

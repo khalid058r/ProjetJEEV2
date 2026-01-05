@@ -21,15 +21,15 @@ try:
     from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
     import torch
     TRANSFORMERS_AVAILABLE = True
-    logger.info("✅ Transformers disponible")
+    logger.info("[OK] Transformers disponible")
 except ImportError:
-    logger.warning("⚠️ Transformers non disponible")
+    logger.warning("[WARN] Transformers non disponible")
 
 try:
     import httpx
     HTTPX_AVAILABLE = True
 except ImportError:
-    logger.warning("⚠️ httpx non disponible")
+    logger.warning("[WARN] ️ httpx non disponible")
 
 
 class BaseLLMProvider(ABC):
@@ -173,7 +173,7 @@ class HuggingFaceProvider(BaseLLMProvider):
         if not TRANSFORMERS_AVAILABLE:
             raise RuntimeError("Transformers non installé")
         
-        logger.info(f"🔄 Chargement de {self.model_name}...")
+        logger.info(f" Chargement de {self.model_name}...")
         
         try:
             # Détermine le device
@@ -212,10 +212,10 @@ class HuggingFaceProvider(BaseLLMProvider):
             )
             
             self._loaded = True
-            logger.info(f"✅ Modèle chargé sur {device}")
+            logger.info(f"[OK]  Modèle chargé sur {device}")
         
         except Exception as e:
-            logger.error(f"❌ Erreur chargement: {e}")
+            logger.error(f"[OK]  Erreur chargement: {e}")
             raise
     
     async def is_available(self) -> bool:
@@ -309,7 +309,7 @@ Si tu ne sais pas, dis-le honnêtement."""
             if await ollama.is_available():
                 self.providers["ollama"] = ollama
                 self.active_provider = "ollama"
-                logger.info(f"✅ Ollama disponible ({ollama.model})")
+                logger.info(f"[OK]  Ollama disponible ({ollama.model})")
         
         # HuggingFace en fallback
         if use_huggingface and TRANSFORMERS_AVAILABLE:
@@ -318,12 +318,12 @@ Si tu ne sais pas, dis-le honnêtement."""
                 self.providers["huggingface"] = hf
                 if not self.active_provider:
                     self.active_provider = "huggingface"
-                logger.info(f"✅ HuggingFace disponible ({hf.model_name})")
+                logger.info(f"[OK]  HuggingFace disponible ({hf.model_name})")
         
         self._initialized = True
         
         if not self.providers:
-            logger.warning("⚠️ Aucun provider LLM disponible")
+            logger.warning("[WARN] ️ Aucun provider LLM disponible")
         
         return self.active_provider is not None
     

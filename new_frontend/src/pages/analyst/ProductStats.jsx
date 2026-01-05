@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import {
     ArrowLeft, Package, DollarSign, ShoppingCart, TrendingUp, TrendingDown,
     BarChart3, PieChart, Activity, Target, Box, Tag, Calendar,
-    Download, RefreshCw, Star, AlertTriangle, CheckCircle, XCircle
+    Download, RefreshCw, Star, AlertTriangle, CheckCircle, XCircle, Brain
 } from 'lucide-react'
 import { analyticsApi, productApi, saleApi } from '../../api'
 import { Card, Button, Loading, Badge } from '../../components/ui'
@@ -258,6 +258,14 @@ export default function ProductStats() {
                     </div>
                 </div>
                 <div className="flex gap-3">
+                    <Button 
+                        variant="secondary" 
+                        onClick={() => navigate(`/analyst/products/${id}/ml`)}
+                        className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700"
+                    >
+                        <Brain className="w-4 h-4 mr-2" />
+                        Prédictions ML
+                    </Button>
                     <Button variant="outline" onClick={fetchProductStats}>
                         <RefreshCw className="w-4 h-4 mr-2" />
                         Actualiser

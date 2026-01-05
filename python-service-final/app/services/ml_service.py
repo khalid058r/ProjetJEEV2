@@ -27,9 +27,9 @@ try:
     from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
     import joblib
     SKLEARN_AVAILABLE = True
-    logger.info("✅ Scikit-learn disponible")
+    logger.info("[OK] Scikit-learn disponible")
 except ImportError:
-    logger.warning("⚠️ Scikit-learn non disponible")
+    logger.warning("[WARN] Scikit-learn non disponible")
 
 
 class RankPredictionModel:
@@ -47,7 +47,7 @@ class RankPredictionModel:
         if not SKLEARN_AVAILABLE:
             return {"error": "sklearn non disponible"}
         
-        logger.info(f"🔄 Entraînement modèle de rang sur {len(products)} produits...")
+        logger.info(f" Entraînement modèle de rang sur {len(products)} produits...")
         
         X, y = [], []
         for p in products:
@@ -90,7 +90,7 @@ class RankPredictionModel:
         self.is_trained = True
         self._save()
         
-        logger.info(f"✅ Modèle rang entraîné - R²: {self.metrics['r2']:.3f}")
+        logger.info(f"[OK]  Modèle rang entraîné - R²: {self.metrics['r2']:.3f}")
         return {"success": True, "metrics": self.metrics}
     
     def predict(self, product: Dict[str, Any]) -> Tuple[int, float]:
@@ -163,7 +163,7 @@ class PriceRecommendationModel:
         if not SKLEARN_AVAILABLE:
             return {"error": "sklearn non disponible"}
         
-        logger.info("🔄 Entraînement modèle de prix...")
+        logger.info(" Entraînement modèle de prix...")
         
         from collections import defaultdict
         cat_prices = defaultdict(list)
@@ -204,7 +204,7 @@ class PriceRecommendationModel:
         self.is_trained = True
         self._save()
         
-        logger.info(f"✅ Modèle prix entraîné - {len(self.category_stats)} catégories")
+        logger.info(f"[OK]  Modèle prix entraîné - {len(self.category_stats)} catégories")
         return {"success": True, "categories": len(self.category_stats)}
     
     def recommend(self, product: Dict[str, Any]) -> Dict[str, Any]:
@@ -275,7 +275,7 @@ class BestSellerDetector:
         if not SKLEARN_AVAILABLE:
             return {"error": "sklearn non disponible"}
         
-        logger.info("🔄 Entraînement détecteur best-sellers...")
+        logger.info(" Entraînement détecteur best-sellers...")
         
         X, y = [], []
         for p in products:
@@ -304,7 +304,7 @@ class BestSellerDetector:
         self.is_trained = True
         self._save()
         
-        logger.info(f"✅ Détecteur entraîné - {sum(y)} best-sellers identifiés")
+        logger.info(f"[OK]  Détecteur entraîné - {sum(y)} best-sellers identifiés")
         return {"success": True, "bestsellers_count": sum(y)}
     
     def predict_potential(self, product: Dict[str, Any]) -> Tuple[float, List[str]]:
@@ -335,12 +335,12 @@ class BestSellerDetector:
             reasons.append(f"⭐ Très bon rating ({rating}/5)")
         
         if reviews >= 500:
-            reasons.append(f"💬 Très populaire ({reviews} avis)")
+            reasons.append(f" Très populaire ({reviews} avis)")
         elif reviews >= 100:
-            reasons.append(f"💬 Populaire ({reviews} avis)")
+            reasons.append(f" Populaire ({reviews} avis)")
         
         if 100 < rank < 500:
-            reasons.append("📈 Position prometteuse")
+            reasons.append(" Position prometteuse")
         
         return float(proba), reasons
     
@@ -369,7 +369,7 @@ class MLService:
     
     def train_all(self, products: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Entraîne tous les modèles"""
-        logger.info(f"🚀 Entraînement complet sur {len(products)} produits...")
+        logger.info(f" Entraînement complet sur {len(products)} produits...")
         
         results = {
             'rank': self.rank_model.train(products),
@@ -377,7 +377,7 @@ class MLService:
             'bestseller': self.bestseller_model.train(products)
         }
         
-        logger.info("✅ Entraînement terminé")
+        logger.info("[OK]  Entraînement terminé")
         return results
     
     def predict_rank(self, request: PredictRankRequest) -> PredictRankResponse:
@@ -394,13 +394,13 @@ class MLService:
         
         if predicted_rank < request.current_rank * 0.8:
             trend = TrendDirection.UP
-            recommendation = "📈 Fort potentiel d'amélioration du classement"
+            recommendation = " Fort potentiel d'amélioration du classement"
         elif predicted_rank > request.current_rank * 1.2:
             trend = TrendDirection.DOWN
-            recommendation = "⚠️ Risque de baisse, optimisez prix et visibilité"
+            recommendation = "[WARN] ️ Risque de baisse, optimisez prix et visibilité"
         else:
             trend = TrendDirection.STABLE
-            recommendation = "➡️ Position stable attendue"
+            recommendation = "[OK] ️ Position stable attendue"
         
         return PredictRankResponse(
             product_id=request.product_id,

@@ -8,3 +8,6 @@ export { default as DataExplorer } from './DataExplorer'
 export { default as Comparison } from './Comparison'
 export { default as ProductsList } from './ProductsList'
 export { default as ProductStats } from './ProductStats'
+export { default as ProductMLPredictions } from './ProductMLPredictions'
+export { default as ETLImport } from './ETLImport'
+

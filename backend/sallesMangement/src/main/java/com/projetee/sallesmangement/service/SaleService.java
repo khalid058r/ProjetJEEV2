@@ -14,11 +14,14 @@ public interface SaleService {
 
     SaleResponse get(Long id);
 
-//    List<SaleResponse> getAll();
+    // List<SaleResponse> getAll();
     List<SaleResponse> getAll(Long userId, Role role);
 
-//    Page<SaleResponse> getPaginated(int page, int size);
+    // Page<SaleResponse> getPaginated(int page, int size);
     Page<SaleResponse> getPaginated(Long userId, Role role, int page, int size);
+
+    List<SaleResponse> getRecent(int limit);
+
     SaleResponse cancel(Long id);
 
     void delete(Long id);

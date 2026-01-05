@@ -104,13 +104,13 @@ export default function AnalystDashboard() {
             })).filter(c => c.value > 0)
             setSalesByCategory(catStats)
 
-            // Parse best sellers
+            // Parse best sellers - utilise les vrais noms de l'API Java: title, revenue, quantitySold
             const bestSellers = bestSellersRes.data
             if (Array.isArray(bestSellers)) {
                 setTopProducts(bestSellers.slice(0, 10).map(p => ({
-                    name: p.productName || p.name || 'Produit',
-                    value: p.totalRevenue || p.revenue || 0,
-                    quantity: p.totalQuantity || p.quantity || 0
+                    name: p.title || p.productName || p.name || 'Produit',
+                    value: p.revenue || p.totalRevenue || 0,
+                    quantity: p.quantitySold || p.totalQuantity || p.quantity || 0
                 })))
             }
 
@@ -332,9 +332,9 @@ export default function AnalystDashboard() {
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className={`w-2 h-8 rounded-full ${index === 0 ? 'bg-success-500' :
-                                                                index === 1 ? 'bg-primary-500' :
-                                                                    index === 2 ? 'bg-warning-500' :
-                                                                        'bg-dark-300'
+                                                            index === 1 ? 'bg-primary-500' :
+                                                                index === 2 ? 'bg-warning-500' :
+                                                                    'bg-dark-300'
                                                             }`} />
                                                         <span className="font-medium text-dark-900 dark:text-white">{cat.name}</span>
                                                     </div>

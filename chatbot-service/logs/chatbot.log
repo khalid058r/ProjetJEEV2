@@ -25,3 +25,35 @@
 2026-01-01 18:23:10 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
 2026-01-03 05:18:38 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
 2026-01-03 05:18:46 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-04 01:05:11 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[REQUEST] User:1 Role:ADMIN Message:'donner ca'[0m[0m
+2026-01-04 01:05:15 | [92m[92mINFO[0m[0m | chatbot.llm | [92m[92m[LLM] Model:llama-3.3-70b-versatile Time:3881ms[0m[0m
+2026-01-04 01:05:15 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[RESPONSE] ✅ User:1 Intent:unknown Time:3881ms[0m[0m
+2026-01-04 01:11:36 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[REQUEST] User:7 Role:INVESTISSEUR Message:'top invistissement'[0m[0m
+2026-01-04 01:11:38 | [92m[92mINFO[0m[0m | chatbot.llm | [92m[92m[LLM] Model:llama-3.3-70b-versatile Time:2713ms[0m[0m
+2026-01-04 01:11:38 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[RESPONSE] ✅ User:7 Intent:unknown Time:2713ms[0m[0m
+2026-01-04 01:46:02 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[REQUEST] User:6 Role:ANALYSTE Message:'Analyse ces tendances et donne 2-3 insights clés avec recommandations.'[0m[0m
+2026-01-04 01:46:02 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[REQUEST] User:6 Role:ANALYSTE Message:'Analyse ces tendances et donne 2-3 insights clés avec recommandations.'[0m[0m
+2026-01-04 01:46:05 | [92m[92mINFO[0m[0m | chatbot.llm | [92m[92m[LLM] Model:llama-3.3-70b-versatile Time:2376ms[0m[0m
+2026-01-04 01:46:05 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[RESPONSE] ✅ User:6 Intent:unknown Time:2376ms[0m[0m
+2026-01-04 01:46:55 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[REQUEST] User:6 Role:ANALYSTE Message:'test'[0m[0m
+2026-01-04 01:46:56 | [92m[92mINFO[0m[0m | chatbot.llm | [92m[92m[LLM] Model:llama-3.3-70b-versatile Time:1464ms[0m[0m
+2026-01-04 01:46:56 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[RESPONSE] ✅ User:6 Intent:unknown Time:1464ms[0m[0m
+2026-01-04 01:47:14 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[REQUEST] User:6 Role:ANALYSTE Message:'guide'[0m[0m
+2026-01-04 01:47:19 | [92m[92mINFO[0m[0m | chatbot.llm | [92m[92m[LLM] Model:llama-3.3-70b-versatile Time:4606ms[0m[0m
+2026-01-04 01:47:19 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[RESPONSE] ✅ User:6 Intent:unknown Time:4606ms[0m[0m
+2026-01-04 19:11:48 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-04 19:11:54 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-04 19:19:23 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[REQUEST] User:6 Role:ANALYSTE Message:'Analyse ces tendances et donne 2-3 insights clés avec recommandations.'[0m[0m
+2026-01-04 19:19:23 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[REQUEST] User:6 Role:ANALYSTE Message:'Analyse ces tendances et donne 2-3 insights clés avec recommandations.'[0m[0m
+2026-01-04 19:19:25 | [92m[92mINFO[0m[0m | chatbot.llm | [92m[92m[LLM] Model:llama-3.3-70b-versatile Time:1999ms[0m[0m
+2026-01-04 19:19:25 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[RESPONSE] ✅ User:6 Intent:unknown Time:1999ms[0m[0m
+2026-01-04 19:56:16 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[REQUEST] User:1 Role:ADMIN Message:'anass elkadiri'[0m[0m
+2026-01-04 19:56:18 | [92m[92mINFO[0m[0m | chatbot.llm | [92m[92m[LLM] Model:llama-3.3-70b-versatile Time:2329ms[0m[0m
+2026-01-04 19:56:18 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[RESPONSE] ✅ User:1 Intent:unknown Time:2329ms[0m[0m
+2026-01-04 19:56:34 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[REQUEST] User:1 Role:ADMIN Message:'donner les tendence'[0m[0m
+2026-01-04 19:56:37 | [92m[92mINFO[0m[0m | chatbot.llm | [92m[92m[LLM] Model:llama-3.3-70b-versatile Time:2376ms[0m[0m
+2026-01-04 19:56:37 | [92m[92mINFO[0m[0m | chatbot.requests | [92m[92m[RESPONSE] ✅ User:1 Intent:unknown Time:2376ms[0m[0m
+2026-01-05 01:24:12 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-05 01:24:20 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-05 16:28:25 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m
+2026-01-05 16:28:37 | [92mINFO[0m | chatbot | [92m🚀 Chatbot démarré sur port 5001 | ✅ Groq OK | ✅ DB OK[0m

@@ -11,6 +11,26 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.springframework.stereotype.Service;
 
+// PDF & Charts
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Element;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.Image;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PiePlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.general.DefaultPieDataset;
+
+import javax.imageio.ImageIO;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStreamWriter;
 import java.time.LocalDate;
@@ -127,9 +147,14 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     @Override
     public byte[] exportToCSV(ProductFilterRequest filters) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-             OutputStreamWriter writer = new OutputStreamWriter(baos);
+             OutputStreamWriter writer = new OutputStreamWriter(baos, java.nio.charset.StandardCharsets.UTF_8);
              CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader(
                      "ASIN", "Title", "Category", "Price", "Rating", "Reviews", "Rank", "Stock"))) {
+
+            // Add Byte Order Mark (BOM) for Excel compatibility with UTF-8
+            baos.write(0xEF);
+            baos.write(0xBB);
+            baos.write(0xBF);
 
             // Récupère les produits filtrés
             ProductFilterResponse filtered = filterProducts(filters);
@@ -154,6 +179,433 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         } catch (Exception e) {
             throw new RuntimeException("Erreur export CSV: " + e.getMessage(), e);
         }
+    }
+
+    // ============ EXPORT PDF ============
+
+    @Override
+    public byte[] exportToPDF(ProductFilterRequest filters) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            // 1. Setup Document
+            com.lowagie.text.Document document = new com.lowagie.text.Document(com.lowagie.text.PageSize.A4);
+            com.lowagie.text.pdf.PdfWriter.getInstance(document, baos);
+            document.open();
+
+            // 2. Add Title and Header
+            com.lowagie.text.Font titleFont = com.lowagie.text.FontFactory.getFont(com.lowagie.text.FontFactory.HELVETICA_BOLD, 18, java.awt.Color.BLUE);
+            com.lowagie.text.Paragraph title = new com.lowagie.text.Paragraph("Rapport d'Analyse des Produits", titleFont);
+            title.setAlignment(com.lowagie.text.Element.ALIGN_CENTER);
+            document.add(title);
+            document.add(new com.lowagie.text.Paragraph(" ")); // Spacer
+
+            com.lowagie.text.Font dateFont = com.lowagie.text.FontFactory.getFont(com.lowagie.text.FontFactory.HELVETICA, 10, java.awt.Color.GRAY);
+            document.add(new com.lowagie.text.Paragraph("Généré le: " + java.time.LocalDateTime.now(), dateFont));
+            document.add(new com.lowagie.text.Paragraph(" "));
+
+            // 3. Fetch Data
+            ProductFilterResponse filtered = filterProducts(filters);
+            List<TopProductDTO> products = filtered.getProducts();
+
+            // 4. Add KPI Section
+            addKPISection(document, products);
+
+            // 5. Add Charts
+            addCharts(document, products);
+
+            // 6. Add Data Table
+            addDataTable(document, products);
+
+            document.close();
+            return baos.toByteArray();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur export PDF: " + e.getMessage(), e);
+        }
+    }
+
+    // ============ DETAILED REPORTS IMPLEMENTATION ============
+
+    @Override
+    public byte[] exportSalesPDF(ProductFilterRequest request) {
+        return generateReport("Rapport des Ventes", document -> {
+            List<Sale> sales = saleRepo.findAll(); // Should filter by date in real app
+            
+            // 1. KPI
+            double totalRevenue = sales.stream().mapToDouble(Sale::getTotalAmount).sum();
+            addKPIGrid(document, 
+                "Total Ventes", String.valueOf(sales.size()),
+                "Chiffre d'Affaires", String.format("%.2f €", totalRevenue),
+                "Panier Moyen", String.format("%.2f €", sales.size() > 0 ? totalRevenue / sales.size() : 0)
+            );
+
+            // 2. Chart (Sales per day)
+            DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+            sales.stream()
+                .collect(Collectors.groupingBy(s -> s.getSaleDate().toString(), Collectors.summingDouble(Sale::getTotalAmount)))
+                .forEach((date, amount) -> dataset.addValue(amount, "Ventes", date));
+            
+            addBarChart(document, "Évolution des Ventes", dataset);
+
+            // 3. Table
+            String[] headers = {"ID", "Date", "Client", "Montant", "Statut"};
+            List<String[]> rows = sales.stream()
+                .sorted((a, b) -> b.getSaleDate().compareTo(a.getSaleDate()))
+                .limit(50)
+                .map(s -> new String[]{
+                    String.valueOf(s.getId()),
+                    s.getSaleDate().toString(),
+                    s.getUser().getUsername(),
+                    String.format("%.2f €", s.getTotalAmount()),
+                    s.getStatus().toString()
+                }).collect(Collectors.toList());
+            
+            addReportTable(document, headers, rows);
+        });
+    }
+
+    @Override
+    public byte[] exportProductsPDF(ProductFilterRequest request) {
+        return generateReport("Rapport des Produits", document -> {
+            List<Product> products = productRepo.findAll();
+            
+            // 1. KPI
+            addKPIGrid(document, 
+                "Total Produits", String.valueOf(products.size()),
+                "Stock Faible", String.valueOf(products.stream().filter(p -> p.getStock() <= 10).count()),
+                "Prix Moyen", String.format("%.2f €", products.stream().mapToDouble(Product::getPrice).average().orElse(0))
+            );
+
+            // 2. Chart (Top 10 Stocks)
+            DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+            products.stream()
+                .sorted((a, b) -> b.getStock().compareTo(a.getStock()))
+                .limit(10)
+                .forEach(p -> dataset.addValue(p.getStock(), "Stock", p.getTitle().substring(0, Math.min(10, p.getTitle().length()))));
+            
+            addBarChart(document, "Top 10 Stocks", dataset);
+
+            // 3. Table
+            String[] headers = {"Produit", "Catégorie", "Prix", "Stock", "Rang"};
+            List<String[]> rows = products.stream()
+                .limit(50)
+                .map(p -> new String[]{
+                    p.getTitle(),
+                    p.getCategory().getName(),
+                    String.format("%.2f €", p.getPrice()),
+                    String.valueOf(p.getStock()),
+                    String.valueOf(p.getRank())
+                }).collect(Collectors.toList());
+            
+            addReportTable(document, headers, rows);
+        });
+    }
+
+    @Override
+    public byte[] exportUsersPDF() {
+        return generateReport("Rapport des Utilisateurs", document -> {
+            List<User> users = userRepo.findAll();
+            
+            // 1. KPI
+            addKPIGrid(document, 
+                "Total Utilisateurs", String.valueOf(users.size()),
+                "Actifs", String.valueOf(users.stream().filter(User::isActive).count()),
+                "Vendeurs", String.valueOf(users.stream().filter(u -> u.getRole() == Role.VENDEUR).count())
+            );
+
+            // 2. Chart (Roles distribution)
+            DefaultPieDataset dataset = new DefaultPieDataset();
+            users.stream()
+                .collect(Collectors.groupingBy(User::getRole, Collectors.counting()))
+                .forEach((role, count) -> dataset.setValue(role.toString(), count));
+            
+            addPieChart(document, "Répartition par Rôle", dataset);
+
+            // 3. Table
+            String[] headers = {"ID", "Nom", "Email", "Rôle", "Actif"};
+            List<String[]> rows = users.stream()
+                .map(u -> new String[]{
+                    String.valueOf(u.getId()),
+                    u.getUsername(),
+                    u.getEmail(),
+                    u.getRole().toString(),
+                    u.isActive() ? "Oui" : "Non"
+                }).collect(Collectors.toList());
+            
+            addReportTable(document, headers, rows);
+        });
+    }
+
+    @Override
+    public byte[] exportInventoryPDF() {
+        return generateReport("Rapport d'Inventaire", document -> {
+            List<Product> products = productRepo.findAll();
+            
+            // 1. KPI
+            double totalValue = products.stream().mapToDouble(p -> p.getPrice() * p.getStock()).sum();
+            addKPIGrid(document, 
+                "Valeur Totale", String.format("%.2f €", totalValue),
+                "Total Unités", String.valueOf(products.stream().mapToInt(Product::getStock).sum()),
+                "Out of Stock", String.valueOf(products.stream().filter(p -> p.getStock() == 0).count())
+            );
+
+            // 2. Chart (Stock Value by Category)
+            DefaultPieDataset dataset = new DefaultPieDataset();
+            products.stream()
+                .collect(Collectors.groupingBy(p -> p.getCategory().getName(), Collectors.summingDouble(p -> p.getPrice() * p.getStock())))
+                .forEach(dataset::setValue);
+            
+            addPieChart(document, "Valeur Stock par Catégorie", dataset);
+
+            // 3. Table
+            String[] headers = {"Produit", "Stock", "Prix Unitaire", "Valeur Totale"};
+            List<String[]> rows = products.stream()
+                .sorted((a, b) -> Double.compare(b.getStock() * (double)b.getPrice(), a.getStock() * (double)a.getPrice())) // Sort by value desc
+                .limit(50)
+                .map(p -> new String[]{
+                    p.getTitle(),
+                    String.valueOf(p.getStock()),
+                    String.format("%.2f €", p.getPrice()),
+                    String.format("%.2f €", p.getPrice() * p.getStock())
+                }).collect(Collectors.toList());
+            
+            addReportTable(document, headers, rows);
+        });
+    }
+
+    @Override
+    public byte[] exportSellersPDF(ProductFilterRequest request) {
+        return generateReport("Performance Vendeurs", document -> {
+            List<User> sellers = userRepo.findByRole(Role.VENDEUR);
+            List<Sale> allSales = saleRepo.findAll();
+
+            // 1. KPI
+            double totalRevenue = allSales.stream().mapToDouble(Sale::getTotalAmount).sum();
+            addKPIGrid(document, 
+                "Total Vendeurs", String.valueOf(sellers.size()),
+                "CA Global", String.format("%.2f €", totalRevenue),
+                "Moyenne/Vendeur", String.format("%.2f €", sellers.size() > 0 ? totalRevenue / sellers.size() : 0)
+            );
+
+            // 2. Chart (Revenue by Seller)
+            DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+            for(User seller : sellers) {
+                double revenue = allSales.stream()
+                    .filter(s -> s.getUser().getId().equals(seller.getId()))
+                    .mapToDouble(Sale::getTotalAmount).sum();
+                dataset.addValue(revenue, "Chiffre d'Affaires", seller.getUsername());
+            }
+            
+            addBarChart(document, "Chiffre d'Affaires par Vendeur", dataset);
+
+            // 3. Table
+            String[] headers = {"Vendeur", "Ventes", "Chiffre d'Affaires", "Panier Moyen"};
+            List<String[]> rows = sellers.stream()
+                .map(seller -> {
+                    List<Sale> sellerSales = allSales.stream().filter(s -> s.getUser().getId().equals(seller.getId())).toList();
+                    double rev = sellerSales.stream().mapToDouble(Sale::getTotalAmount).sum();
+                    return new String[]{
+                        seller.getUsername(),
+                        String.valueOf(sellerSales.size()),
+                        String.format("%.2f €", rev),
+                        String.format("%.2f €", sellerSales.size() > 0 ? rev / sellerSales.size() : 0)
+                    };
+                })
+                .sorted((a, b) -> Double.compare(
+                    Double.parseDouble(b[2].replace(" €", "").replace(",", ".")), 
+                    Double.parseDouble(a[2].replace(" €", "").replace(",", "."))
+                ))
+                .collect(Collectors.toList());
+            
+            addReportTable(document, headers, rows);
+        });
+    }
+
+    // ============ PDF HELPERS ============
+
+    @FunctionalInterface
+    interface ReportContentGenerator {
+        void generate(com.lowagie.text.Document document) throws Exception;
+    }
+
+    private byte[] generateReport(String title, ReportContentGenerator contentGenerator) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            com.lowagie.text.Document document = new com.lowagie.text.Document(com.lowagie.text.PageSize.A4);
+            com.lowagie.text.pdf.PdfWriter.getInstance(document, baos);
+            document.open();
+
+            // Header
+            com.lowagie.text.Font titleFont = com.lowagie.text.FontFactory.getFont(com.lowagie.text.FontFactory.HELVETICA_BOLD, 22, new java.awt.Color(0, 102, 204));
+            com.lowagie.text.Paragraph titlePara = new com.lowagie.text.Paragraph(title, titleFont);
+            titlePara.setAlignment(com.lowagie.text.Element.ALIGN_CENTER);
+            titlePara.setSpacingAfter(10);
+            document.add(titlePara);
+            
+            com.lowagie.text.Font dateFont = com.lowagie.text.FontFactory.getFont(com.lowagie.text.FontFactory.HELVETICA, 10, java.awt.Color.GRAY);
+            com.lowagie.text.Paragraph datePara = new com.lowagie.text.Paragraph("Généré le: " + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")), dateFont);
+            datePara.setAlignment(com.lowagie.text.Element.ALIGN_CENTER);
+            datePara.setSpacingAfter(20);
+            document.add(datePara);
+
+            // Content
+            contentGenerator.generate(document);
+
+            document.close();
+            return baos.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur génération PDF: " + e.getMessage(), e);
+        }
+    }
+
+    private void addKPIGrid(com.lowagie.text.Document document, String... kpiPairs) throws com.lowagie.text.DocumentException {
+        if (kpiPairs.length % 2 != 0) return;
+        
+        com.lowagie.text.pdf.PdfPTable table = new com.lowagie.text.pdf.PdfPTable(kpiPairs.length / 2);
+        table.setWidthPercentage(100);
+        table.setSpacingBefore(10f);
+        table.setSpacingAfter(20f);
+
+        for (int i = 0; i < kpiPairs.length; i += 2) {
+            addKPICell(table, kpiPairs[i], kpiPairs[i+1]);
+        }
+        document.add(table);
+    }
+
+    private void addBarChart(com.lowagie.text.Document document, String title, DefaultCategoryDataset dataset) throws Exception {
+        JFreeChart chart = ChartFactory.createBarChart(
+                title, "", "", dataset, PlotOrientation.VERTICAL, false, true, false);
+        chart.setBackgroundPaint(java.awt.Color.white);
+        chart.getCategoryPlot().setBackgroundPaint(java.awt.Color.white);
+        
+        java.awt.image.BufferedImage bufferedImage = chart.createBufferedImage(500, 250);
+        com.lowagie.text.Image image = com.lowagie.text.Image.getInstance(writerImageToByteArray(bufferedImage));
+        image.setAlignment(com.lowagie.text.Element.ALIGN_CENTER);
+        image.setSpacingAfter(20f);
+        document.add(image);
+    }
+
+    private void addPieChart(com.lowagie.text.Document document, String title, DefaultPieDataset dataset) throws Exception {
+        JFreeChart chart = ChartFactory.createPieChart(title, dataset, true, true, false);
+        chart.setBackgroundPaint(java.awt.Color.white);
+        chart.getPlot().setBackgroundPaint(java.awt.Color.white);
+        
+        java.awt.image.BufferedImage bufferedImage = chart.createBufferedImage(500, 250);
+        com.lowagie.text.Image image = com.lowagie.text.Image.getInstance(writerImageToByteArray(bufferedImage));
+        image.setAlignment(com.lowagie.text.Element.ALIGN_CENTER);
+        image.setSpacingAfter(20f);
+        document.add(image);
+    }
+
+    private void addReportTable(com.lowagie.text.Document document, String[] headers, List<String[]> rows) throws com.lowagie.text.DocumentException {
+        com.lowagie.text.pdf.PdfPTable table = new com.lowagie.text.pdf.PdfPTable(headers.length);
+        table.setWidthPercentage(100);
+        table.setSpacingBefore(10f);
+        
+        // Header
+        for (String header : headers) {
+            com.lowagie.text.pdf.PdfPCell cell = new com.lowagie.text.pdf.PdfPCell(new com.lowagie.text.Paragraph(header, com.lowagie.text.FontFactory.getFont(com.lowagie.text.FontFactory.HELVETICA_BOLD, 10, java.awt.Color.WHITE)));
+            cell.setBackgroundColor(new java.awt.Color(60, 60, 60));
+            cell.setPadding(6);
+            table.addCell(cell);
+        }
+
+        // Rows
+        com.lowagie.text.Font cellFont = com.lowagie.text.FontFactory.getFont(com.lowagie.text.FontFactory.HELVETICA, 9);
+        boolean alternate = false;
+        for (String[] row : rows) {
+            for (String cellText : row) {
+                com.lowagie.text.pdf.PdfPCell cell = new com.lowagie.text.pdf.PdfPCell(new com.lowagie.text.Paragraph(cellText, cellFont));
+                cell.setPadding(6);
+                if (alternate) cell.setBackgroundColor(new java.awt.Color(245, 245, 245));
+                table.addCell(cell);
+            }
+            alternate = !alternate;
+        }
+
+        document.add(table);
+    }
+
+    private void addKPISection(com.lowagie.text.Document document, List<TopProductDTO> products) throws com.lowagie.text.DocumentException {
+        com.lowagie.text.pdf.PdfPTable table = new com.lowagie.text.pdf.PdfPTable(4);
+        table.setWidthPercentage(100);
+        table.setSpacingBefore(10f);
+        table.setSpacingAfter(10f);
+
+        double totalRevenue = products.stream().mapToDouble(p -> p.getPrice() * Math.max(0, 100 - p.getStock())).sum(); // Simulated revenue
+        double avgPrice = products.stream().mapToDouble(TopProductDTO::getPrice).average().orElse(0.0);
+        double avgRating = products.stream().mapToDouble(TopProductDTO::getRating).average().orElse(0.0);
+
+        addKPICell(table, "Total Produits", String.valueOf(products.size()));
+        addKPICell(table, "Prix Moyen", String.format("%.2f €", avgPrice));
+        addKPICell(table, "Note Moyenne", String.format("%.1f ★", avgRating));
+        addKPICell(table, "CA Estimé", String.format("%.0f €", totalRevenue));
+
+        document.add(table);
+    }
+
+    private void addKPICell(com.lowagie.text.pdf.PdfPTable table, String label, String value) {
+        com.lowagie.text.pdf.PdfPCell cell = new com.lowagie.text.pdf.PdfPCell();
+        cell.setBackgroundColor(new java.awt.Color(240, 240, 240));
+        cell.setPadding(10);
+        cell.addElement(new com.lowagie.text.Paragraph(label, com.lowagie.text.FontFactory.getFont(com.lowagie.text.FontFactory.HELVETICA, 10)));
+        cell.addElement(new com.lowagie.text.Paragraph(value, com.lowagie.text.FontFactory.getFont(com.lowagie.text.FontFactory.HELVETICA_BOLD, 12, java.awt.Color.DARK_GRAY)));
+        table.addCell(cell);
+    }
+
+    private void addCharts(com.lowagie.text.Document document, List<TopProductDTO> products) throws Exception {
+        // Prepare Dataset for Pie Chart (Category Distribution)
+        org.jfree.data.general.DefaultPieDataset dataset = new org.jfree.data.general.DefaultPieDataset();
+        products.stream()
+                .collect(Collectors.groupingBy(TopProductDTO::getCategoryName, Collectors.counting()))
+                .forEach(dataset::setValue);
+
+        // Create Chart
+        org.jfree.chart.JFreeChart chart = org.jfree.chart.ChartFactory.createPieChart(
+                "Répartition par Catégorie", dataset, true, true, false);
+        
+        // Customizing Chart
+        org.jfree.chart.plot.PiePlot plot = (org.jfree.chart.plot.PiePlot) chart.getPlot();
+        plot.setBackgroundPaint(java.awt.Color.white);
+        plot.setOutlineVisible(false);
+
+        // Convert to Image
+        java.awt.image.BufferedImage bufferedImage = chart.createBufferedImage(500, 300);
+        com.lowagie.text.Image image = com.lowagie.text.Image.getInstance(writerImageToByteArray(bufferedImage));
+        image.setAlignment(com.lowagie.text.Element.ALIGN_CENTER);
+        
+        document.add(image);
+        document.add(new com.lowagie.text.Paragraph(" "));
+    }
+
+    private byte[] writerImageToByteArray(java.awt.image.BufferedImage image) throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        javax.imageio.ImageIO.write(image, "png", baos);
+        return baos.toByteArray();
+    }
+
+    private void addDataTable(com.lowagie.text.Document document, List<TopProductDTO> products) throws com.lowagie.text.DocumentException {
+        com.lowagie.text.pdf.PdfPTable table = new com.lowagie.text.pdf.PdfPTable(new float[]{3, 2, 1, 1, 1});
+        table.setWidthPercentage(100);
+        
+        // Header
+        String[] headers = {"Produit", "Catégorie", "Prix", "Note", "Stock"};
+        for (String header : headers) {
+            com.lowagie.text.pdf.PdfPCell cell = new com.lowagie.text.pdf.PdfPCell(new com.lowagie.text.Paragraph(header, com.lowagie.text.FontFactory.getFont(com.lowagie.text.FontFactory.HELVETICA_BOLD, 10, java.awt.Color.WHITE)));
+            cell.setBackgroundColor(java.awt.Color.GRAY);
+            cell.setPadding(5);
+            table.addCell(cell);
+        }
+
+        // Rows
+        com.lowagie.text.Font cellFont = com.lowagie.text.FontFactory.getFont(com.lowagie.text.FontFactory.HELVETICA, 9);
+        for (TopProductDTO p : products) {
+            table.addCell(new com.lowagie.text.Paragraph(p.getTitle(), cellFont));
+            table.addCell(new com.lowagie.text.Paragraph(p.getCategoryName(), cellFont));
+            table.addCell(new com.lowagie.text.Paragraph(String.format("%.2f €", p.getPrice()), cellFont));
+            table.addCell(new com.lowagie.text.Paragraph(String.valueOf(p.getRating()), cellFont));
+            table.addCell(new com.lowagie.text.Paragraph(String.valueOf(p.getStock()), cellFont));
+        }
+
+        document.add(table);
     }
 
     // ============ STATISTIQUES GLOBALES ============

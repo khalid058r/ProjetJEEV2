@@ -56,8 +56,69 @@ public class AnalyticsController {
         byte[] data = analyticsService.exportToCSV(request);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=products.csv")
-                .contentType(MediaType.parseMediaType("text/csv"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=products_export.csv")
+                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .body(data);
+    }
+
+    @PostMapping("/export/pdf")
+    public ResponseEntity<byte[]> exportPDF(
+            @Valid @RequestBody ProductFilterRequest request) {
+        byte[] data = analyticsService.exportToPDF(request);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=products_report.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(data);
+    }
+
+    // ============ DETAILED REPORTS ============
+
+    @PostMapping("/export/pdf/sales")
+    public ResponseEntity<byte[]> exportSalesPDF(@RequestBody(required = false) ProductFilterRequest request) {
+        if (request == null) request = new ProductFilterRequest();
+        byte[] data = analyticsService.exportSalesPDF(request);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=rapport_ventes.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(data);
+    }
+
+    @PostMapping("/export/pdf/products")
+    public ResponseEntity<byte[]> exportProductsPDF(@RequestBody(required = false) ProductFilterRequest request) {
+        if (request == null) request = new ProductFilterRequest();
+        byte[] data = analyticsService.exportProductsPDF(request);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=rapport_produits.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(data);
+    }
+
+    @GetMapping("/export/pdf/users")
+    public ResponseEntity<byte[]> exportUsersPDF() {
+        byte[] data = analyticsService.exportUsersPDF();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=rapport_utilisateurs.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(data);
+    }
+
+    @GetMapping("/export/pdf/inventory")
+    public ResponseEntity<byte[]> exportInventoryPDF() {
+        byte[] data = analyticsService.exportInventoryPDF();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=rapport_inventaire.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(data);
+    }
+
+    @PostMapping("/export/pdf/sellers")
+    public ResponseEntity<byte[]> exportSellersPDF(@RequestBody(required = false) ProductFilterRequest request) {
+        if (request == null) request = new ProductFilterRequest();
+        byte[] data = analyticsService.exportSellersPDF(request);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=rapport_vendeurs.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
                 .body(data);
     }
 

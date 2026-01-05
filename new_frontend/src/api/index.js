@@ -21,6 +21,7 @@ export const authApi = {
 export const productApi = {
     getAll: (params) => api.get('/products', { params }),
     getId: (id) => api.get(`/products/${id}`),
+    getById: (id) => api.get(`/products/${id}`),  // Alias pour compatibilité
     create: (data) => api.post('/products', data),
     update: (id, data) => api.put(`/products/${id}`, data),
     delete: (id) => api.delete(`/products/${id}`),
@@ -29,6 +30,9 @@ export const productApi = {
     // Redirection vers Analytics API pour la consistance des données
     getLowStock: () => api.get('/analytics/products/low-stock'),
     getTopSelling: (limit = 10) => api.get('/analytics/products/best-sellers', { params: { limit } }),
+    import: (formData) => api.post('/products/import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
 }
 
 export const categoryApi = {
@@ -93,6 +97,120 @@ export const analyticsApi = {
     getVendeurKPI: () => api.get('/analytics/vendeur/kpi'),
     getVendeurBestSellers: (limit = 5) => api.get('/analytics/vendeur/products/best-sellers', { params: { limit } }),
     getVendeurDailySales: () => api.get('/analytics/vendeur/sales/daily'),
+
+    // Exports
+    exportCSV: (filterData) => api.post('/analytics/export/csv', filterData, {
+        responseType: 'blob'
+    }),
+    exportPDF: (filterData) => api.post('/analytics/export/pdf', filterData, {
+        responseType: 'blob'
+    }),
+
+    // Detailed Reports
+    exportSalesPDF: (filterData) => api.post('/analytics/export/pdf/sales', filterData, { responseType: 'blob' }),
+    exportProductsPDF: (filterData) => api.post('/analytics/export/pdf/products', filterData, { responseType: 'blob' }),
+    exportUsersPDF: () => api.get('/analytics/export/pdf/users', { responseType: 'blob' }),
+    exportInventoryPDF: () => api.get('/analytics/export/pdf/inventory', { responseType: 'blob' }),
+    exportSellersPDF: (filterData) => api.post('/analytics/export/pdf/sellers', filterData, { responseType: 'blob' })
+}
+
+// ===================================================
+// ML API - Machine Learning (via Java Backend → Python ML Service)
+// ===================================================
+export const mlApi = {
+    // Prédictions ML
+    predictPrice: (productData) => api.post('/ml/predict/price', productData),
+    predictDemand: (productData) => api.post('/ml/predict/demand', productData),
+    predictBestseller: (productData) => api.post('/ml/predict/bestseller', productData),
+
+    // Prédictions par ID produit
+    predictPriceById: (productId) => api.post(`/ml/predict/price/${productId}`),
+    predictDemandById: (productId) => api.post(`/ml/predict/demand/${productId}`),
+    predictBestsellerById: (productId) => api.post(`/ml/predict/bestseller/${productId}`),
+
+    // Analyse complète
+    analyzeProduct: (productId) => api.get(`/ml/analyze/${productId}`),
+
+    // Santé du service ML
+    getHealth: () => api.get('/ml/health'),
+}
+
+// ===================================================
+// RECOMMENDATIONS API - Recommandations de produits
+// ===================================================
+export const recommendationsApi = {
+    // Produits similaires
+    getSimilar: (productId, limit = 5) => api.get(`/recommendations/similar/${productId}`, { params: { limit } }),
+
+    // Up-sell - Produits premium
+    getUpsell: (productId, limit = 5) => api.get(`/recommendations/upsell/${productId}`, { params: { limit } }),
+
+    // Cross-sell - Produits complémentaires
+    getCrossSell: (productId, limit = 5) => api.get(`/recommendations/crosssell/${productId}`, { params: { limit } }),
+
+    // Toutes les recommandations
+    getAll: (productId, limit = 5) => api.get(`/recommendations/product/${productId}`, { params: { limit } }),
+}
+
+// ===================================================
+// SEARCH API - Recherche sémantique (via Python ML Service)
+// ===================================================
+const PYTHON_ML_URL = 'http://localhost:5000'
+
+export const searchApi = {
+    // Recherche sémantique
+    semantic: (query, topK = 10) =>
+        fetch(`${PYTHON_ML_URL}/api/ml/v2/search?query=${encodeURIComponent(query)}&top_k=${topK}`)
+            .then(res => res.json()),
+
+    // Produits similaires par embedding
+    findSimilar: (productId, topK = 5) =>
+        fetch(`${PYTHON_ML_URL}/api/ml/v2/similar/${productId}?top_k=${topK}`)
+            .then(res => res.json()),
+}
+
+// ===================================================
+// ETL API - Import/Export de données
+// ===================================================
+export const etlApi = {
+    // Upload et import CSV
+    uploadCSV: (file) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        return fetch(`${PYTHON_ML_URL}/api/etl/upload`, {
+            method: 'POST',
+            body: formData
+        }).then(res => res.json())
+    },
+
+    // Validation de fichier
+    validateFile: (file) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        return fetch(`${PYTHON_ML_URL}/api/etl/validate`, {
+            method: 'POST',
+            body: formData
+        }).then(res => res.json())
+    },
+
+    // Traitement et import vers Java
+    processAndImport: (file, options = {}) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        Object.keys(options).forEach(key => formData.append(key, options[key]))
+        return fetch(`${PYTHON_ML_URL}/api/etl/process-and-import`, {
+            method: 'POST',
+            body: formData
+        }).then(res => res.json())
+    },
+
+    // Statut des jobs
+    getJobStatus: (jobId) =>
+        fetch(`${PYTHON_ML_URL}/api/etl/jobs/${jobId}`).then(res => res.json()),
+
+    // Liste des jobs
+    listJobs: () =>
+        fetch(`${PYTHON_ML_URL}/api/etl/jobs`).then(res => res.json()),
 }
 
 export default {
@@ -103,4 +221,8 @@ export default {
     users: userApi,
     analytics: analyticsApi,
     stock: stockApi,
+    ml: mlApi,
+    recommendations: recommendationsApi,
+    search: searchApi,
+    etl: etlApi,
 }

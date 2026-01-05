@@ -21,5 +21,7 @@ public interface ProductService {
     void delete(Long id);
 
     List<ProductResponse> search(String query);
+
+    java.util.Map<String, Object> importProducts(org.springframework.web.multipart.MultipartFile file);
 }
 

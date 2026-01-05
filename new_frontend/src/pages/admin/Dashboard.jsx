@@ -231,13 +231,55 @@ export default function AdminDashboard() {
                         <option>Ce mois</option>
                         <option>Cette année</option>
                     </select>
-                    <button
-                        onClick={fetchDashboardData}
-                        className="p-2.5 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors"
-                        title="Actualiser"
-                    >
-                        <RefreshCw className="w-5 h-5 text-dark-600 dark:text-dark-300" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={async () => {
+                                try {
+                                    const response = await analyticsApi.exportCSV({})
+                                    const url = window.URL.createObjectURL(new Blob([response.data]))
+                                    const link = document.createElement('a')
+                                    link.href = url
+                                    link.setAttribute('download', 'products_export.csv')
+                                    document.body.appendChild(link)
+                                    link.click()
+                                    link.remove()
+                                } catch (e) {
+                                    console.error("Export CSV failed", e)
+                                }
+                            }}
+                            className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors text-sm font-medium text-dark-700 dark:text-dark-200"
+                        >
+                            <ArrowDownRight className="w-4 h-4" />
+                            CSV
+                        </button>
+                        <button
+                            onClick={async () => {
+                                try {
+                                    const response = await analyticsApi.exportPDF({})
+                                    const url = window.URL.createObjectURL(new Blob([response.data]))
+                                    const link = document.createElement('a')
+                                    link.href = url
+                                    link.setAttribute('download', 'products_report.pdf')
+                                    document.body.appendChild(link)
+                                    link.click()
+                                    link.remove()
+                                } catch (e) {
+                                    console.error("Export PDF failed", e)
+                                }
+                            }}
+                            className="flex items-center gap-2 px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-xl transition-colors text-sm font-medium shadow-lg shadow-primary-500/25"
+                        >
+                            <ExternalLink className="w-4 h-4" />
+                            Rapport PDF
+                        </button>
+                        <button
+                            onClick={fetchDashboardData}
+                            className="p-2.5 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors"
+                            title="Actualiser"
+                        >
+                            <RefreshCw className="w-5 h-5 text-dark-600 dark:text-dark-300" />
+                        </button>
+                    </div>
                 </motion.div>
             </div>
 

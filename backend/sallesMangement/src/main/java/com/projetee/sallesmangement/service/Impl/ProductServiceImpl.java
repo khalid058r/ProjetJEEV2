@@ -138,4 +138,74 @@ public class ProductServiceImpl implements ProductService {
                 .map(mapper::toResponse)
                 .toList();
     }
+
+    @Override
+    public java.util.Map<String, Object> importProducts(org.springframework.web.multipart.MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new BadRequestException("File is empty");
+        }
+
+        int successCount = 0;
+        int failureCount = 0;
+        java.util.List<String> errors = new java.util.ArrayList<>();
+
+        try (java.io.Reader reader = new java.io.InputStreamReader(file.getInputStream());
+             org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader,
+                     org.apache.commons.csv.CSVFormat.DEFAULT.withFirstRecordAsHeader().withIgnoreHeaderCase().withTrim())) {
+
+            for (org.apache.commons.csv.CSVRecord record : csvParser) {
+                try {
+                    String title = record.get("title");
+                    String priceStr = record.get("price");
+                    String stockStr = record.get("stock");
+                    String categoryName = record.get("category");
+                    String imageUrl = record.isMapped("imageUrl") ? record.get("imageUrl") : "https://via.placeholder.com/150";
+
+                    if (title == null || title.isBlank() || priceStr == null || stockStr == null || categoryName == null) {
+                        throw new BadRequestException("Missing required fields (title, price, stock, category)");
+                    }
+
+                    double price = Double.parseDouble(priceStr);
+                    int stock = Integer.parseInt(stockStr);
+
+                    // Find or create category
+                    Category category = categoryRepo.findByNameIgnoreCase(categoryName)
+                            .orElseGet(() -> categoryRepo.save(Category.builder().name(categoryName).build()));
+
+                    // Check if product exists (by Title for simplicity in import)
+                    if (repo.existsByTitleIgnoreCase(title)) {
+                        failureCount++;
+                        errors.add("Row " + record.getRecordNumber() + ": Product '" + title + "' already exists");
+                        continue;
+                    }
+
+                    Product product = Product.builder()
+                            .title(title)
+                            .price(price)
+                            .stock(stock)
+                            .category(category)
+                            .imageUrl(imageUrl)
+                            .asin("ASIN-" + System.currentTimeMillis() + "-" + record.getRecordNumber()) // Generate ASIN
+                            .build();
+
+                    repo.save(product);
+                    successCount++;
+
+                } catch (Exception e) {
+                    failureCount++;
+                    errors.add("Row " + record.getRecordNumber() + ": " + e.getMessage());
+                }
+            }
+
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Failed to parse CSV file: " + e.getMessage());
+        }
+
+        java.util.Map<String, Object> summary = new java.util.HashMap<>();
+        summary.put("successCount", successCount);
+        summary.put("failureCount", failureCount);
+        summary.put("errors", errors);
+
+        return summary;
+    }
 }

@@ -14,16 +14,14 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins(
-                                "http://localhost:5173",  // Frontend React
-                                "http://localhost:5000",  // Service Python
-                                "http://127.0.0.1:5000",  // Python (alternative)
-                                "http://localhost:5001",  // Chatbot Service
-                                "http://127.0.0.1:5001"   // Chatbot (alternative)
-                        )
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
+                        .allowedOriginPatterns(
+                                "http://localhost:*",
+                                "http://127.0.0.1:*")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                         .allowedHeaders("*")
-                        .allowCredentials(true);
+                        .exposedHeaders("Authorization", "Content-Type")
+                        .allowCredentials(true)
+                        .maxAge(3600);
             }
         };
     }

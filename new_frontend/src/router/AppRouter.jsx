@@ -48,6 +48,8 @@ const AnalystDataExplorer = lazy(() => import('../pages/analyst/DataExplorer'))
 const AnalystComparison = lazy(() => import('../pages/analyst/Comparison'))
 const AnalystProductsList = lazy(() => import('../pages/analyst/ProductsList'))
 const AnalystProductStats = lazy(() => import('../pages/analyst/ProductStats'))
+const AnalystProductMLPredictions = lazy(() => import('../pages/analyst/ProductMLPredictions'))
+const AnalystETLImport = lazy(() => import('../pages/analyst/ETLImport'))
 
 // Investor Pages
 const InvestorDashboard = lazy(() => import('../pages/investor/Dashboard'))
@@ -258,6 +260,9 @@ export default function AppRouter() {
                 <Route path="compare" element={<SuspenseWrapper><AnalystComparison /></SuspenseWrapper>} />
                 <Route path="products" element={<SuspenseWrapper><AnalystProductsList /></SuspenseWrapper>} />
                 <Route path="products/:id" element={<SuspenseWrapper><AnalystProductStats /></SuspenseWrapper>} />
+                <Route path="products/:id/ml" element={<SuspenseWrapper><AnalystProductMLPredictions /></SuspenseWrapper>} />
+                <Route path="etl" element={<SuspenseWrapper><AnalystETLImport /></SuspenseWrapper>} />
+                <Route path="import" element={<SuspenseWrapper><AnalystETLImport /></SuspenseWrapper>} />
                 <Route path="alerts" element={<SuspenseWrapper><AnalystAlerts /></SuspenseWrapper>} />
                 <Route path="reports" element={<SuspenseWrapper><AnalystReports /></SuspenseWrapper>} />
                 <Route path="profile" element={<SuspenseWrapper><AnalystProfile /></SuspenseWrapper>} />

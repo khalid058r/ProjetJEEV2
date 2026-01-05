@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
     LayoutDashboard, BarChart3, PieChart, LineChart, FileText,
     Layers, Download, LogOut, Menu, X, Moon, Sun, Bell, ChevronDown, User, Brain,
-    TrendingUp, AlertTriangle, Database, GitCompare, Package
+    TrendingUp, AlertTriangle, Database, GitCompare, Package, Upload
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -17,6 +17,7 @@ const navigation = [
     { name: 'Explorateur', href: '/analyst/explorer', icon: Database },
     { name: 'Comparaison', href: '/analyst/compare', icon: GitCompare },
     { name: 'Produits', href: '/analyst/products', icon: Package },
+    { name: 'Import ETL', href: '/analyst/etl', icon: Upload },
     { name: 'Alertes', href: '/analyst/alerts', icon: AlertTriangle },
     { name: 'Rapports', href: '/analyst/reports', icon: FileText },
     { name: 'Profil', href: '/analyst/profile', icon: User },

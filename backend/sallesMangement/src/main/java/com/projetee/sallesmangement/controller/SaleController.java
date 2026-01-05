@@ -76,6 +76,13 @@ public class SaleController {
         return ResponseEntity.ok(service.getPaginated(userId, role, page, size));
     }
 
+    @GetMapping("/recent")
+    public ResponseEntity<List<SaleResponse>> getRecent(
+            @RequestParam(defaultValue = "10") int limit) {
+        // Retourne les ventes récentes (sans authentification pour analytics)
+        return ResponseEntity.ok(service.getRecent(limit));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);

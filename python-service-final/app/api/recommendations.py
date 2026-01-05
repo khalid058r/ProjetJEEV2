@@ -70,9 +70,11 @@ async def get_similar_products(
         )
         
         return {
+            "success": True,
             "product_id": product_id,
             "count": len(results),
-            "similar_products": results
+            "recommendations": results,
+            "similar_products": results  # Backward compatibility
         }
     except Exception as e:
         logger.error(f"Erreur: {e}")
@@ -98,8 +100,10 @@ async def get_upsell_products(
         results = recommendation_service.get_upsell_products(product_id, limit=limit)
         
         return {
+            "success": True,
             "product_id": product_id,
             "count": len(results),
+            "recommendations": results,
             "upsell_options": results
         }
     except Exception as e:
@@ -126,8 +130,10 @@ async def get_crosssell_products(
         results = recommendation_service.get_crosssell_products(product_id, limit=limit)
         
         return {
+            "success": True,
             "product_id": product_id,
             "count": len(results),
+            "recommendations": results,
             "crosssell_suggestions": results
         }
     except Exception as e:

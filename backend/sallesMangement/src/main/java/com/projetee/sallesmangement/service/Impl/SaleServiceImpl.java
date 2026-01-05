@@ -91,13 +91,13 @@ public class SaleServiceImpl implements SaleService {
         return saleMapper.toResponse(sale);
     }
 
-//    @Override
-//    public List<SaleResponse> getAll() {
-//        return saleRepo.findAll()
-//                .stream()
-//                .map(saleMapper::toResponse)
-//                .toList();
-//    }
+    // @Override
+    // public List<SaleResponse> getAll() {
+    // return saleRepo.findAll()
+    // .stream()
+    // .map(saleMapper::toResponse)
+    // .toList();
+    // }
 
     @Override
     public List<SaleResponse> getAll(Long userId, Role role) {
@@ -119,13 +119,12 @@ public class SaleServiceImpl implements SaleService {
                 .toList();
     }
 
-
-//    @Override
-//    public Page<SaleResponse> getPaginated(int page, int size) {
-//        Pageable pageable = PageRequest.of(page, size);
-//        return saleRepo.findAll(pageable)
-//                .map(saleMapper::toResponse);
-//    }
+    // @Override
+    // public Page<SaleResponse> getPaginated(int page, int size) {
+    // Pageable pageable = PageRequest.of(page, size);
+    // return saleRepo.findAll(pageable)
+    // .map(saleMapper::toResponse);
+    // }
 
     @Override
     public Page<SaleResponse> getPaginated(Long userId, Role role, int page, int size) {
@@ -146,6 +145,15 @@ public class SaleServiceImpl implements SaleService {
         return salesPage.map(saleMapper::toResponse);
     }
 
+    @Override
+    public List<SaleResponse> getRecent(int limit) {
+        // Récupère les ventes récentes sans authentification (pour analytics)
+        Pageable pageable = PageRequest.of(0, limit, org.springframework.data.domain.Sort.by("saleDate").descending());
+        return saleRepo.findAll(pageable)
+                .stream()
+                .map(saleMapper::toResponse)
+                .toList();
+    }
 
     @Override
     public void delete(Long id) {

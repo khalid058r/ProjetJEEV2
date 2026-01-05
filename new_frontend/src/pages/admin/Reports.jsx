@@ -6,7 +6,7 @@ import {
     DollarSign, ArrowLeft, FileSpreadsheet, Eye
 } from 'lucide-react'
 import { productApi, saleApi, userApi, categoryApi } from '../../api'
-import { Card, Button, Loading, Badge, Modal } from '../../components/ui'
+import { Card, Button, Loading, Badge, Modal, DateRangePicker } from '../../components/ui'
 import { AreaChartComponent, BarChartComponent, PieChartComponent } from '../../components/charts'
 import { formatCurrency, formatNumber, formatDate } from '../../utils/formatters'
 import toast from 'react-hot-toast'
@@ -292,6 +292,54 @@ export default function Reports() {
         toast.success('Export CSV généré')
     }
 
+    const handleExportPDF = async () => {
+        if (!selectedReport) return
+        try {
+            toast.loading('Génération du PDF...')
+            let response;
+            const filterRequest = {
+                startDate: dateRange.start,
+                endDate: dateRange.end
+            }
+
+            switch (selectedReport) {
+                case 'sales':
+                    response = await import('../../api').then(m => m.analyticsApi.exportSalesPDF(filterRequest));
+                    break;
+                case 'products':
+                    response = await import('../../api').then(m => m.analyticsApi.exportProductsPDF(filterRequest));
+                    break;
+                case 'users':
+                    response = await import('../../api').then(m => m.analyticsApi.exportUsersPDF());
+                    break;
+                case 'inventory':
+                    response = await import('../../api').then(m => m.analyticsApi.exportInventoryPDF());
+                    break;
+                case 'performance': // Sellers
+                    response = await import('../../api').then(m => m.analyticsApi.exportSellersPDF(filterRequest));
+                    break;
+                default:
+                    toast.error("Type de rapport non supporté")
+                    return;
+            }
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `rapport-${selectedReport}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            toast.dismiss();
+            toast.success('PDF téléchargé avec succès');
+
+        } catch (error) {
+            console.error("Export PDF error", error);
+            toast.dismiss();
+            toast.error("Erreur lors de l'export PDF");
+        }
+    }
+
     if (loading) return <Loading />
 
     const reportData = selectedReport ? generateReportData(selectedReport) : null
@@ -317,26 +365,19 @@ export default function Reports() {
 
             {/* Date Range Filter */}
             <Card className="p-4">
-                <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-dark-500" />
-                        <span className="text-sm text-dark-500">Période:</span>
+                        <div className="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+                            <Calendar className="w-5 h-5 text-primary-500" />
+                        </div>
+                        <span className="text-sm font-medium text-dark-700 dark:text-dark-200">Période du rapport :</span>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <input
-                            type="date"
-                            value={dateRange.start}
-                            onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                            className="px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        />
-                        <span className="text-dark-500">à</span>
-                        <input
-                            type="date"
-                            value={dateRange.end}
-                            onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                            className="px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        />
-                    </div>
+                    <DateRangePicker
+                        startDate={dateRange.start}
+                        endDate={dateRange.end}
+                        onStartDateChange={(val) => setDateRange(prev => ({ ...prev, start: val }))}
+                        onEndDateChange={(val) => setDateRange(prev => ({ ...prev, end: val }))}
+                    />
                 </div>
             </Card>
 
@@ -360,18 +401,20 @@ export default function Reports() {
                             transition={{ delay: index * 0.1 }}
                         >
                             <Card
-                                className={`p-6 cursor-pointer bg-gradient-to-br ${colors[report.color]} text-white transition-all hover:shadow-lg hover:-translate-y-1`}
+                                className={`p-6 cursor-pointer bg-gradient-to-br ${colors[report.color]} text-white transition-all hover:shadow-lg hover:-translate-y-1 block`}
                                 onClick={() => handlePreview(report.id)}
                             >
                                 <div className="flex items-start justify-between">
                                     <div>
-                                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm">
                                             <Icon className="w-6 h-6" />
                                         </div>
-                                        <h3 className="text-lg font-semibold">{report.title}</h3>
-                                        <p className="text-white/70 text-sm mt-1">Cliquez pour prévisualiser</p>
+                                        <h3 className="text-lg font-bold tracking-tight">{report.title}</h3>
+                                        <p className="text-white/80 text-sm mt-1 font-medium">Cliquez pour prévisualiser</p>
                                     </div>
-                                    <Eye className="w-5 h-5 text-white/50" />
+                                    <div className="p-2 bg-white/10 rounded-full">
+                                        <Eye className="w-5 h-5 text-white" />
+                                    </div>
                                 </div>
                             </Card>
                         </motion.div>
@@ -389,70 +432,76 @@ export default function Reports() {
                 {reportData && (
                     <div className="space-y-6">
                         {/* Actions */}
-                        <div className="flex justify-between items-center">
-                            <Badge variant="secondary">{reportData.period}</Badge>
-                            <div className="flex gap-2">
+                        <div className="flex justify-between items-center bg-gray-50 dark:bg-dark-800 p-4 rounded-xl border border-gray-100 dark:border-dark-700">
+                            <Badge variant="secondary" className="px-3 py-1 text-sm font-medium">{reportData.period}</Badge>
+                            <div className="flex gap-3">
                                 <Button variant="outline" size="sm" onClick={handleExportCSV}>
-                                    <Download className="w-4 h-4 mr-1" />
+                                    <FileSpreadsheet className="w-4 h-4 mr-2" />
                                     CSV
                                 </Button>
-                                <Button variant="outline" size="sm" onClick={handlePrint}>
-                                    <Printer className="w-4 h-4 mr-1" />
-                                    Imprimer
+                                <Button variant="primary" size="sm" onClick={handleExportPDF} loading={generating}>
+                                    <Download className="w-4 h-4 mr-2" />
+                                    Télécharger PDF
                                 </Button>
                             </div>
                         </div>
 
                         {/* Report Content */}
                         <div ref={printRef}>
-                            <h2 className="text-xl font-bold text-dark-900 dark:text-white mb-4">{reportData.title}</h2>
-
                             {/* Stats */}
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                                 {reportData.stats.map((stat, i) => (
-                                    <div key={i} className="p-4 bg-dark-50 dark:bg-dark-800 rounded-xl">
-                                        <p className="text-sm text-dark-500">{stat.label}</p>
-                                        <p className="text-xl font-bold text-dark-900 dark:text-white">{stat.value}</p>
+                                    <div key={i} className="p-5 bg-white dark:bg-dark-800 border border-gray-100 dark:border-dark-700 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                                        <p className="text-sm font-medium text-dark-500 mb-1">{stat.label}</p>
+                                        <p className="text-2xl font-bold text-dark-900 dark:text-white tracking-tight">{stat.value}</p>
                                     </div>
                                 ))}
                             </div>
 
                             {/* Chart */}
                             {reportData.chartData && reportData.chartData.length > 0 && (
-                                <div className="h-64 mb-6">
-                                    {selectedReport === 'users' ? (
-                                        <PieChartComponent data={reportData.chartData} />
-                                    ) : (
-                                        <BarChartComponent data={reportData.chartData} dataKey="value" />
-                                    )}
+                                <div className="mb-8 p-6 border border-gray-100 dark:border-dark-700 rounded-2xl bg-white dark:bg-dark-800 shadow-sm">
+                                    <h3 className="text-lg font-semibold mb-6 text-dark-900 dark:text-white flex items-center gap-2">
+                                        <BarChart3 className="w-5 h-5 text-primary-500" />
+                                        Visualisation
+                                    </h3>
+                                    <div className="h-72">
+                                        {selectedReport === 'users' || selectedReport === 'inventory' ? (
+                                            <PieChartComponent data={reportData.chartData} />
+                                        ) : (
+                                            <BarChartComponent data={reportData.chartData} dataKey="value" />
+                                        )}
+                                    </div>
                                 </div>
                             )}
 
                             {/* Table */}
                             {reportData.tableData && reportData.tableData.length > 0 && (
-                                <div className="overflow-x-auto">
-                                    <table className="w-full">
-                                        <thead className="bg-dark-50 dark:bg-dark-800">
-                                            <tr>
-                                                {Object.keys(reportData.tableData[0]).map(key => (
-                                                    <th key={key} className="text-left px-4 py-3 text-sm font-medium text-dark-500 capitalize">
-                                                        {key}
-                                                    </th>
-                                                ))}
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-200 dark:divide-dark-700">
-                                            {reportData.tableData.map((row, i) => (
-                                                <tr key={i} className="hover:bg-dark-50 dark:hover:bg-dark-800/50">
-                                                    {Object.values(row).map((val, j) => (
-                                                        <td key={j} className="px-4 py-3 text-sm text-dark-700 dark:text-dark-300">
-                                                            {val}
-                                                        </td>
+                                <div className="border border-gray-200 dark:border-dark-700 rounded-xl overflow-hidden shadow-sm">
+                                    <div className="max-h-[400px] overflow-auto">
+                                        <table className="w-full text-left">
+                                            <thead className="bg-gray-50 dark:bg-dark-800/50 sticky top-0 z-10 backdrop-blur-sm">
+                                                <tr>
+                                                    {Object.keys(reportData.tableData[0]).map(key => (
+                                                        <th key={key} className="px-6 py-4 text-xs font-semibold text-dark-500 uppercase tracking-wider">
+                                                            {key}
+                                                        </th>
                                                     ))}
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100 dark:divide-dark-700 bg-white dark:bg-dark-800">
+                                                {reportData.tableData.map((row, i) => (
+                                                    <tr key={i} className="hover:bg-gray-50 dark:hover:bg-dark-700/50 transition-colors">
+                                                        {Object.values(row).map((val, j) => (
+                                                            <td key={j} className="px-6 py-4 text-sm text-dark-700 dark:text-dark-300 whitespace-nowrap">
+                                                                {val}
+                                                            </td>
+                                                        ))}
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             )}
                         </div>

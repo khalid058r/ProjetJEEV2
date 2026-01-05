@@ -5,7 +5,7 @@ import {
     Plus, Search, Filter, MoreVertical, Edit2, Trash2, Eye,
     Package, AlertTriangle, Upload, X, Image as ImageIcon, Star, RefreshCw,
     SlidersHorizontal, ChevronDown, TrendingUp, TrendingDown, DollarSign,
-    ShoppingCart, BarChart3, Layers, AlertCircle, CheckCircle
+    ShoppingCart, BarChart3, Layers, AlertCircle, CheckCircle, FileText, Cloud, Check
 } from 'lucide-react'
 import { productApi, categoryApi, saleApi } from '../../api'
 import { Button, Card, Modal, Input, Badge, Loading, EmptyState, ConfirmDialog, SearchInput, ImageUpload, Pagination } from '../../components/ui'
@@ -327,6 +327,74 @@ export default function Products() {
         setShowDeleteConfirm(true)
     }
 
+    // Import Logic
+    const [showImportModal, setShowImportModal] = useState(false)
+    const [importFile, setImportFile] = useState(null)
+    const [importing, setImporting] = useState(false)
+    const [importSummary, setImportSummary] = useState(null)
+    const [dragActive, setDragActive] = useState(false)
+
+    const handleDrag = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (e.type === "dragenter" || e.type === "dragover") {
+            setDragActive(true)
+        } else if (e.type === "dragleave") {
+            setDragActive(false)
+        }
+    }
+
+    const handleDrop = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setDragActive(false)
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleFile(e.dataTransfer.files[0])
+        }
+    }
+
+    const handleFile = (file) => {
+        if (file && file.type === "text/csv" || file.name.endsWith('.csv')) {
+            setImportFile(file)
+            setImportSummary(null)
+        } else {
+            toast.error("Veuillez sélectionner un fichier CSV valide")
+        }
+    }
+
+    const handleImportSubmit = async () => {
+        if (!importFile) return
+
+        setImporting(true)
+        const formData = new FormData()
+        formData.append('file', importFile)
+
+        try {
+            const res = await productApi.import(formData)
+            setImportSummary(res.data)
+            fetchData()
+            if (res.data.failureCount === 0) {
+                toast.success(`${res.data.successCount} produits importés avec succès`)
+                setTimeout(() => {
+                    handleCloseImportModal()
+                }, 2000)
+            } else {
+                toast.success(`Import terminé: ${res.data.successCount} succès, ${res.data.failureCount} erreurs`)
+            }
+        } catch (error) {
+            console.error("Import error", error)
+            toast.error(error.response?.data?.message || "Erreur lors de l'import")
+        } finally {
+            setImporting(false)
+        }
+    }
+
+    const handleCloseImportModal = () => {
+        setShowImportModal(false)
+        setImportFile(null)
+        setImportSummary(null)
+    }
+
     if (loading) return <Loading />
 
     return (
@@ -340,6 +408,10 @@ export default function Products() {
                 <div className="flex gap-3">
                     <Button variant="ghost" onClick={fetchData}>
                         <RefreshCw className="w-5 h-5" />
+                    </Button>
+                    <Button variant="outline" onClick={() => setShowImportModal(true)}>
+                        <Upload className="w-5 h-5 mr-2" />
+                        Importer CSV
                     </Button>
                     <Button onClick={() => handleOpenModal()}>
                         <Plus className="w-5 h-5 mr-2" />
@@ -798,16 +870,6 @@ export default function Products() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Input
                             label="Titre du produit"
-                            name="title"
-                            value={formData.title}
-                            onChange={handleChange}
-                            required
-                        />
-                        <Input
-                            label="ASIN"
-                            name="asin"
-                            value={formData.asin}
-                            onChange={handleChange}
                             placeholder="Généré automatiquement si vide"
                         />
                     </div>
@@ -976,6 +1038,121 @@ export default function Products() {
                 confirmText="Supprimer"
                 variant="danger"
             />
-        </div>
+
+            {/* Import Modal */}
+            <Modal
+                isOpen={showImportModal}
+                onClose={handleCloseImportModal}
+                title="Importer des produits"
+                size="lg"
+            >
+                {!importSummary ? (
+                    <div className="space-y-4">
+                        <div
+                            className={`relative border-2 border-dashed rounded-xl p-8 transition-all text-center
+                        ${dragActive ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/10' : 'border-gray-300 dark:border-dark-600 hover:border-primary-400 hover:bg-gray-50 dark:hover:bg-dark-800'}`}
+                            onDragEnter={handleDrag}
+                            onDragLeave={handleDrag}
+                            onDragOver={handleDrag}
+                            onDrop={handleDrop}
+                        >
+                            <input
+                                type="file"
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                onChange={(e) => e.target.files && e.target.files[0] && handleFile(e.target.files[0])}
+                                accept=".csv"
+                            />
+
+                            <div className="flex flex-col items-center justify-center pointer-events-none">
+                                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-colors
+                            ${importFile ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 dark:bg-dark-700 text-gray-400'}`}>
+                                    {importFile ? <FileText className="w-8 h-8" /> : <Cloud className="w-8 h-8" />}
+                                </div>
+
+                                {importFile ? (
+                                    <>
+                                        <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-1">
+                                            {importFile.name}
+                                        </h3>
+                                        <p className="text-sm text-dark-500">
+                                            {(importFile.size / 1024).toFixed(1)} KB
+                                        </p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-1">
+                                            Glissez votre fichier CSV ici
+                                        </h3>
+                                        <p className="text-sm text-dark-500 mb-4">
+                                            ou cliquez pour parcourir
+                                        </p>
+                                        <div className="text-xs text-dark-400 bg-gray-50 dark:bg-dark-800 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-dark-700">
+                                            Format requis: title, price, stock, category
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-4">
+                            <Button variant="ghost" onClick={handleCloseImportModal}>
+                                Annuler
+                            </Button>
+                            <Button
+                                onClick={handleImportSubmit}
+                                disabled={!importFile}
+                                loading={importing}
+                                className="bg-primary-600 hover:bg-primary-700 text-white"
+                            >
+                                Importer maintenant
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-6">
+                        <div className="flex flex-col items-center justify-center py-6">
+                            <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4
+                        ${importSummary.failureCount === 0 ? 'bg-success-100 text-success-600' : 'bg-warning-100 text-warning-600'}`}>
+                                {importSummary.failureCount === 0 ? (
+                                    <CheckCircle className="w-10 h-10" />
+                                ) : (
+                                    <AlertCircle className="w-10 h-10" />
+                                )}
+                            </div>
+                            <h3 className="text-xl font-bold text-dark-900 dark:text-white mb-2">
+                                {importSummary.failureCount === 0 ? 'Import réussi !' : 'Import terminé avec erreurs'}
+                            </h3>
+                            <p className="text-dark-500 text-center max-w-sm">
+                                {importSummary.successCount} produits ont été ajoutés ou mis à jour avec succès.
+                                {importSummary.failureCount > 0 && ` Cependant, ${importSummary.failureCount} lignes ont été ignorées.`}
+                            </p>
+                        </div>
+
+                        {importSummary.errors && importSummary.errors.length > 0 && (
+                            <div className="bg-danger-50 dark:bg-danger-900/10 border border-danger-100 dark:border-danger-900/20 rounded-xl p-4 max-h-60 overflow-y-auto">
+                                <h4 className="flex items-center gap-2 text-danger-700 dark:text-danger-400 font-semibold mb-3">
+                                    <AlertTriangle className="w-4 h-4" />
+                                    Erreurs rencontrées ({importSummary.failureCount})
+                                </h4>
+                                <div className="space-y-2">
+                                    {importSummary.errors.map((error, idx) => (
+                                        <div key={idx} className="flex items-start gap-2 text-sm text-danger-600 dark:text-danger-300">
+                                            <span className="mt-0.5">•</span>
+                                            <span>{error}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="flex justify-center">
+                            <Button onClick={handleCloseImportModal} size="lg">
+                                Terminer
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+        </div >
     )
 }

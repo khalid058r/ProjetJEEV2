@@ -23,16 +23,16 @@ FAISS_AVAILABLE = False
 try:
     from sentence_transformers import SentenceTransformer
     SENTENCE_TRANSFORMERS_AVAILABLE = True
-    logger.info("✅ Sentence Transformers disponible")
+    logger.info("[OK] Sentence Transformers disponible")
 except ImportError:
-    logger.warning("⚠️ Sentence Transformers non disponible")
+    logger.warning("[WARN] Sentence Transformers non disponible")
 
 try:
     import faiss
     FAISS_AVAILABLE = True
-    logger.info("✅ FAISS disponible")
+    logger.info("[OK] FAISS disponible")
 except ImportError:
-    logger.warning("⚠️ FAISS non disponible")
+    logger.warning("[WARN] FAISS non disponible")
 
 
 class SemanticSearchService:
@@ -49,17 +49,17 @@ class SemanticSearchService:
         self._initialize_model()
     
     def _initialize_model(self):
-        """Initialise le modèle d'embeddings"""
+        """Initialise le modele d'embeddings"""
         if not SENTENCE_TRANSFORMERS_AVAILABLE:
-            logger.warning("Recherche sémantique désactivée (sentence-transformers manquant)")
+            logger.warning("Recherche semantique desactivee (sentence-transformers manquant)")
             return
         
         try:
-            logger.info(f"🔄 Chargement du modèle {settings.embedding_model}...")
+            logger.info(f"[LOADING] Chargement du modele {settings.embedding_model}...")
             self.model = SentenceTransformer(settings.embedding_model)
-            logger.info("✅ Modèle d'embeddings chargé")
+            logger.info("[OK] Modele d'embeddings charge")
         except Exception as e:
-            logger.error(f"❌ Erreur chargement modèle: {e}")
+            logger.error(f"[ERROR] Erreur chargement modele: {e}")
     
     def index_products(self, products: List[Dict[str, Any]]) -> bool:
         """
@@ -77,7 +77,7 @@ class SemanticSearchService:
             return False
         
         try:
-            logger.info(f"🔄 Indexation de {len(products)} produits...")
+            logger.info(f" Indexation de {len(products)} produits...")
             start_time = time.time()
             
             # Stocke les données
@@ -109,12 +109,12 @@ class SemanticSearchService:
             self.last_updated = datetime.now()
             
             elapsed = time.time() - start_time
-            logger.info(f"✅ {len(products)} produits indexés en {elapsed:.2f}s")
+            logger.info(f"[OK]  {len(products)} produits indexés en {elapsed:.2f}s")
             
             return True
         
         except Exception as e:
-            logger.error(f"❌ Erreur indexation: {e}", exc_info=True)
+            logger.error(f"[OK]  Erreur indexation: {e}", exc_info=True)
             return False
     
     def _create_search_text(self, product: Dict[str, Any]) -> str:
@@ -237,7 +237,7 @@ class SemanticSearchService:
             )
         
         except Exception as e:
-            logger.error(f"❌ Erreur recherche: {e}", exc_info=True)
+            logger.error(f"[OK]  Erreur recherche: {e}", exc_info=True)
             return SearchResponse(
                 query=query.query,
                 results=[],
@@ -292,7 +292,7 @@ class SemanticSearchService:
         
         stock = product.get('stock', 0)
         if stock and stock > 100:
-            highlights.append("📦 Stock important")
+            highlights.append(" Stock important")
         
         return highlights[:3]
     

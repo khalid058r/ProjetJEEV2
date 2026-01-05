@@ -36,13 +36,13 @@ async def lifespan(app: FastAPI):
     """Cycle de vie de l'application"""
     # Startup
     logger.info("=" * 70)
-    logger.info("🚀 DÉMARRAGE SERVICE PYTHON ML & ETL")
+    logger.info("[START] DEMARRAGE SERVICE PYTHON ML & ETL")
     logger.info("=" * 70)
-    logger.info(f"📝 Documentation: http://localhost:{settings.api_port}/docs")
-    logger.info(f"🔗 Backend Java: {settings.java_backend_url}")
-    logger.info(f"🧠 Embeddings: {settings.embedding_model}")
-    logger.info(f"🤖 LLM Ollama: {settings.ollama_model}")
-    logger.info(f"🤖 LLM HuggingFace: {settings.hf_model}")
+    logger.info(f"[DOCS] Documentation: http://localhost:{settings.api_port}/docs")
+    logger.info(f"[JAVA] Backend Java: {settings.java_backend_url}")
+    logger.info(f"[EMB] Embeddings: {settings.embedding_model}")
+    logger.info(f"[LLM] Ollama: {settings.ollama_model}")
+    logger.info(f"[LLM] HuggingFace: {settings.hf_model}")
     logger.info("=" * 70)
     
     # Crée les répertoires
@@ -52,7 +52,7 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
-    logger.info("🛑 ARRÊT DU SERVICE")
+    logger.info("[STOP] ARRET DU SERVICE")
     from app.services.java_client import java_client
     await java_client.close()
 
@@ -63,22 +63,22 @@ app = FastAPI(
     description="""
 ## Service Python pour E-commerce
 
-### 🔧 ETL
+###  ETL
 - Traitement CSV avec validation
 - Classification automatique
 - Import vers Java
 
-### 🔍 Recherche Sémantique  
+###  Recherche Sémantique  
 - Embeddings sentence-transformers
 - Index FAISS
 - Filtres avancés
 
-### 💬 Chatbot IA
+###  Chatbot IA
 - LLM Open Source (Ollama/HuggingFace)
 - Détection d'intention
 - Historique conversation
 
-### 🤖 Machine Learning
+###  Machine Learning
 - Prédiction de rang (Random Forest)
 - Recommandation prix (Gradient Boosting)
 - Détection best-sellers

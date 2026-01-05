@@ -5,7 +5,7 @@ import {
     Target, AlertTriangle, CheckCircle, Package, BarChart3,
     ArrowUpRight, ArrowDownRight, Activity, Sparkles
 } from 'lucide-react'
-import { analyticsApi } from '../../api'
+import { analyticsApi, mlApi } from '../../api'
 import { Card, Button, Loading, EmptyState, Badge } from '../../components/ui'
 import { AreaChartComponent, LineChartComponent, BarChartComponent } from '../../components/charts'
 import { formatCurrency, formatNumber, formatCompactNumber, formatPercent } from '../../utils/formatters'
@@ -32,11 +32,49 @@ export default function Predictions() {
                 analyticsApi.getBestSellers(10).catch(() => ({ data: null }))
             ])
 
+            // Enhance Best Sellers with real ML Predictions
+            let enhancedBestSellers = []
+            if (bestSellersRes?.data) {
+                const products = Array.isArray(bestSellersRes.data) ? bestSellersRes.data : []
+
+                // Process predictions in parallel for top products (limit to 5 to avoid timeouts)
+                const predictionPromises = products.slice(0, 5).map(async (product) => {
+                    try {
+                        const mlInput = {
+                            name: product.title || product.productName || product.name,
+                            category: product.categoryName || 'General', // API might return categoryName directly
+                            rating: product.rating || 4.5,
+                            reviewCount: product.reviewCount || 10,
+                            price: product.price || product.totalRevenue / (product.quantitySold || 1),
+                            stock: product.stock || 50, // Best seller endpoint might not return stock, assume 50 if missing
+                            rank: product.rank || 0
+                        }
+
+                        // Call ML Demand Prediction
+                        const demandRes = await mlApi.predictDemand(mlInput).catch(() => null)
+
+                        return {
+                            ...product,
+                            mlPrediction: demandRes?.data || null
+                        }
+                    } catch (e) {
+                        return { ...product, mlPrediction: null }
+                    }
+                })
+
+                enhancedBestSellers = await Promise.all(predictionPromises)
+
+                // Add remaining products without ML if any
+                if (products.length > 5) {
+                    enhancedBestSellers = [...enhancedBestSellers, ...products.slice(5)]
+                }
+            }
+
             // Parse data and generate predictions
-            generatePredictions(kpiRes.data, categoryRes.data, monthlyRes.data, bestSellersRes.data)
+            generatePredictions(kpiRes.data, categoryRes.data, monthlyRes.data, enhancedBestSellers)
         } catch (error) {
             console.error('Error loading data:', error)
-            toast.error('Erreur lors du chargement')
+            toast.error('Erreur lors du chargement des données')
         } finally {
             setLoading(false)
         }
@@ -48,8 +86,6 @@ export default function Predictions() {
         try {
             // Parse KPI
             const totalRevenue = kpiData?.sales?.totalRevenue || 0
-            const salesCount = kpiData?.sales?.salesCount || 0
-            const productCount = kpiData?.products?.count || 0
 
             // Parse monthly data for trends
             let monthlyTrends = []
@@ -65,7 +101,7 @@ export default function Predictions() {
                 }))
             }
 
-            // Generate 12-month forecast
+            // Generate 12-month forecast based on historical data patterns if available, else simulate for demo
             const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
             const currentMonth = new Date().getMonth()
             const avgMonthlyRevenue = totalRevenue > 0 ? totalRevenue / (currentMonth + 1) : 50000
@@ -74,19 +110,16 @@ export default function Predictions() {
                 const isPast = i <= currentMonth
                 const historicalValue = monthlyTrends.find(m => m.name === name)?.revenue
                 const baseValue = historicalValue || avgMonthlyRevenue * (0.8 + Math.random() * 0.4)
-
-                // Apply growth projection for future months
                 const growthFactor = 1 + ((i - currentMonth) * 0.03)
-                const predictedValue = isPast ? null : baseValue * growthFactor * (0.95 + Math.random() * 0.1)
 
                 return {
                     name,
                     actual: isPast ? baseValue : null,
-                    predicted: predictedValue || baseValue * growthFactor
+                    predicted: isPast ? null : baseValue * growthFactor * (0.95 + Math.random() * 0.1)
                 }
             })
 
-            // Parse categories for predictions
+            // Category predictions (Simulated for now as ML model focuses on products)
             let categories = []
             if (Array.isArray(categoryData)) {
                 categories = categoryData
@@ -94,11 +127,10 @@ export default function Predictions() {
                 categories = categoryData.value
             }
 
-            // Category predictions
             const categoryPredictions = categories.slice(0, 8).map((cat, index) => {
                 const revenue = cat.totalRevenue || cat.revenue || cat.value || 0
-                const trend = Math.random() > 0.25 ? 'up' : 'down'
-                const changePercent = Math.floor(Math.random() * 25) + 5
+                const trend = Math.random() > 0.3 ? 'up' : 'down' // Replace with logic if historical data available
+                const changePercent = Math.floor(Math.random() * 20) + 2
 
                 return {
                     name: cat.categoryName || cat.name || `Catégorie ${index + 1}`,
@@ -106,53 +138,59 @@ export default function Predictions() {
                     predictedRevenue: revenue * (trend === 'up' ? (1 + changePercent / 100) : (1 - changePercent / 100)),
                     trend,
                     changePercent,
-                    confidence: Math.floor(Math.random() * 15) + 80
+                    confidence: 85 // Static confidence for categories
                 }
             })
 
-            // Parse best sellers for product predictions
-            let bestSellers = []
+            // Real ML Product Predictions processing
+            let productPredictions = []
             if (Array.isArray(bestSellersData)) {
-                bestSellers = bestSellersData
+                productPredictions = bestSellersData.slice(0, 8).map((product, index) => {
+                    const revenue = product.revenue || product.totalRevenue || 0
+                    const quantity = product.quantitySold || product.totalQuantity || product.quantity || 0
+
+                    // Use ML data if available, else fallback
+                    const mlData = product.mlPrediction
+                    const predictedDemand = mlData?.predicted_demand || mlData?.predictedDemand || Math.ceil(quantity * 1.1)
+                    const confidence = mlData?.confidence || 75
+                    const trend = predictedDemand > quantity ? 'up' : 'down'
+
+                    // Logic for recommendations based on ML output
+                    let recommendation = 'maintain'
+                    if (trend === 'up' && confidence > 80) recommendation = 'increase_stock'
+                    else if (trend === 'down' && confidence > 80) recommendation = 'reduce_stock'
+
+                    const predictedChange = quantity > 0 ? ((predictedDemand - quantity) / quantity * 100) : 0
+
+                    return {
+                        id: product.productId || index,
+                        name: product.title || product.productName || product.name,
+                        currentRevenue: revenue,
+                        currentQuantity: quantity,
+                        predictedDemand: predictedDemand,
+                        trend,
+                        changePercent: Math.abs(Math.round(predictedChange)) || 5,
+                        confidence: Math.round(confidence),
+                        recommendation
+                    }
+                })
             }
 
-            const productPredictions = bestSellers.slice(0, 8).map((product, index) => {
-                const revenue = product.totalRevenue || product.revenue || 0
-                const quantity = product.totalQuantity || product.quantity || 0
-                const trend = Math.random() > 0.3 ? 'up' : 'down'
-                const changePercent = Math.floor(Math.random() * 30) + 5
-
-                return {
-                    id: product.productId || index,
-                    name: product.productName || product.name || `Produit ${index + 1}`,
-                    currentRevenue: revenue,
-                    currentQuantity: quantity,
-                    predictedDemand: Math.ceil(quantity * (1 + (Math.random() * 0.3))),
-                    trend,
-                    changePercent,
-                    confidence: Math.floor(Math.random() * 15) + 78,
-                    recommendation: trend === 'up'
-                        ? (Math.random() > 0.5 ? 'increase_stock' : 'maintain')
-                        : 'reduce_stock'
-                }
-            })
-
-            // Generate stock alerts based on trends
+            // Generate stock alerts based on REAL ML predictions
             const stockAlerts = productPredictions
-                .filter(p => p.trend === 'up' && p.confidence > 80)
+                .filter(p => p.trend === 'up' && p.confidence >= 80)
                 .slice(0, 5)
                 .map(p => ({
                     product: p.name,
                     currentQuantity: p.currentQuantity,
                     predictedDemand: p.predictedDemand,
-                    daysUntilStockout: Math.floor(p.currentQuantity / (p.predictedDemand / 30)) || Math.floor(Math.random() * 15) + 3,
+                    daysUntilStockout: p.predictedDemand > 0 ? Math.floor(p.currentQuantity / (p.predictedDemand / 30)) : 30,
                     severity: p.currentQuantity < p.predictedDemand ? 'critical' : 'warning'
                 }))
 
-            // Calculate next month prediction
-            const currentMonthRevenue = salesForecast[currentMonth]?.actual || avgMonthlyRevenue
-            const nextMonthPrediction = currentMonthRevenue * (1.05 + Math.random() * 0.1)
-            const predictedGrowth = ((nextMonthPrediction - currentMonthRevenue) / currentMonthRevenue) * 100
+            // Summary stats
+            const nextMonthRevenue = salesForecast[currentMonth + 1]?.predicted || avgMonthlyRevenue * 1.05
+            const growthRate = totalRevenue > 0 ? ((nextMonthRevenue - avgMonthlyRevenue) / avgMonthlyRevenue * 100) : 5
 
             setPredictions({
                 salesForecast,
@@ -161,18 +199,20 @@ export default function Predictions() {
                 stockAlerts,
                 summary: {
                     currentRevenue: totalRevenue,
-                    nextMonthRevenue: nextMonthPrediction,
-                    growthRate: predictedGrowth,
+                    nextMonthRevenue,
+                    growthRate,
                     topCategory: categoryPredictions[0]?.name || 'N/A',
                     stockRiskCount: stockAlerts.filter(a => a.severity === 'critical').length,
-                    modelConfidence: 85 + Math.floor(Math.random() * 10)
+                    modelConfidence: productPredictions.length > 0
+                        ? Math.round(productPredictions.reduce((sum, p) => sum + p.confidence, 0) / productPredictions.length)
+                        : 85
                 }
             })
 
             toast.success('Prédictions générées avec succès')
         } catch (error) {
-            console.error('Error generating predictions:', error)
-            toast.error('Erreur lors de la génération')
+            console.error('Error processing predictions:', error)
+            toast.error('Erreur lors du traitement des prédictions')
         } finally {
             setGenerating(false)
         }
@@ -404,8 +444,8 @@ export default function Predictions() {
                                             animate={{ opacity: 1, scale: 1 }}
                                             transition={{ delay: 0.6 + index * 0.1 }}
                                             className={`p-4 rounded-xl border ${alert.severity === 'critical'
-                                                    ? 'bg-danger-50 dark:bg-danger-900/20 border-danger-200 dark:border-danger-800'
-                                                    : 'bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800'
+                                                ? 'bg-danger-50 dark:bg-danger-900/20 border-danger-200 dark:border-danger-800'
+                                                : 'bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800'
                                                 }`}
                                         >
                                             <div className="flex items-center justify-between">
@@ -501,7 +541,7 @@ export default function Predictions() {
                                                     <div className="w-16 h-2 bg-dark-200 dark:bg-dark-700 rounded-full overflow-hidden">
                                                         <div
                                                             className={`h-full rounded-full ${pred.confidence >= 85 ? 'bg-success-500' :
-                                                                    pred.confidence >= 70 ? 'bg-warning-500' : 'bg-danger-500'
+                                                                pred.confidence >= 70 ? 'bg-warning-500' : 'bg-danger-500'
                                                                 }`}
                                                             style={{ width: `${pred.confidence}%` }}
                                                         />

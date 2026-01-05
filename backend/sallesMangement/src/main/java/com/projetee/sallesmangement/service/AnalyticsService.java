@@ -14,7 +14,16 @@ public interface AnalyticsService {
 
     CategoryAnalysisResponse analyzeCategoryById(Long categoryId);
 
-    byte[] exportToCSV(ProductFilterRequest filters);
+    // Exporter
+    byte[] exportToCSV(ProductFilterRequest request);
+    byte[] exportToPDF(ProductFilterRequest request); // Global report
+
+    // Detailed Reports
+    byte[] exportSalesPDF(ProductFilterRequest request);
+    byte[] exportProductsPDF(ProductFilterRequest request);
+    byte[] exportUsersPDF();
+    byte[] exportInventoryPDF();
+    byte[] exportSellersPDF(ProductFilterRequest request);
 
     GlobalStatisticsResponse getGlobalStatistics();
 

@@ -3,6 +3,7 @@ package com.projetee.sallesmangement.service.Impl;
 import com.projetee.sallesmangement.dto.user.UserRequest;
 import com.projetee.sallesmangement.dto.user.UserResponse;
 import com.projetee.sallesmangement.entity.User;
+import com.projetee.sallesmangement.exception.BadRequestException;
 import com.projetee.sallesmangement.exception.DuplicateResourceException;
 import com.projetee.sallesmangement.exception.ResourceNotFoundException;
 import com.projetee.sallesmangement.mapper.UserMapper;

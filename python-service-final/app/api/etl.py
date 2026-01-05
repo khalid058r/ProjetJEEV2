@@ -157,6 +157,156 @@ async def upload_process_and_import(
         }
 
 
+@router.post("/validate")
+async def validate_csv_file(file: UploadFile = File(...)):
+    """
+    Valide un fichier CSV sans l'importer
+    
+    - **file**: Fichier CSV à valider
+    Returns: Résultat de validation avec preview des données
+    """
+    if not file.filename.endswith('.csv'):
+        return {
+            "valid": False,
+            "errors": ["Le fichier doit être un CSV"],
+            "warnings": [],
+            "preview": None
+        }
+    
+    # Sauvegarde temporaire
+    upload_path = Path(settings.upload_dir) / f"temp_{file.filename}"
+    upload_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    try:
+        with open(upload_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Lit le CSV pour validation
+        import pandas as pd
+        df = pd.read_csv(upload_path, nrows=100)  # Preview des 100 premières lignes
+        
+        errors = []
+        warnings = []
+        
+        # Vérifie les colonnes requises
+        required_cols = ['title', 'price']
+        optional_cols = ['asin', 'category', 'rating', 'review_count', 'rank', 'stock', 'image_url']
+        
+        for col in required_cols:
+            if col not in df.columns and col.lower() not in df.columns:
+                errors.append(f"Colonne requise manquante: {col}")
+        
+        for col in optional_cols:
+            if col not in df.columns and col.lower() not in df.columns:
+                warnings.append(f"Colonne optionnelle manquante: {col}")
+        
+        # Preview des données
+        preview = {
+            "columns": list(df.columns),
+            "row_count": len(df),
+            "sample_rows": df.head(10).fillna("").to_dict('records')
+        }
+        
+        # Nettoyage fichier temporaire
+        upload_path.unlink(missing_ok=True)
+        
+        return {
+            "valid": len(errors) == 0,
+            "errors": errors,
+            "warnings": warnings,
+            "preview": preview,
+            "stats": {
+                "total_rows": len(df),
+                "columns_count": len(df.columns)
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur validation: {e}")
+        upload_path.unlink(missing_ok=True)
+        return {
+            "valid": False,
+            "errors": [str(e)],
+            "warnings": [],
+            "preview": None
+        }
+
+
+# Jobs storage (in-memory for simplicity)
+import_jobs = {}
+
+
+@router.get("/jobs")
+async def list_import_jobs():
+    """Liste tous les jobs d'import"""
+    return {
+        "jobs": list(import_jobs.values()),
+        "count": len(import_jobs)
+    }
+
+
+@router.get("/jobs/{job_id}")
+async def get_job_status(job_id: str):
+    """Récupère le statut d'un job d'import"""
+    if job_id not in import_jobs:
+        raise HTTPException(status_code=404, detail=f"Job {job_id} non trouvé")
+    return import_jobs[job_id]
+
+
+@router.post("/process-and-import")
+async def process_and_import_csv(
+    file: UploadFile = File(...),
+    update_existing: bool = Form(True)
+):
+    """
+    Traite et importe un fichier CSV vers Java (alias de upload-and-import)
+    """
+    import uuid
+    from datetime import datetime
+    
+    job_id = str(uuid.uuid4())[:8]
+    import_jobs[job_id] = {
+        "id": job_id,
+        "filename": file.filename,
+        "status": "processing",
+        "started_at": datetime.now().isoformat(),
+        "completed_at": None,
+        "imported_count": 0,
+        "failed_count": 0,
+        "errors": []
+    }
+    
+    try:
+        result = await upload_process_and_import(file, update_existing)
+        
+        import_jobs[job_id].update({
+            "status": "completed" if result.get("import") else "partial",
+            "completed_at": datetime.now().isoformat(),
+            "imported_count": result.get("import", {}).get("imported_count", 0) if result.get("import") else 0,
+            "failed_count": result.get("import", {}).get("failed_count", 0) if result.get("import") else 0,
+            "processing_result": result.get("processing"),
+            "import_result": result.get("import")
+        })
+        
+        return {
+            "success": result.get("import") is not None,
+            "job_id": job_id,
+            "imported_count": import_jobs[job_id]["imported_count"],
+            "failed_count": import_jobs[job_id]["failed_count"],
+            "message": result.get("message"),
+            "processing": result.get("processing"),
+            "import": result.get("import")
+        }
+        
+    except Exception as e:
+        import_jobs[job_id].update({
+            "status": "failed",
+            "completed_at": datetime.now().isoformat(),
+            "errors": [str(e)]
+        })
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/classify-rank/{rank}")
 async def classify_rank(rank: int):
     """Classifie un rang"""
