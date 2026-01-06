@@ -11,7 +11,7 @@ from pathlib import Path
 
 from app.config import settings
 from app.services.java_client import java_client
-from app.services.ml_service import ml_service
+from app.services.ml_service_unified import ml_service
 from app.services.search_service import search_service
 from app.services.recommendation_service import recommendation_service
 

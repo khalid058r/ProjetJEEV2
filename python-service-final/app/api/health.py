@@ -1,9 +1,12 @@
 """
-API Routes - Health Check
+API Routes - Health Check Amélioré
+Vérifie tous les composants du service
 """
 from fastapi import APIRouter
 from datetime import datetime
 import logging
+import psutil
+import os
 
 from app.config import settings
 from app.models.schemas import HealthResponse, ServiceHealth
@@ -55,16 +58,50 @@ async def health_check():
     except Exception as e:
         services.append(ServiceHealth(name="chatbot", status="unhealthy", details={"error": str(e)}))
     
-    # Service ML
+    # Service ML Unifié (utilise le nouveau service)
     try:
-        from app.services.ml_service import ml_service, SKLEARN_AVAILABLE
+        from app.services.ml_service_unified import ml_service, SKLEARN_AVAILABLE
+        ml_status = ml_service.get_status()
         services.append(ServiceHealth(
             name="ml",
-            status="healthy" if SKLEARN_AVAILABLE else "degraded",
-            details=ml_service.get_status()
+            status="healthy" if ml_service.is_ready() else "degraded",
+            details={
+                "sklearn_available": SKLEARN_AVAILABLE,
+                "models_ready": ml_status.get("ready", False),
+                "models_loaded": ml_status.get("metrics", {}).get("models_loaded", 0),
+                "load_time_ms": ml_status.get("metrics", {}).get("load_time_ms", 0)
+            }
         ))
     except Exception as e:
         services.append(ServiceHealth(name="ml", status="unhealthy", details={"error": str(e)}))
+    
+    # ModelManager Status
+    try:
+        from app.core.model_manager import get_model_manager
+        mm = get_model_manager()
+        mm_status = mm.get_status()
+        services.append(ServiceHealth(
+            name="model_manager",
+            status="healthy" if mm.is_ready() else "degraded",
+            details={
+                "models": mm_status.get("models", {}),
+                "data": mm_status.get("data", {})
+            }
+        ))
+    except Exception as e:
+        services.append(ServiceHealth(name="model_manager", status="unavailable", details={"error": str(e)}))
+    
+    # Cache Status
+    try:
+        from app.core.cache import get_cache_manager
+        cache = get_cache_manager()
+        services.append(ServiceHealth(
+            name="cache",
+            status="healthy",
+            details=cache.stats()
+        ))
+    except Exception as e:
+        services.append(ServiceHealth(name="cache", status="unavailable", details={"error": str(e)}))
     
     # Java Backend
     try:
@@ -80,17 +117,105 @@ async def health_check():
     
     # Status global
     unhealthy = [s for s in services if s.status == "unhealthy"]
-    overall_status = "unhealthy" if unhealthy else "healthy"
+    degraded = [s for s in services if s.status == "degraded"]
+    
+    if unhealthy:
+        overall_status = "unhealthy"
+    elif degraded:
+        overall_status = "degraded"
+    else:
+        overall_status = "healthy"
     
     uptime = (datetime.now() - START_TIME).total_seconds()
     
     return HealthResponse(
         status=overall_status,
         timestamp=datetime.now(),
-        version="2.0.0",
+        version="2.1.0",
         services=services,
         uptime_seconds=uptime
     )
+
+
+@router.get("/health/ready")
+async def readiness_check():
+    """
+    Readiness probe - Vérifie si le service est prêt à recevoir du trafic
+    Utilisé par Kubernetes/Docker pour le load balancing
+    """
+    try:
+        from app.services.ml_service_unified import ml_service
+        from app.core.model_manager import get_model_manager
+        
+        mm = get_model_manager()
+        
+        return {
+            "ready": True,
+            "ml_service_ready": ml_service.is_ready(),
+            "models_loaded": mm.is_ready(),
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            "ready": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+
+@router.get("/health/live")
+async def liveness_check():
+    """
+    Liveness probe - Vérifie si le service est vivant
+    Utilisé par Kubernetes/Docker pour redémarrer le container si nécessaire
+    """
+    return {
+        "alive": True,
+        "uptime_seconds": (datetime.now() - START_TIME).total_seconds(),
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+@router.get("/metrics")
+async def get_metrics():
+    """
+    Métriques du service pour monitoring
+    """
+    try:
+        process = psutil.Process(os.getpid())
+        memory_info = process.memory_info()
+        
+        # ML Status
+        from app.services.ml_service_unified import ml_service
+        ml_status = ml_service.get_status()
+        
+        # Cache stats
+        from app.core.cache import get_cache_manager
+        cache_stats = get_cache_manager().stats()
+        
+        return {
+            "service": "python-ml-service",
+            "version": "2.1.0",
+            "uptime_seconds": (datetime.now() - START_TIME).total_seconds(),
+            "system": {
+                "memory_mb": round(memory_info.rss / 1024 / 1024, 2),
+                "memory_percent": round(process.memory_percent(), 2),
+                "cpu_percent": process.cpu_percent(),
+                "threads": process.num_threads()
+            },
+            "ml": {
+                "ready": ml_status.get("ready", False),
+                "models_loaded": ml_status.get("metrics", {}).get("models_loaded", 0),
+                "load_time_ms": ml_status.get("metrics", {}).get("load_time_ms", 0)
+            },
+            "cache": cache_stats,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
 
 @router.get("/ping")

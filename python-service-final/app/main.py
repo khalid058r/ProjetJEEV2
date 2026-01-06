@@ -114,15 +114,14 @@ async def log_requests(request: Request, call_next):
 
 
 # Import et inclusion des routers
-from app.api import health, etl, search, chat, ml, analytics, recommendations, sync, validation
-from app.api import ml_v2  # API ML avec modèles entraînés
+from app.api import health, etl, search, chat, analytics, recommendations, sync, validation
+from app.api import ml_unified  # API ML unifiée (remplace ml.py et ml_v2.py)
 
 app.include_router(health.router)
 app.include_router(etl.router)
 app.include_router(search.router)
 app.include_router(chat.router)
-app.include_router(ml.router)
-app.include_router(ml_v2.router)  # ML V2 avec modèles .pkl
+app.include_router(ml_unified.router)  # ML unifié avec modèles optimisés
 app.include_router(analytics.router)
 app.include_router(recommendations.router)
 app.include_router(sync.router)
@@ -135,20 +134,34 @@ async def root():
     """Page d'accueil"""
     return {
         "service": "Python ML & ETL Service",
-        "version": "2.0.0",
+        "version": "2.1.0",
         "status": "operational",
         "docs": "/docs",
         "endpoints": {
             "health": "/api/health",
+            "health_ready": "/api/health/ready",
+            "health_live": "/api/health/live",
+            "metrics": "/api/metrics",
             "etl": "/api/etl/*",
             "search": "/api/search/*",
             "chat": "/api/chat/*",
-            "ml": "/api/ml/*",
-            "ml_v2": "/api/ml/v2/* (modèles entraînés)",
+            "ml": "/api/ml/* (unifié)",
             "analytics": "/api/analytics/*",
             "recommendations": "/api/recommendations/*",
             "sync": "/api/sync/*",
             "validation": "/api/validation/*"
+        },
+        "ml_endpoints": {
+            "predict_price": "POST /api/ml/predict/price",
+            "predict_demand": "POST /api/ml/predict/demand",
+            "predict_bestseller": "POST /api/ml/predict/bestseller",
+            "predict_rank": "POST /api/ml/predict-rank",
+            "analyze": "POST /api/ml/analyze",
+            "search": "GET /api/ml/search?query=...",
+            "similar": "GET /api/ml/similar/{product_id}",
+            "train": "POST /api/ml/train",
+            "status": "GET /api/ml/status",
+            "reload": "POST /api/ml/reload"
         }
     }
 

@@ -1,5 +1,5 @@
 # ============================================
-# PYTHON ML & ETL SERVICE - REQUIREMENTS
+# PYTHON ML & ETL SERVICE - REQUIREMENTS v2.1
 # ============================================
 
 # === Web Framework ===
@@ -8,15 +8,20 @@ uvicorn[standard]==0.27.0
 pydantic==2.9.2
 pydantic-settings==2.6.1
 python-multipart==0.0.6
-flask==3.0.0
-flask-cors==4.0.0
 
 # === Data Processing ===
 pandas==2.1.4
 numpy==1.26.4
+
+# === Database ===
+mysql-connector-python==8.3.0
+pymysql==1.1.0
 sqlalchemy==2.0.23
-psycopg2-binary==2.9.9
+
+# === HTTP Client ===
 requests==2.31.0
+httpx==0.26.0
+aiohttp==3.9.1
 
 # === Machine Learning ===
 scikit-learn==1.4.0
@@ -29,15 +34,14 @@ transformers==4.36.2
 # === Vector Search ===
 faiss-cpu==1.7.4
 
-# === LLM HuggingFace (optionnel mais recommandé) ===
+# === Monitoring & Metrics ===
+psutil==5.9.8
+
+# === LLM HuggingFace (optionnel) ===
 accelerate==0.25.0
 # PyTorch - installer séparément:
 # CPU: pip install torch --index-url https://download.pytorch.org/whl/cpu
 # GPU: pip install torch --index-url https://download.pytorch.org/whl/cu118
-
-# === HTTP Client ===
-httpx==0.26.0
-aiohttp==3.9.1
 
 # === Utilities ===
 python-dotenv==1.0.0

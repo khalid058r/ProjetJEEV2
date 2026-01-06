@@ -79,8 +79,8 @@ async def index_products_from_java():
         if success:
             # Met à jour les stats ML
             try:
-                from app.services.ml_service import ml_service
-                ml_service.price_model.train(products_data)
+                from app.services.ml_service_unified import ml_service
+                ml_service.train_all(products_data)
             except:
                 pass
             
