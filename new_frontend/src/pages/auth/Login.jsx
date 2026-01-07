@@ -164,27 +164,7 @@ export default function Login() {
                 </Button>
             </form>
 
-            {/* Demo accounts */}
-            <div className="pt-4 border-t border-gray-200 dark:border-dark-700">
-                <p className="text-sm text-center text-dark-500 mb-4">Comptes de démonstration</p>
-                <div className="grid grid-cols-2 gap-2">
-                    {[
-                        { role: 'Admin', email: 'admin@test.com' },
-                        { role: 'Vendeur', email: 'vendeur@test.com' },
-                        { role: 'Analyste', email: 'analyste@test.com' },
-                        { role: 'Investisseur', email: 'investisseur@test.com' }
-                    ].map((account) => (
-                        <button
-                            key={account.role}
-                            type="button"
-                            onClick={() => setFormData({ email: account.email, password: 'password123' })}
-                            className="px-3 py-2 text-xs bg-dark-100 dark:bg-dark-800 hover:bg-dark-200 dark:hover:bg-dark-700 rounded-lg text-dark-600 dark:text-dark-400 transition-colors"
-                        >
-                            {account.role}
-                        </button>
-                    ))}
-                </div>
-            </div>
+
 
             {/* Register link */}
             <p className="text-center text-dark-500">
