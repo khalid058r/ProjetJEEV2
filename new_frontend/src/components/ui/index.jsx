@@ -1114,3 +1114,4 @@ export default {
 
 // Export NotificationBell component
 export { default as NotificationBell } from './NotificationBell'
+export { default as SemanticSearch } from './SemanticSearch'

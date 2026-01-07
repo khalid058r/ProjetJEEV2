@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { Avatar, NotificationBell } from '../ui'
+import { saleApi } from '../../api'
 
 const navigation = [
     { name: 'Dashboard', href: '/vendeur', icon: LayoutDashboard },
@@ -26,6 +27,36 @@ export default function VendeurLayout() {
     const { darkMode, toggleDarkMode } = useTheme()
     const navigate = useNavigate()
     const location = useLocation()
+    const [quickStats, setQuickStats] = useState({ today: 0, month: 0 })
+
+    useEffect(() => {
+        if (user) {
+            fetchQuickStats()
+        }
+    }, [user])
+
+    const fetchQuickStats = async () => {
+        try {
+            const { data } = await saleApi.getAll()
+            // Backend handles filtering
+            const mySales = data || []
+
+            const today = new Date()
+            const todayStr = today.toISOString().split('T')[0]
+            const thisMonth = today.getMonth()
+            const thisYear = today.getFullYear()
+
+            const todayCount = mySales.filter(s => s.saleDate?.startsWith(todayStr)).length
+            const monthCount = mySales.filter(s => {
+                const d = new Date(s.saleDate)
+                return d.getMonth() === thisMonth && d.getFullYear() === thisYear
+            }).length
+
+            setQuickStats({ today: todayCount, month: monthCount })
+        } catch (error) {
+            console.error('Error fetching layout stats:', error)
+        }
+    }
 
     const handleLogout = () => {
         logout()
@@ -82,11 +113,15 @@ export default function VendeurLayout() {
                     <div className="grid grid-cols-2 gap-2">
                         <div className="p-3 rounded-xl bg-success-50 dark:bg-success-900/20">
                             <p className="text-xs text-success-600 dark:text-success-400">Aujourd'hui</p>
-                            <p className="text-lg font-bold text-success-700 dark:text-success-300">0 ventes</p>
+                            <p className="text-lg font-bold text-success-700 dark:text-success-300">
+                                {quickStats.today} ventes
+                            </p>
                         </div>
                         <div className="p-3 rounded-xl bg-primary-50 dark:bg-primary-900/20">
                             <p className="text-xs text-primary-600 dark:text-primary-400">Ce mois</p>
-                            <p className="text-lg font-bold text-primary-700 dark:text-primary-300">0 ventes</p>
+                            <p className="text-lg font-bold text-primary-700 dark:text-primary-300">
+                                {quickStats.month} ventes
+                            </p>
                         </div>
                     </div>
                 </div>

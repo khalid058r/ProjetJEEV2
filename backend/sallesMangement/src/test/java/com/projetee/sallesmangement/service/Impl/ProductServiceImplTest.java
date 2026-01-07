@@ -53,7 +53,6 @@ public class ProductServiceImplTest {
 
     @Test
     public void importProducts_shouldHandleDuplicate() {
-        // Given
         String csvContent = "title,price,stock,category\n" +
                 "Test Product,100.0,10,Electronics\n";
         MockMultipartFile file = new MockMultipartFile("file", "test.csv", "text/csv", csvContent.getBytes(StandardCharsets.UTF_8));

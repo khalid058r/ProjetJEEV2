@@ -15,12 +15,16 @@ export default function MySales() {
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
     const [dateFilter, setDateFilter] = useState('')
+    const [statusFilter, setStatusFilter] = useState('ALL')
+    const [sortBy, setSortBy] = useState('date-desc')
     const [selectedSale, setSelectedSale] = useState(null)
     const [showDetailModal, setShowDetailModal] = useState(false)
 
     useEffect(() => {
-        fetchSales()
-    }, [])
+        if (user) {
+            fetchSales()
+        }
+    }, [user])
 
     const fetchSales = async () => {
         try {
@@ -28,11 +32,8 @@ export default function MySales() {
             const response = await saleApi.getAll().catch(() => ({ data: [] }))
             const allSales = response.data || []
 
-            // Filter by current user
-            const mySales = allSales.filter(sale =>
-                !user?.id || sale.userId === user.id
-            )
-
+            // Le backend filtre déjà par utilisateur
+            const mySales = allSales
             setSales(mySales)
         } catch (error) {
             toast.error('Erreur lors du chargement')
@@ -50,7 +51,22 @@ export default function MySales() {
             const saleDate = new Date(sale.saleDate).toISOString().split('T')[0]
             matchesDate = saleDate === dateFilter
         }
-        return (searchQuery === '' || matchesSearch) && matchesDate
+        const matchesStatus = statusFilter === 'ALL' || sale.status === statusFilter
+
+        return (searchQuery === '' || matchesSearch) && matchesDate && matchesStatus
+    }).sort((a, b) => {
+        switch (sortBy) {
+            case 'date-desc':
+                return new Date(b.saleDate) - new Date(a.saleDate)
+            case 'date-asc':
+                return new Date(a.saleDate) - new Date(b.saleDate)
+            case 'amount-desc':
+                return b.totalAmount - a.totalAmount
+            case 'amount-asc':
+                return a.totalAmount - b.totalAmount
+            default:
+                return 0
+        }
     })
 
     const totalRevenue = filteredSales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0)
@@ -92,12 +108,34 @@ export default function MySales() {
                             placeholder="Rechercher par produit..."
                         />
                     </div>
-                    <div className="sm:w-48">
+                    <div className="flex gap-2 sm:w-auto">
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        >
+                            <option value="ALL">Tous les statuts</option>
+                            <option value="COMPLETED">Validée</option>
+                            <option value="PENDING">En attente</option>
+                            <option value="CANCELLED">Annulée</option>
+                        </select>
+
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        >
+                            <option value="date-desc">Date (Récent)</option>
+                            <option value="date-asc">Date (Ancien)</option>
+                            <option value="amount-desc">Montant (Haut)</option>
+                            <option value="amount-asc">Montant (Bas)</option>
+                        </select>
+
                         <input
                             type="date"
                             value={dateFilter}
                             onChange={(e) => setDateFilter(e.target.value)}
-                            className="w-full px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            className="w-full sm:w-auto px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                         />
                     </div>
                     <Button variant="outline" onClick={() => toast.success('Export en cours...')}>

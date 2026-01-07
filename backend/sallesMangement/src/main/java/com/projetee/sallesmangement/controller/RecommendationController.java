@@ -15,7 +15,6 @@ import java.util.Map;
 @RequestMapping("/api/recommendations")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Recommendations", description = "Endpoints pour les recommandations de produits")
 public class RecommendationController {
 
     private final PythonMLClient pythonMLClient;

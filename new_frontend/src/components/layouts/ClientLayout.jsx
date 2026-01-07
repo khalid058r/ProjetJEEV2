@@ -9,7 +9,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
 import CartDrawer from '../shop/CartDrawer'
-import { NotificationBell } from '../ui'
+import { NotificationBell, SemanticSearch } from '../ui'
 
 export default function ClientLayout() {
     const { user, isAuthenticated, logout } = useAuth()
@@ -17,16 +17,8 @@ export default function ClientLayout() {
     const navigate = useNavigate()
     const location = useLocation()
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-    const [searchQuery, setSearchQuery] = useState('')
-    const [userMenuOpen, setUserMenuOpen] = useState(false)
 
-    const handleSearch = (e) => {
-        e.preventDefault()
-        if (searchQuery.trim()) {
-            navigate(`/shop?search=${encodeURIComponent(searchQuery)}`)
-            setSearchQuery('')
-        }
-    }
+    const [userMenuOpen, setUserMenuOpen] = useState(false)
 
     const handleLogout = () => {
         logout()
@@ -65,7 +57,7 @@ export default function ClientLayout() {
                         </span>
                         <span className="hidden sm:flex items-center gap-1">
                             <Phone className="w-4 h-4" />
-                            +212 5XX-XXXXXX
+                            06 03 40 28 91
                         </span>
                     </div>
                     <div className="flex items-center gap-4">
@@ -95,23 +87,9 @@ export default function ClientLayout() {
                         </Link>
 
                         {/* Search bar - Desktop */}
-                        <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-lg mx-8">
-                            <div className="relative w-full">
-                                <input
-                                    type="text"
-                                    placeholder="Rechercher un produit..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-4 pr-10 py-2.5 border border-gray-300 rounded-full focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                                />
-                                <button
-                                    type="submit"
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-600 transition-colors"
-                                >
-                                    <Search className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </form>
+                        <div className="hidden md:flex flex-1 max-w-lg mx-8">
+                            <SemanticSearch className="w-full" />
+                        </div>
 
                         {/* Navigation - Desktop */}
                         <nav className="hidden lg:flex items-center space-x-6">
@@ -238,23 +216,10 @@ export default function ClientLayout() {
 
                     {/* Mobile search */}
                     <div className="md:hidden pb-4">
-                        <form onSubmit={handleSearch}>
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Rechercher..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                />
-                                <button
-                                    type="submit"
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                                >
-                                    <Search className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </form>
+                        {/* Mobile search */}
+                        <div className="md:hidden pb-4">
+                            <SemanticSearch placeholder="Rechercher..." />
+                        </div>
                     </div>
                 </div>
 
@@ -359,7 +324,7 @@ export default function ClientLayout() {
                             <ul className="space-y-2 text-gray-400">
                                 <li className="flex items-center gap-2">
                                     <Phone className="w-4 h-4" />
-                                    +212 5XX-XXXXXX
+                                    06 03 40 28 91
                                 </li>
                                 <li className="flex items-center gap-2">
                                     <Clock className="w-4 h-4" />

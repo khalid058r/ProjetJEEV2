@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from './AuthContext'
+import { analyticsApi } from '../api'
+import { formatDistanceToNow } from 'date-fns'
 
 const NotificationContext = createContext(null)
 
@@ -42,7 +44,65 @@ export function NotificationProvider({ children }) {
                 console.error('Error loading notifications:', e)
             }
         }
-    }, [])
+
+        // Start polling backend alerts
+        fetchBackendAlerts()
+        pollingIntervalRef.current = setInterval(fetchBackendAlerts, 60000) // Poll every 60s
+
+        return () => {
+            if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current)
+        }
+    }, [user])
+
+    const fetchBackendAlerts = async () => {
+        if (!user) return
+
+        try {
+            const response = await analyticsApi.getAlerts().catch(() => ({ data: [] }))
+            const alerts = response.data || []
+
+            if (alerts.length > 0) {
+                setNotifications(prev => {
+                    const existingIds = new Set(prev.map(n => n.backendId))
+                    const newAlerts = alerts
+                        .filter(a => !existingIds.has(a.id))
+                        .map(alert => ({
+                            id: Date.now() + Math.random(), // Frontend ID
+                            backendId: alert.id, // Keep backend ID to avoid dupes
+                            type: getNotificationType(alert.type),
+                            title: alert.title,
+                            message: alert.message,
+                            timestamp: alert.createdAt || new Date().toISOString(),
+                            read: alert.isRead,
+                            priority: alert.priority?.toLowerCase() || 'medium',
+                            link: getAlertLink(alert)
+                        }))
+
+                    if (newAlerts.length > 0) {
+                        return [...newAlerts, ...prev].slice(0, 50)
+                    }
+                    return prev
+                })
+            }
+        } catch (error) {
+            console.error('Error fetching backend alerts:', error)
+        }
+    }
+
+    const getNotificationType = (backendType) => {
+        switch (backendType) {
+            case 'STOCK_LOW': return 'warning'
+            case 'STOCK_OUT': return 'error'
+            case 'DEMAND_SPIKE': return 'info'
+            case 'PRICE_DROP': return 'info'
+            default: return 'info'
+        }
+    }
+
+    const getAlertLink = (alert) => {
+        if (alert.productId) return `/admin/products/${alert.productId}`
+        return '#'
+    }
 
     // Save to localStorage on change
     useEffect(() => {

@@ -8,7 +8,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BasketStatsResponse {
-    private Double averageBasket;
+    private Double averageBasketValue;
+    private Double averageItems;
+    private Long totalItemsSold;
     private Double variance;
     private Double standardDeviation;
+    private java.util.List<ProductAssociation> associations;
 }

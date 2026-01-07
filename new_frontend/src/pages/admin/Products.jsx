@@ -7,7 +7,8 @@ import {
     SlidersHorizontal, ChevronDown, TrendingUp, TrendingDown, DollarSign,
     ShoppingCart, BarChart3, Layers, AlertCircle, CheckCircle, FileText, Cloud, Check
 } from 'lucide-react'
-import { productApi, categoryApi, saleApi } from '../../api'
+import { productApi, categoryApi, saleApi, mlApi } from '../../api'
+import { Sparkles } from 'lucide-react'
 import { Button, Card, Modal, Input, Badge, Loading, EmptyState, ConfirmDialog, SearchInput, ImageUpload, Pagination } from '../../components/ui'
 import { formatCurrency, getStockStatus, formatNumber } from '../../utils/formatters'
 import { uploadToCloudinary, getOptimizedImageUrl } from '../../utils/cloudinary'
@@ -55,6 +56,10 @@ export default function Products() {
     const [imageFile, setImageFile] = useState(null)
     const [imagePreview, setImagePreview] = useState('')
     const [submitting, setSubmitting] = useState(false)
+
+    // AI Features
+    const [loadingAI, setLoadingAI] = useState(false)
+    const [aiSuggestion, setAiSuggestion] = useState(null)
 
     useEffect(() => {
         fetchData()
@@ -118,14 +123,16 @@ export default function Products() {
         let result = products.filter(product => {
             const matchesSearch = product.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 product.asin?.toLowerCase().includes(searchQuery.toLowerCase())
-            const matchesCategory = !filterCategory || product.categoryId === parseInt(filterCategory)
+
+            // Comparaison souple pour l'ID catégorie (string vs int)
+            const matchesCategory = !filterCategory || product.categoryId == filterCategory
 
             // Filtres avancés
             const matchesPriceMin = !priceMin || product.price >= parseFloat(priceMin)
             const matchesPriceMax = !priceMax || product.price <= parseFloat(priceMax)
 
             let matchesStock = true
-            if (stockFilter === 'out') matchesStock = product.stock === 0
+            if (stockFilter === 'out') matchesStock = product.stock <= 0
             else if (stockFilter === 'low') matchesStock = product.stock > 0 && product.stock <= 10
             else if (stockFilter === 'ok') matchesStock = product.stock > 10
 
@@ -199,6 +206,7 @@ export default function Products() {
                 rank: ''
             })
             setImagePreview('')
+            setAiSuggestion(null)
         }
         setImageFile(null)
         setShowModal(true)
@@ -325,6 +333,54 @@ export default function Products() {
     const openDeleteConfirm = (product) => {
         setSelectedProduct(product)
         setShowDeleteConfirm(true)
+    }
+
+    // AI Smart Pricing
+    const handlePredictPrice = async () => {
+        if (!formData.title && !formData.categoryId) {
+            toast.error("Veuillez remplir le titre et la catégorie pour avoir une estimation")
+            return
+        }
+
+        setLoadingAI(true)
+        setAiSuggestion(null)
+
+        try {
+            const categoryName = categories.find(c => c.id === parseInt(formData.categoryId))?.name || "Unknown"
+
+            const mlInput = {
+                name: formData.title,
+                category: categoryName,
+                price: parseFloat(formData.price) || 0,
+                rating: parseFloat(formData.rating) || 0,
+                reviewCount: parseInt(formData.reviewCount) || 0,
+                rank: parseInt(formData.rank) || 0
+            }
+
+            const res = await mlApi.predictPrice(mlInput)
+            if (res.data && res.data.success) {
+                setAiSuggestion(res.data)
+                toast.success("Prix optimal calculé !")
+                // Si pas de prix, on peut pré-remplir
+                if (!formData.price) {
+                    setFormData(prev => ({ ...prev, price: res.data.predictedPrice }))
+                }
+            } else {
+                toast.error("Impossible de prédire le prix")
+            }
+        } catch (error) {
+            console.error("AI Error", error)
+            toast.error("Erreur lors de l'estimation IA")
+        } finally {
+            setLoadingAI(false)
+        }
+    }
+
+    const applyAiPrice = () => {
+        if (aiSuggestion) {
+            setFormData(prev => ({ ...prev, price: aiSuggestion.predictedPrice }))
+            toast.success("Prix suggéré appliqué")
+        }
     }
 
     // Import Logic
@@ -892,16 +948,60 @@ export default function Products() {
                                 ))}
                             </select>
                         </div>
-                        <Input
-                            label="Prix (MAD)"
-                            name="price"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={formData.price}
-                            onChange={handleChange}
-                            required
-                        />
+                        <div className="relative">
+                            <Input
+                                label="Prix (MAD)"
+                                name="price"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={formData.price}
+                                onChange={handleChange}
+                                required
+                            />
+                            <div className="absolute top-8 right-2">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-8 px-2 text-primary-600 hover:bg-primary-50"
+                                    onClick={handlePredictPrice}
+                                    loading={loadingAI}
+                                    title="Demander à l'IA"
+                                >
+                                    <Sparkles className="w-4 h-4" />
+                                </Button>
+                            </div>
+                            {aiSuggestion && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="mt-2 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+                                                Suggestion IA : {formatCurrency(aiSuggestion.predictedPrice)}
+                                            </p>
+                                            <p className="text-[10px] text-indigo-500">
+                                                Confiance : {(aiSuggestion.confidence * 100).toFixed(0)}%
+                                            </p>
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            onClick={applyAiPrice}
+                                            className="h-6 text-xs bg-indigo-600 hover:bg-indigo-700"
+                                        >
+                                            Appliquer
+                                        </Button>
+                                    </div>
+                                    <p className="text-[10px] text-indigo-400 mt-1 italic">
+                                        "{aiSuggestion.recommendation}"
+                                    </p>
+                                </motion.div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

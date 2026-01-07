@@ -31,8 +31,10 @@ export default function VendeurStats() {
     const [ranking, setRanking] = useState({ position: 0, total: 0, topVendeurs: [] })
 
     useEffect(() => {
-        fetchData()
-    }, [period])
+        if (user) {
+            fetchData()
+        }
+    }, [period, user])
 
     const fetchData = async () => {
         try {
@@ -45,7 +47,8 @@ export default function VendeurStats() {
 
             const allSales = salesRes.data || []
             const allUsers = usersRes.data || []
-            const mySales = allSales.filter(s => s.userId === user?.id)
+            // Le backend filtre déjà par utilisateur
+            const mySales = allSales
 
             // Calculer la période
             const now = new Date()
@@ -245,8 +248,8 @@ export default function VendeurStats() {
                             key={p.key}
                             onClick={() => setPeriod(p.key)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${period === p.key
-                                    ? 'bg-white dark:bg-dark-700 text-primary-600 shadow-sm'
-                                    : 'text-dark-500 hover:text-dark-700'
+                                ? 'bg-white dark:bg-dark-700 text-primary-600 shadow-sm'
+                                : 'text-dark-500 hover:text-dark-700'
                                 }`}
                         >
                             {p.label}
@@ -350,9 +353,9 @@ export default function VendeurStats() {
                                     >
                                         <div className="flex items-center gap-3">
                                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${idx === 0 ? 'bg-yellow-100 text-yellow-700' :
-                                                    idx === 1 ? 'bg-gray-100 text-gray-700' :
-                                                        idx === 2 ? 'bg-orange-100 text-orange-700' :
-                                                            'bg-dark-100 text-dark-600'
+                                                idx === 1 ? 'bg-gray-100 text-gray-700' :
+                                                    idx === 2 ? 'bg-orange-100 text-orange-700' :
+                                                        'bg-dark-100 text-dark-600'
                                                 }`}>
                                                 {idx + 1}
                                             </div>
@@ -415,15 +418,15 @@ export default function VendeurStats() {
                                 <div
                                     key={v.id}
                                     className={`flex items-center justify-between p-3 rounded-xl ${v.id === user?.id
-                                            ? 'bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800'
-                                            : 'bg-dark-50 dark:bg-dark-800'
+                                        ? 'bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800'
+                                        : 'bg-dark-50 dark:bg-dark-800'
                                         }`}
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${idx === 0 ? 'bg-yellow-400 text-yellow-900' :
-                                                idx === 1 ? 'bg-gray-300 text-gray-700' :
-                                                    idx === 2 ? 'bg-orange-400 text-orange-900' :
-                                                        'bg-dark-200 text-dark-600'
+                                            idx === 1 ? 'bg-gray-300 text-gray-700' :
+                                                idx === 2 ? 'bg-orange-400 text-orange-900' :
+                                                    'bg-dark-200 text-dark-600'
                                             }`}>
                                             {idx + 1}
                                         </div>

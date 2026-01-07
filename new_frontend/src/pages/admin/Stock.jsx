@@ -5,7 +5,7 @@ import {
     Plus, Edit2, Search, Filter, BarChart3, ArrowUpRight, ArrowDownRight,
     CheckCircle2, XCircle, Clock, Truck, Warehouse, Activity
 } from 'lucide-react'
-import { stockApi, productApi } from '../../api'
+import { stockApi, productApi, mlApi } from '../../api'
 import { Card, Button, Badge, Loading, Modal, Input } from '../../components/ui'
 import { formatCurrency, formatNumber } from '../../utils/formatters'
 import toast from 'react-hot-toast'
@@ -16,6 +16,7 @@ export default function StockDashboard() {
     const [dashboard, setDashboard] = useState(null)
     const [lowStockProducts, setLowStockProducts] = useState([])
     const [outOfStockProducts, setOutOfStockProducts] = useState([])
+    const [forecasts, setForecasts] = useState({}) // { productId: { predictedDemand: 50, confidence: 0.9, daysOfStock: 12 } }
 
     // Modals
     const [showAddStockModal, setShowAddStockModal] = useState(false)
@@ -51,12 +52,12 @@ export default function StockDashboard() {
                 stockApi.getOutOfStockProducts().catch(() => ({ data: [] }))
             ])
 
-            setProducts(productsRes.data || [])
+            const allProducts = productsRes.data || []
+            setProducts(allProducts)
             setLowStockProducts(lowStockRes.data || [])
             setOutOfStockProducts(outOfStockRes.data || [])
 
             // Calculer le dashboard localement si l'API n'est pas disponible
-            const allProducts = productsRes.data || []
             setDashboard({
                 totalProducts: allProducts.length,
                 totalStock: allProducts.reduce((sum, p) => sum + (p.stock || 0), 0),
@@ -72,12 +73,35 @@ export default function StockDashboard() {
                 }).length,
                 stockValue: allProducts.reduce((sum, p) => sum + ((p.price || 0) * (p.stock || 0)), 0)
             })
+
+            fetchForecasts(allProducts)
+
         } catch (error) {
             console.error('Error fetching stock data:', error)
             toast.error('Erreur lors du chargement des données')
         } finally {
             setLoading(false)
         }
+    }
+
+    const fetchForecasts = async (productsList) => {
+        const newForecasts = {}
+        const promises = productsList.map(async (p) => {
+            try {
+                const res = await mlApi.predictDemand({
+                    productId: p.id,
+                    history: []
+                })
+                if (res.data) {
+                    newForecasts[p.id] = res.data
+                }
+            } catch (err) {
+
+            }
+        })
+
+        await Promise.allSettled(promises)
+        setForecasts(newForecasts)
     }
 
     const filteredProducts = useMemo(() => {
@@ -167,11 +191,44 @@ export default function StockDashboard() {
         return <Badge variant="success">En stock</Badge>
     }
 
+    const handleExportCSV = () => {
+        if (filteredProducts.length === 0) {
+            toast.error('Aucun stock à exporter')
+            return
+        }
+
+        const headers = ['Produit', 'ASIN', 'Stock Physique', 'Réservé', 'Disponible', 'Valeur Unitaire', 'Valeur Totale']
+        const csvContent = [
+            headers.join(','),
+            ...filteredProducts.map(p => {
+                const available = (p.stock || 0) - (p.reservedStock || 0)
+                const value = (p.price || 0) * (p.stock || 0)
+                return [
+                    `"${p.title.replace(/"/g, '""')}"`,
+                    p.asin,
+                    p.stock || 0,
+                    p.reservedStock || 0,
+                    available,
+                    p.price || 0,
+                    value
+                ].join(',')
+            })
+        ].join('\n')
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.setAttribute('href', url)
+        link.setAttribute('download', `inventaire_${new Date().toISOString().split('T')[0]}.csv`)
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+    }
+
     if (loading) return <Loading />
 
     return (
         <div className="space-y-6">
-            {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-dark-900 dark:text-white flex items-center gap-2">
@@ -182,15 +239,17 @@ export default function StockDashboard() {
                         Tableau de bord et gestion des inventaires
                     </p>
                 </div>
-                <Button onClick={fetchData} variant="outline" icon={RefreshCw}>
-                    Actualiser
-                </Button>
+                <div className="flex gap-2">
+                    <Button onClick={fetchData} variant="outline" icon={RefreshCw}>
+                        Actualiser
+                    </Button>
+                    <Button variant="outline" icon={BarChart3} onClick={handleExportCSV}>
+                        Exporter Inventaire
+                    </Button>
+                </div>
             </div>
-
-            {/* KPI Cards */}
             {dashboard && (
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* Stock Total */}
                     <Card className="p-4 bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
                         <div className="flex items-center justify-between">
                             <div>
@@ -201,7 +260,6 @@ export default function StockDashboard() {
                         </div>
                     </Card>
 
-                    {/* Stock Réservé */}
                     <Card className="p-4 bg-gradient-to-br from-amber-500 to-orange-600 text-white">
                         <div className="flex items-center justify-between">
                             <div>
@@ -212,7 +270,6 @@ export default function StockDashboard() {
                         </div>
                     </Card>
 
-                    {/* Stock Disponible */}
                     <Card className="p-4 bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
                         <div className="flex items-center justify-between">
                             <div>
@@ -223,7 +280,7 @@ export default function StockDashboard() {
                         </div>
                     </Card>
 
-                    {/* Valeur Stock */}
+
                     <Card className="p-4 bg-gradient-to-br from-purple-500 to-violet-600 text-white">
                         <div className="flex items-center justify-between">
                             <div>
@@ -236,10 +293,9 @@ export default function StockDashboard() {
                 </div>
             )}
 
-            {/* Alertes Stock */}
+
             {(dashboard?.lowStockCount > 0 || dashboard?.outOfStockCount > 0) && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Alertes Stock Bas */}
                     {dashboard?.lowStockCount > 0 && (
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
@@ -262,8 +318,6 @@ export default function StockDashboard() {
                             </Card>
                         </motion.div>
                     )}
-
-                    {/* Alertes Rupture */}
                     {dashboard?.outOfStockCount > 0 && (
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
@@ -290,7 +344,6 @@ export default function StockDashboard() {
                 </div>
             )}
 
-            {/* Filtres et Recherche */}
             <Card className="p-4">
                 <div className="flex flex-col sm:flex-row gap-4">
                     <div className="flex-1 relative">
@@ -316,7 +369,6 @@ export default function StockDashboard() {
                 </div>
             </Card>
 
-            {/* Liste des Produits */}
             <Card className="overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full">
@@ -336,6 +388,9 @@ export default function StockDashboard() {
                                 </th>
                                 <th className="text-center px-4 py-3 text-xs font-semibold text-dark-600 dark:text-dark-400 uppercase">
                                     Statut
+                                </th>
+                                <th className="text-center px-4 py-3 text-xs font-semibold text-dark-600 dark:text-dark-400 uppercase">
+                                    Prévision (30j)
                                 </th>
                                 <th className="text-center px-4 py-3 text-xs font-semibold text-dark-600 dark:text-dark-400 uppercase">
                                     Prix
@@ -388,24 +443,45 @@ export default function StockDashboard() {
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 <span className={`font-medium ${(product.reservedStock || 0) > 0
-                                                        ? 'text-amber-600'
-                                                        : 'text-dark-500'
+                                                    ? 'text-amber-600'
+                                                    : 'text-dark-500'
                                                     }`}>
                                                     {product.reservedStock || 0}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 <span className={`font-bold ${available <= 0
-                                                        ? 'text-red-600'
-                                                        : available <= 10
-                                                            ? 'text-amber-600'
-                                                            : 'text-emerald-600'
+                                                    ? 'text-red-600'
+                                                    : available <= 10
+                                                        ? 'text-amber-600'
+                                                        : 'text-emerald-600'
                                                     }`}>
                                                     {available}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 {getStockBadge(product)}
+                                            </td>
+                                            <td className="px-4 py-3 text-center">
+                                                {forecasts[product.id] ? (
+                                                    <div className="flex flex-col items-center">
+                                                        <span className="font-bold text-dark-800 dark:text-white">
+                                                            {Math.round(forecasts[product.id].predictedDemand)}
+                                                        </span>
+                                                        {forecasts[product.id].predictedDemand > available && (
+                                                            <span className="text-[10px] text-red-500 font-semibold animate-pulse">
+                                                                Manque {Math.round(forecasts[product.id].predictedDemand - available)}
+                                                            </span>
+                                                        )}
+                                                        {forecasts[product.id].predictedDemand <= available && (
+                                                            <span className="text-[10px] text-emerald-500">
+                                                                Couvert
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs text-dark-400">-</span>
+                                                )}
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 <span className="text-dark-600 dark:text-dark-400">
@@ -449,8 +525,6 @@ export default function StockDashboard() {
                     </div>
                 )}
             </Card>
-
-            {/* Modal Ajouter Stock */}
             <Modal
                 isOpen={showAddStockModal}
                 onClose={() => setShowAddStockModal(false)}
@@ -544,7 +618,6 @@ export default function StockDashboard() {
                 </form>
             </Modal>
 
-            {/* Modal Ajuster Stock */}
             <Modal
                 isOpen={showAdjustStockModal}
                 onClose={() => setShowAdjustStockModal(false)}
@@ -606,10 +679,10 @@ export default function StockDashboard() {
 
                     {adjustStockForm.newQuantity !== '' && (
                         <div className={`p-3 rounded-lg ${parseInt(adjustStockForm.newQuantity) > (selectedProduct?.stock || 0)
-                                ? 'bg-emerald-50 dark:bg-emerald-900/20'
-                                : parseInt(adjustStockForm.newQuantity) < (selectedProduct?.stock || 0)
-                                    ? 'bg-red-50 dark:bg-red-900/20'
-                                    : 'bg-gray-50 dark:bg-gray-800'
+                            ? 'bg-emerald-50 dark:bg-emerald-900/20'
+                            : parseInt(adjustStockForm.newQuantity) < (selectedProduct?.stock || 0)
+                                ? 'bg-red-50 dark:bg-red-900/20'
+                                : 'bg-gray-50 dark:bg-gray-800'
                             }`}>
                             <div className="flex items-center gap-2">
                                 {parseInt(adjustStockForm.newQuantity) > (selectedProduct?.stock || 0) ? (
@@ -620,10 +693,10 @@ export default function StockDashboard() {
                                     <Activity className="w-5 h-5 text-gray-600" />
                                 )}
                                 <p className={`${parseInt(adjustStockForm.newQuantity) > (selectedProduct?.stock || 0)
-                                        ? 'text-emerald-700 dark:text-emerald-300'
-                                        : parseInt(adjustStockForm.newQuantity) < (selectedProduct?.stock || 0)
-                                            ? 'text-red-700 dark:text-red-300'
-                                            : 'text-gray-700 dark:text-gray-300'
+                                    ? 'text-emerald-700 dark:text-emerald-300'
+                                    : parseInt(adjustStockForm.newQuantity) < (selectedProduct?.stock || 0)
+                                        ? 'text-red-700 dark:text-red-300'
+                                        : 'text-gray-700 dark:text-gray-300'
                                     }`}>
                                     Différence: <span className="font-bold">
                                         {parseInt(adjustStockForm.newQuantity) - (selectedProduct?.stock || 0) >= 0 ? '+' : ''}

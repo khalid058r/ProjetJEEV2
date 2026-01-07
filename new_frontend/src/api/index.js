@@ -98,6 +98,12 @@ export const analyticsApi = {
     getVendeurBestSellers: (limit = 5) => api.get('/analytics/vendeur/products/best-sellers', { params: { limit } }),
     getVendeurDailySales: () => api.get('/analytics/vendeur/sales/daily'),
 
+    // Product specific
+    // Product specific
+    // Fallback to empty to avoid 500 error on backend (user refused restart)
+    // The frontend ProductStats.jsx now handles fetching via getRecent.
+    getProductSalesStats: (productId) => Promise.resolve({ data: [] }),
+
     // Exports
     exportCSV: (filterData) => api.post('/analytics/export/csv', filterData, {
         responseType: 'blob'
@@ -118,12 +124,12 @@ export const analyticsApi = {
 // ML API - Machine Learning (via Java Backend → Python ML Service)
 // ===================================================
 export const mlApi = {
-    // Prédictions ML
+    // Prédictions ML (via Java backend)
     predictPrice: (productData) => api.post('/ml/predict/price', productData),
     predictDemand: (productData) => api.post('/ml/predict/demand', productData),
     predictBestseller: (productData) => api.post('/ml/predict/bestseller', productData),
 
-    // Prédictions par ID produit
+    // Prédictions par ID produit (via Java backend)
     predictPriceById: (productId) => api.post(`/ml/predict/price/${productId}`),
     predictDemandById: (productId) => api.post(`/ml/predict/demand/${productId}`),
     predictBestsellerById: (productId) => api.post(`/ml/predict/bestseller/${productId}`),
@@ -133,6 +139,66 @@ export const mlApi = {
 
     // Santé du service ML
     getHealth: () => api.get('/ml/health'),
+}
+
+// ===================================================
+// ML DIRECT API - Appels directs au service Python ML
+// (Utile pour des fonctionnalités avancées ou bypass Java)
+// ===================================================
+export const mlDirectApi = {
+    // Prédictions directes
+    predictPrice: (productData) =>
+        fetch(`${PYTHON_ML_URL}/api/ml/predict/price`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productData)
+        }).then(res => res.json()),
+
+    predictDemand: (productData, days = 30) =>
+        fetch(`${PYTHON_ML_URL}/api/ml/predict/demand?days=${days}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productData)
+        }).then(res => res.json()),
+
+    predictBestseller: (productData) =>
+        fetch(`${PYTHON_ML_URL}/api/ml/predict/bestseller`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productData)
+        }).then(res => res.json()),
+
+    // Analyse complète
+    analyze: (productData) =>
+        fetch(`${PYTHON_ML_URL}/api/ml/analyze`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productData)
+        }).then(res => res.json()),
+
+    // Recherche de bestsellers potentiels
+    findBestsellers: (products, topN = 20) =>
+        fetch(`${PYTHON_ML_URL}/api/ml/find-bestsellers?top_n=${topN}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(products)
+        }).then(res => res.json()),
+
+    // Statut du service ML
+    getStatus: () =>
+        fetch(`${PYTHON_ML_URL}/api/ml/status`).then(res => res.json()),
+
+    // Health check complet
+    getHealth: () =>
+        fetch(`${PYTHON_ML_URL}/api/health/ready`).then(res => res.json()),
+
+    // Métriques du service
+    getMetrics: () =>
+        fetch(`${PYTHON_ML_URL}/api/metrics`).then(res => res.json()),
+
+    // Reload des modèles (admin)
+    reloadModels: () =>
+        fetch(`${PYTHON_ML_URL}/api/ml/reload`, { method: 'POST' }).then(res => res.json()),
 }
 
 // ===================================================
@@ -155,17 +221,22 @@ export const recommendationsApi = {
 // ===================================================
 // SEARCH API - Recherche sémantique (via Python ML Service)
 // ===================================================
-const PYTHON_ML_URL = 'http://localhost:5000'
+const PYTHON_ML_URL = import.meta.env.VITE_PYTHON_ML_URL || 'http://localhost:5000'
 
 export const searchApi = {
-    // Recherche sémantique
+    // Recherche sémantique (API unifiée)
     semantic: (query, topK = 10) =>
-        fetch(`${PYTHON_ML_URL}/api/ml/v2/search?query=${encodeURIComponent(query)}&top_k=${topK}`)
+        fetch(`${PYTHON_ML_URL}/api/ml/search?query=${encodeURIComponent(query)}&top_k=${topK}`)
             .then(res => res.json()),
 
     // Produits similaires par embedding
     findSimilar: (productId, topK = 5) =>
-        fetch(`${PYTHON_ML_URL}/api/ml/v2/similar/${productId}?top_k=${topK}`)
+        fetch(`${PYTHON_ML_URL}/api/ml/similar/${productId}?top_k=${topK}`)
+            .then(res => res.json()),
+
+    // Recherche rapide (quick search)
+    quick: (query, limit = 10) =>
+        fetch(`${PYTHON_ML_URL}/api/search/quick?q=${encodeURIComponent(query)}&limit=${limit}`)
             .then(res => res.json()),
 }
 
@@ -213,6 +284,48 @@ export const etlApi = {
         fetch(`${PYTHON_ML_URL}/api/etl/jobs`).then(res => res.json()),
 }
 
+// ===================================================
+// CHATBOT API - Assistant IA (via Python ML Service)
+// ===================================================
+export const chatbotApi = {
+    // Envoyer un message
+    sendMessage: (message, userId = 'anonymous', conversationId = null) =>
+        fetch(`${PYTHON_ML_URL}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message,
+                user_id: userId,
+                conversation_id: conversationId
+            })
+        }).then(res => res.json()),
+
+    // Historique de conversation
+    getHistory: (conversationId) =>
+        fetch(`${PYTHON_ML_URL}/api/chat/history/${conversationId}`).then(res => res.json()),
+
+    // Effacer l'historique
+    clearHistory: (userId) =>
+        fetch(`${PYTHON_ML_URL}/api/chat/clear/${userId}`, { method: 'DELETE' }).then(res => res.json()),
+}
+
+// ===================================================
+// SYNC API - Synchronisation Python ↔ Java
+// ===================================================
+export const syncApi = {
+    // Sync complet
+    fullSync: () =>
+        fetch(`${PYTHON_ML_URL}/api/sync/full`, { method: 'POST' }).then(res => res.json()),
+
+    // Sync produits
+    syncProducts: () =>
+        fetch(`${PYTHON_ML_URL}/api/sync/products`, { method: 'POST' }).then(res => res.json()),
+
+    // Statut de la dernière sync
+    getStatus: () =>
+        fetch(`${PYTHON_ML_URL}/api/sync/status`).then(res => res.json()),
+}
+
 export default {
     auth: authApi,
     products: productApi,
@@ -222,7 +335,10 @@ export default {
     analytics: analyticsApi,
     stock: stockApi,
     ml: mlApi,
+    mlDirect: mlDirectApi,
     recommendations: recommendationsApi,
     search: searchApi,
     etl: etlApi,
+    chatbot: chatbotApi,
+    sync: syncApi,
 }

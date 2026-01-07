@@ -15,4 +15,5 @@ public class TopProductResponse {
     private Double rating;
     private Long quantitySold;
     private Double revenue;
+    private Integer stock;
 }

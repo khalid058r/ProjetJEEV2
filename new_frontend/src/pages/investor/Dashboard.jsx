@@ -95,10 +95,10 @@ export default function InvestorDashboard() {
             } else {
                 // Fallback: données simulées
                 const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
-                setRevenueData(months.map((name) => ({
+                setRevenueData(months.map((name, i) => ({
                     name,
-                    revenue: Math.floor(Math.random() * 80000) + 40000,
-                    profit: Math.floor(Math.random() * 30000) + 15000
+                    revenue: 40000 + (Math.abs(Math.sin(i)) * 40000),
+                    profit: 15000 + (Math.abs(Math.sin(i)) * 15000)
                 })))
             }
 
@@ -118,7 +118,7 @@ export default function InvestorDashboard() {
                     name: p.title || p.productName || p.name || 'Produit',
                     revenue: p.revenue || p.totalRevenue || 0,
                     sales: p.quantitySold || p.totalSold || p.quantity || 0,
-                    margin: Math.floor(Math.random() * 30) + 15 // Marge simulée
+                    margin: 15 + (index % 5) * 5 + ((p.title || p.name || '').length % 5)
                 })))
             }
 

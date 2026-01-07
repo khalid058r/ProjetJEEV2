@@ -88,8 +88,8 @@ export default function Financial() {
                 const currentMonth = new Date().getMonth()
                 const avgMonthlyRevenue = totalRevenue / (currentMonth + 1)
 
-                monthly = months.slice(0, currentMonth + 1).map((month) => {
-                    const revenue = Math.round(avgMonthlyRevenue * (0.7 + Math.random() * 0.6))
+                monthly = months.slice(0, currentMonth + 1).map((month, i) => {
+                    const revenue = Math.round(avgMonthlyRevenue * (0.8 + (Math.abs(Math.sin(i / 2)) * 0.4)))
                     return {
                         name: month,
                         revenue,

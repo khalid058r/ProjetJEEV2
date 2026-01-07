@@ -101,17 +101,27 @@ export default function Sales() {
                 sale.id?.toString().includes(searchLower)
 
             let matchesDate = true
+            const saleDate = new Date(sale.saleDate)
+
+            // Filtre par date exacte (comparaison locale)
             if (dateFilter) {
-                const saleDate = new Date(sale.saleDate).toISOString().split('T')[0]
-                matchesDate = saleDate === dateFilter
+                const year = saleDate.getFullYear()
+                const month = String(saleDate.getMonth() + 1).padStart(2, '0')
+                const day = String(saleDate.getDate()).padStart(2, '0')
+                const saleDateStr = `${year}-${month}-${day}`
+                matchesDate = saleDateStr === dateFilter
             }
+            // Filtre par plage de dates
             if (dateRangeStart && dateRangeEnd) {
-                const saleDate = new Date(sale.saleDate)
-                matchesDate = saleDate >= new Date(dateRangeStart) && saleDate <= new Date(dateRangeEnd)
+                const startDate = new Date(dateRangeStart)
+                const endDate = new Date(dateRangeEnd)
+                endDate.setHours(23, 59, 59, 999) // Inclure toute la journée de fin
+                matchesDate = saleDate >= startDate && saleDate <= endDate
             }
 
             const matchesStatus = !statusFilter || sale.status === statusFilter
-            const matchesVendeur = !vendeurFilter || sale.userId === parseInt(vendeurFilter)
+            // Comparaison souple pour l'ID vendeur (string vs int)
+            const matchesVendeur = !vendeurFilter || sale.userId == vendeurFilter
 
             // Filtres avancés montant
             const matchesAmountMin = !amountMin || sale.totalAmount >= parseFloat(amountMin)
@@ -309,6 +319,40 @@ export default function Sales() {
         setAmountMax('')
     }
 
+    const handleExportCSV = () => {
+        if (filteredSales.length === 0) {
+            toast.error('Aucune donnée à exporter')
+            return
+        }
+
+        const headers = ['ID', 'Date', 'Vendeur', 'Client', 'Total', 'Statut', 'Articles']
+        const csvContent = [
+            headers.join(','),
+            ...filteredSales.map(sale => {
+                const date = new Date(sale.saleDate).toLocaleDateString('fr-FR')
+                const articles = sale.lignes?.map(l => `${l.productTitle} (${l.quantity})`).join('; ') || ''
+                return [
+                    sale.id,
+                    date,
+                    `"${sale.username || ''}"`,
+                    `"${sale.clientName || 'Anonyme'}"`,
+                    sale.totalAmount,
+                    sale.status,
+                    `"${articles}"`
+                ].join(',')
+            })
+        ].join('\n')
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.setAttribute('href', url)
+        link.setAttribute('download', `ventes_${new Date().toISOString().split('T')[0]}.csv`)
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+    }
+
     if (loading) return <Loading />
 
     const vendeurs = users.filter(u => u.role === 'VENDEUR')
@@ -329,9 +373,9 @@ export default function Sales() {
                         <BarChart3 className="w-5 h-5 mr-2" />
                         Stats Vendeurs
                     </Button>
-                    <Button variant="outline" onClick={() => toast.success('Export en cours...')}>
+                    <Button variant="outline" onClick={handleExportCSV}>
                         <Download className="w-5 h-5 mr-2" />
-                        Exporter
+                        Exporter CSV
                     </Button>
                     <Button onClick={handleOpenModal} className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600">
                         <Zap className="w-5 h-5 mr-2" />

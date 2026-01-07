@@ -11,7 +11,6 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Map;
 
-
 @Service
 @Slf4j
 public class PythonMLClient {
@@ -169,7 +168,6 @@ public class PythonMLClient {
         }
     }
 
-
     @SuppressWarnings("unchecked")
     public RecommendationResponse getCrossSellProducts(Long productId, int limit) {
         String url = pythonMlServiceUrl + "/api/recommendations/crosssell/" + productId + "?limit=" + limit;
@@ -278,7 +276,6 @@ public class PythonMLClient {
         }
     }
 
-
     private RecommendedProduct mapToRecommendedProduct(Map<String, Object> map) {
         return RecommendedProduct.builder()
                 .id(safeLong(map.get("id")))
@@ -293,9 +290,141 @@ public class PythonMLClient {
                 .build();
     }
 
+    // ============================================================================
+    // NOUVELLES MÉTHODES - Recherche sémantique et analyse
+    // ============================================================================
+
+    /**
+     * Recherche sémantique de produits
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> semanticSearch(String query, int topK) {
+        String url = pythonMlServiceUrl + "/api/ml/search?query=" + query + "&top_k=" + topK;
+        log.info("🔍 Recherche sémantique: {}", url);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            return response.getBody();
+        } catch (RestClientException e) {
+            log.error("❌ Erreur recherche: {}", e.getMessage());
+            return Map.of("success", false, "error", e.getMessage());
+        }
+    }
+
+    /**
+     * Analyse complète d'un produit
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> analyzeProduct(ProductInputDTO product) {
+        String url = pythonMlServiceUrl + "/api/ml/analyze";
+        log.info("📊 Analyse produit: {}", url);
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<ProductInputDTO> request = new HttpEntity<>(product, headers);
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+            return response.getBody();
+        } catch (RestClientException e) {
+            log.error("❌ Erreur analyse: {}", e.getMessage());
+            return Map.of("success", false, "error", e.getMessage());
+        }
+    }
+
+    /**
+     * Obtient le statut du service ML
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getMlStatus() {
+        String url = pythonMlServiceUrl + "/api/ml/status";
+
+        try {
+            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            return response.getBody();
+        } catch (RestClientException e) {
+            log.warn("⚠️ Status ML indisponible: {}", e.getMessage());
+            return Map.of("ready", false, "error", e.getMessage());
+        }
+    }
+
+    /**
+     * Recharge les modèles ML (hot reload)
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> reloadModels() {
+        String url = pythonMlServiceUrl + "/api/ml/reload";
+        log.info("🔄 Reload modèles ML: {}", url);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, null, Map.class);
+            return response.getBody();
+        } catch (RestClientException e) {
+            log.error("❌ Erreur reload: {}", e.getMessage());
+            return Map.of("success", false, "error", e.getMessage());
+        }
+    }
+
+    /**
+     * Entraîne les modèles avec les données Java
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> trainFromJava() {
+        String url = pythonMlServiceUrl + "/api/ml/train-from-java";
+        log.info("🎓 Entraînement depuis Java: {}", url);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, null, Map.class);
+            return response.getBody();
+        } catch (RestClientException e) {
+            log.error("❌ Erreur entraînement: {}", e.getMessage());
+            return Map.of("success", false, "error", e.getMessage());
+        }
+    }
+
+    /**
+     * Health check détaillé (readiness)
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getReadiness() {
+        String url = pythonMlServiceUrl + "/api/health/ready";
+
+        try {
+            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            return response.getBody();
+        } catch (RestClientException e) {
+            return Map.of(
+                    "ready", false,
+                    "error", e.getMessage(),
+                    "service_url", pythonMlServiceUrl);
+        }
+    }
+
+    /**
+     * Métriques du service
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getMetrics() {
+        String url = pythonMlServiceUrl + "/api/metrics";
+
+        try {
+            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            return response.getBody();
+        } catch (RestClientException e) {
+            log.warn("⚠️ Métriques indisponibles: {}", e.getMessage());
+            return Map.of("error", e.getMessage());
+        }
+    }
+
+    // ============================================================================
+    // HELPER METHODS
+    // ============================================================================
+
     private Long safeLong(Object value) {
-        if (value == null) return null;
-        if (value instanceof Number) return ((Number) value).longValue();
+        if (value == null)
+            return null;
+        if (value instanceof Number)
+            return ((Number) value).longValue();
         try {
             return Long.parseLong(value.toString());
         } catch (NumberFormatException e) {
@@ -304,8 +433,10 @@ public class PythonMLClient {
     }
 
     private Double safeDouble(Object value) {
-        if (value == null) return null;
-        if (value instanceof Number) return ((Number) value).doubleValue();
+        if (value == null)
+            return null;
+        if (value instanceof Number)
+            return ((Number) value).doubleValue();
         try {
             return Double.parseDouble(value.toString());
         } catch (NumberFormatException e) {
@@ -314,8 +445,10 @@ public class PythonMLClient {
     }
 
     private Integer safeInt(Object value) {
-        if (value == null) return null;
-        if (value instanceof Number) return ((Number) value).intValue();
+        if (value == null)
+            return null;
+        if (value instanceof Number)
+            return ((Number) value).intValue();
         try {
             return Integer.parseInt(value.toString());
         } catch (NumberFormatException e) {

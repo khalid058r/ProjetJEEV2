@@ -23,7 +23,8 @@ export default function AdminDashboard() {
         revenue: 0,
         avgOrderValue: 0,
         todaySales: 0,
-        todayRevenue: 0
+        todayRevenue: 0,
+        avgRating: 0
     })
     const [recentSales, setRecentSales] = useState([])
     const [topProducts, setTopProducts] = useState([])
@@ -365,16 +366,16 @@ export default function AdminDashboard() {
                         {/* Mini stats */}
                         <div className="relative grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-white/20">
                             <div>
-                                <p className="text-white/60 text-xs">Aujourd'hui</p>
-                                <p className="text-white font-semibold mt-1">{formatCurrency(stats.revenue * 0.05)}</p>
-                            </div>
-                            <div>
-                                <p className="text-white/60 text-xs">Cette semaine</p>
-                                <p className="text-white font-semibold mt-1">{formatCurrency(stats.revenue * 0.25)}</p>
-                            </div>
-                            <div>
                                 <p className="text-white/60 text-xs">Ce mois</p>
-                                <p className="text-white font-semibold mt-1">{formatCurrency(stats.revenue * 0.7)}</p>
+                                <p className="text-white font-semibold mt-1">{formatCurrency(stats.todayRevenue)}</p>
+                            </div>
+                            <div>
+                                <p className="text-white/60 text-xs">Moyenne/Vente</p>
+                                <p className="text-white font-semibold mt-1">{formatCurrency(stats.avgOrderValue)}</p>
+                            </div>
+                            <div>
+                                <p className="text-white/60 text-xs">Prévision (Fin mois)</p>
+                                <p className="text-white font-semibold mt-1">{formatCurrency(stats.todayRevenue * 1.2)}</p>
                             </div>
                         </div>
                     </Card>
@@ -417,75 +418,77 @@ export default function AdminDashboard() {
             </div>
 
             {/* Alert Widgets */}
-            {lowStockProducts.length > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.45 }}
-                >
-                    <AlertBox type="warning" className="p-0 overflow-hidden">
-                        <div className="p-4 border-b border-warning-200 dark:border-warning-800 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-warning-100 dark:bg-warning-900/30 flex items-center justify-center">
-                                    <AlertTriangle className="w-5 h-5 text-warning-600" />
-                                </div>
-                                <div>
-                                    <h4 className="font-semibold text-warning-800 dark:text-warning-200">
-                                        Alerte Stock Faible
-                                    </h4>
-                                    <p className="text-sm text-warning-600 dark:text-warning-400">
-                                        {lowStockProducts.length} produit(s) avec un stock critique
-                                    </p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => navigate('/admin/low-stock')}
-                                className="flex items-center gap-2 px-4 py-2 bg-warning-100 dark:bg-warning-900/30 hover:bg-warning-200 dark:hover:bg-warning-800 text-warning-700 dark:text-warning-300 rounded-xl text-sm font-medium transition-colors"
-                            >
-                                Voir tout
-                                <ExternalLink className="w-4 h-4" />
-                            </button>
-                        </div>
-                        <div className="divide-y divide-warning-100 dark:divide-warning-900">
-                            {lowStockProducts.slice(0, 3).map((product, index) => (
-                                <div
-                                    key={product.id || index}
-                                    className="flex items-center justify-between p-4 hover:bg-warning-50/50 dark:hover:bg-warning-900/20 cursor-pointer transition-colors"
-                                    onClick={() => navigate(`/admin/products/${product.id}`)}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        {product.imageUrl ? (
-                                            <img
-                                                src={product.imageUrl}
-                                                alt={product.title}
-                                                className="w-10 h-10 rounded-lg object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-10 h-10 rounded-lg bg-warning-200 dark:bg-warning-800 flex items-center justify-center">
-                                                <Package className="w-5 h-5 text-warning-500" />
-                                            </div>
-                                        )}
-                                        <div>
-                                            <p className="font-medium text-warning-800 dark:text-warning-200">
-                                                {product.title}
-                                            </p>
-                                            <p className="text-xs text-warning-600 dark:text-warning-400">
-                                                {product.categoryName || 'Non catégorisé'}
-                                            </p>
-                                        </div>
+            {
+                lowStockProducts.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.45 }}
+                    >
+                        <AlertBox type="warning" className="p-0 overflow-hidden">
+                            <div className="p-4 border-b border-warning-200 dark:border-warning-800 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-warning-100 dark:bg-warning-900/30 flex items-center justify-center">
+                                        <AlertTriangle className="w-5 h-5 text-warning-600" />
                                     </div>
-                                    <Badge
-                                        variant={product.stock === 0 ? 'danger' : 'warning'}
-                                        className="font-bold"
-                                    >
-                                        {product.stock === 0 ? 'Rupture' : `${product.stock} restant${product.stock > 1 ? 's' : ''}`}
-                                    </Badge>
+                                    <div>
+                                        <h4 className="font-semibold text-warning-800 dark:text-warning-200">
+                                            Alerte Stock Faible
+                                        </h4>
+                                        <p className="text-sm text-warning-600 dark:text-warning-400">
+                                            {lowStockProducts.length} produit(s) avec un stock critique
+                                        </p>
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
-                    </AlertBox>
-                </motion.div>
-            )}
+                                <button
+                                    onClick={() => navigate('/admin/low-stock')}
+                                    className="flex items-center gap-2 px-4 py-2 bg-warning-100 dark:bg-warning-900/30 hover:bg-warning-200 dark:hover:bg-warning-800 text-warning-700 dark:text-warning-300 rounded-xl text-sm font-medium transition-colors"
+                                >
+                                    Voir tout
+                                    <ExternalLink className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <div className="divide-y divide-warning-100 dark:divide-warning-900">
+                                {lowStockProducts.slice(0, 3).map((product, index) => (
+                                    <div
+                                        key={product.id || index}
+                                        className="flex items-center justify-between p-4 hover:bg-warning-50/50 dark:hover:bg-warning-900/20 cursor-pointer transition-colors"
+                                        onClick={() => navigate(`/admin/products/${product.id}`)}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            {product.imageUrl ? (
+                                                <img
+                                                    src={product.imageUrl}
+                                                    alt={product.title}
+                                                    className="w-10 h-10 rounded-lg object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-10 h-10 rounded-lg bg-warning-200 dark:bg-warning-800 flex items-center justify-center">
+                                                    <Package className="w-5 h-5 text-warning-500" />
+                                                </div>
+                                            )}
+                                            <div>
+                                                <p className="font-medium text-warning-800 dark:text-warning-200">
+                                                    {product.title}
+                                                </p>
+                                                <p className="text-xs text-warning-600 dark:text-warning-400">
+                                                    {product.categoryName || 'Non catégorisé'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <Badge
+                                            variant={product.stock === 0 ? 'danger' : 'warning'}
+                                            className="font-bold"
+                                        >
+                                            {product.stock === 0 ? 'Rupture' : `${product.stock} restant${product.stock > 1 ? 's' : ''}`}
+                                        </Badge>
+                                    </div>
+                                ))}
+                            </div>
+                        </AlertBox>
+                    </motion.div>
+                )
+            }
 
             {/* Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -562,11 +565,11 @@ export default function AdminDashboard() {
                                             </div>
                                             <div>
                                                 <p className="font-medium text-dark-900 dark:text-white">
-                                                    {sale.lignes?.[0]?.productTitle || 'Vente #' + sale.id}
-                                                    {sale.lignes?.length > 1 && ` (+${sale.lignes.length - 1})`}
+                                                    {(sale.lignes || sale.lignesVente || sale.items)?.[0]?.productTitle || 'Vente #' + sale.id}
+                                                    {(sale.lignes || sale.lignesVente || sale.items)?.length > 1 && ` (+${(sale.lignes || sale.lignesVente || sale.items).length - 1})`}
                                                 </p>
                                                 <p className="text-xs text-dark-500">
-                                                    {sale.lignes?.reduce((sum, l) => sum + (l.quantity || 0), 0) || 0} article(s) - {sale.username}
+                                                    {(sale.lignes || sale.lignesVente || sale.items)?.reduce((sum, l) => sum + (l.quantity || 0), 0) || 0} article(s) - {sale.username}
                                                 </p>
                                             </div>
                                         </div>
@@ -646,28 +649,58 @@ export default function AdminDashboard() {
                         <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary-500 via-success-500 to-warning-500 opacity-20" />
 
                         <div className="space-y-4">
-                            {[
-                                { type: 'sale', icon: ShoppingCart, color: 'success', title: 'Nouvelle vente effectuée', desc: recentSales[0]?.username ? `Par ${recentSales[0].username}` : 'Vente récente', time: '2 min' },
-                                { type: 'product', icon: Package, color: 'primary', title: 'Produit mis à jour', desc: 'Stock modifié', time: '15 min' },
-                                { type: 'user', icon: Users, color: 'warning', title: 'Nouvel utilisateur inscrit', desc: 'Bienvenue!', time: '1 heure' },
-                                { type: 'alert', icon: AlertTriangle, color: 'danger', title: 'Stock faible détecté', desc: lowStockProducts[0]?.title || 'Produit en rupture', time: '2 heures' },
-                            ].map((activity, index) => (
-                                <div key={index} className="flex items-start gap-4 relative">
-                                    <div className={`w-10 h-10 rounded-xl bg-${activity.color}-100 dark:bg-${activity.color}-900/30 flex items-center justify-center flex-shrink-0 z-10`}>
-                                        <activity.icon className={`w-5 h-5 text-${activity.color}-600 dark:text-${activity.color}-400`} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center justify-between gap-2">
-                                            <p className="font-medium text-dark-900 dark:text-white text-sm truncate">{activity.title}</p>
-                                            <span className="text-xs text-dark-400 flex-shrink-0 flex items-center gap-1">
-                                                <Clock className="w-3 h-3" />
-                                                {activity.time}
-                                            </span>
+                            {(() => {
+                                const activities = [];
+
+                                // 1. Recent Sales
+                                recentSales.slice(0, 3).forEach(sale => {
+                                    activities.push({
+                                        type: 'sale',
+                                        icon: ShoppingCart,
+                                        color: 'success',
+                                        title: 'Nouvelle vente',
+                                        desc: `${formatCurrency(sale.totalAmount)} par ${sale.username}`,
+                                        time: formatRelativeTime(sale.saleDate),
+                                        date: new Date(sale.saleDate)
+                                    });
+                                });
+
+                                // 2. Low Stock Alerts
+                                lowStockProducts.slice(0, 2).forEach(p => {
+                                    activities.push({
+                                        type: 'alert',
+                                        icon: AlertTriangle,
+                                        color: 'danger',
+                                        title: 'Stock Critique',
+                                        desc: `${p.title} (${p.stock} restant)`,
+                                        time: 'À l\'instant',
+                                        date: new Date()
+                                    });
+                                });
+
+                                const displayList = activities.sort((a, b) => b.date - a.date);
+                                const finalList = displayList.length > 0 ? displayList : [
+                                    { type: 'info', icon: Bell, color: 'primary', title: 'Aucune activité', desc: 'Le système est calme', time: 'Maintenant' }
+                                ];
+
+                                return finalList.map((activity, index) => (
+                                    <div key={index} className="flex items-start gap-4 relative">
+                                        <div className={`w-10 h-10 rounded-xl bg-${activity.color}-100 dark:bg-${activity.color}-900/30 flex items-center justify-center flex-shrink-0 z-10`}>
+                                            <activity.icon className={`w-5 h-5 text-${activity.color}-600 dark:text-${activity.color}-400`} />
                                         </div>
-                                        <p className="text-xs text-dark-500 mt-0.5">{activity.desc}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <p className="font-medium text-dark-900 dark:text-white text-sm truncate">{activity.title}</p>
+                                                <span className="text-xs text-dark-400 flex-shrink-0 flex items-center gap-1">
+                                                    <Clock className="w-3 h-3" />
+                                                    {activity.time}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-dark-500 mt-0.5">{activity.desc}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ));
+                            })()}
                         </div>
                     </div>
                 </Card>
@@ -681,10 +714,10 @@ export default function AdminDashboard() {
                 className="grid grid-cols-2 sm:grid-cols-4 gap-4"
             >
                 {[
-                    { label: 'Taux de conversion', value: '24.8%', icon: Target, change: '+2.4%', positive: true },
-                    { label: 'Panier moyen', value: formatCurrency(stats.revenue / Math.max(stats.sales, 1)), icon: ShoppingCart, change: '+5.1%', positive: true },
-                    { label: 'Taux de retour', value: '2.3%', icon: RefreshCw, change: '-0.5%', positive: true },
-                    { label: 'Satisfaction', value: '4.8/5', icon: Sparkles, change: '+0.2', positive: true },
+                    { label: 'Taux de conversion', value: '3.2%', icon: Target, change: 'Est.', positive: true },
+                    { label: 'Panier moyen', value: formatCurrency(stats.avgOrderValue), icon: ShoppingCart, change: 'Moyenne', positive: true },
+                    { label: 'Commandes', value: stats.sales, icon: RefreshCw, change: 'Total', positive: true },
+                    { label: 'Satisfaction', value: `${stats.avgRating ? stats.avgRating.toFixed(1) : '0'}/5`, icon: Sparkles, change: 'Global', positive: true },
                 ].map((stat, index) => (
                     <Card key={stat.label} className="p-4">
                         <div className="flex items-center gap-3">
@@ -704,6 +737,6 @@ export default function AdminDashboard() {
                     </Card>
                 ))}
             </motion.div>
-        </div>
+        </div >
     )
 }

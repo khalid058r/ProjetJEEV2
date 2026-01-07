@@ -5,9 +5,10 @@ import {
     Package, Users, Calendar, ArrowUpRight, ArrowDownRight,
     PieChart, Activity, Target, Zap
 } from 'lucide-react'
-import { productApi, saleApi, categoryApi, userApi } from '../../api'
+import { productApi, saleApi, categoryApi, userApi, analyticsApi } from '../../api'
 import { Card, Loading, Badge } from '../../components/ui'
 import { AreaChartComponent, BarChartComponent, PieChartComponent, LineChartComponent } from '../../components/charts'
+import SlowMoversWidget from '../../components/analytics/SlowMoversWidget'
 import { formatCurrency, formatNumber } from '../../utils/formatters'
 
 export default function AdminAnalytics() {
@@ -24,6 +25,7 @@ export default function AdminAnalytics() {
     const [salesTrend, setSalesTrend] = useState([])
     const [categoryData, setCategoryData] = useState([])
     const [topProducts, setTopProducts] = useState([])
+    const [basketStats, setBasketStats] = useState(null)
     const [revenueByDay, setRevenueByDay] = useState([])
 
     useEffect(() => {
@@ -34,21 +36,40 @@ export default function AdminAnalytics() {
         try {
             setLoading(true)
 
-            const [productsRes, salesRes, categoriesRes, usersRes] = await Promise.all([
+            // Calculate date range based on period
+            const end = new Date()
+            const start = new Date()
+
+            switch (period) {
+                case '7days': start.setDate(end.getDate() - 7); break;
+                case '30days': start.setDate(end.getDate() - 30); break;
+                case '90days': start.setDate(end.getDate() - 90); break;
+                case 'year': start.setFullYear(end.getFullYear() - 1); break;
+                default: start.setDate(end.getDate() - 7);
+            }
+
+            const startDateStr = start.toISOString().split('T')[0]
+            const endDateStr = end.toISOString().split('T')[0]
+
+            const [productsRes, salesRes, categoriesRes, usersRes, basketRes, dailySalesRes] = await Promise.all([
                 productApi.getAll().catch(() => ({ data: [] })),
                 saleApi.getAll().catch(() => ({ data: [] })),
                 categoryApi.getAll().catch(() => ({ data: [] })),
-                userApi.getAll().catch(() => ({ data: [] }))
+                userApi.getAll().catch(() => ({ data: [] })),
+                analyticsApi.getBasketStats().catch(() => ({ data: null })),
+                analyticsApi.getDailySales(startDateStr, endDateStr).catch(() => ({ data: [] }))
             ])
 
             const products = productsRes.data || []
             const sales = salesRes.data || []
             const categories = categoriesRes.data || []
             const users = usersRes.data || []
+            const basket = basketRes.data
+            const dailySales = dailySalesRes.data || []
 
             // Calculate stats
             const totalRevenue = sales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0)
-            const avgOrderValue = sales.length > 0 ? totalRevenue / sales.length : 0
+            const avgOrderValue = basket?.averageBasketValue || (sales.length > 0 ? totalRevenue / sales.length : 0)
 
             setStats({
                 totalRevenue,
@@ -59,25 +80,31 @@ export default function AdminAnalytics() {
                 conversionRate: 3.2 // Mock
             })
 
-            // Sales trend by day
-            const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
-            setSalesTrend(days.map((day, i) => ({
-                name: day,
-                ventes: Math.floor(Math.random() * 50) + 10,
-                revenus: Math.floor(Math.random() * 50000) + 10000
-            })))
+            if (basket) {
+                setBasketStats(basket)
+            }
+
+            // Sales trend by day (Real Data)
+            const trendData = dailySales.map(day => ({
+                name: new Date(day.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
+                ventes: day.count,
+                revenus: day.revenue
+            }))
+
+            setSalesTrend(trendData)
 
             // Revenue by day
-            setRevenueByDay(days.map(day => ({
-                name: day,
-                value: Math.floor(Math.random() * 80000) + 20000
+            setRevenueByDay(trendData.map(d => ({
+                name: d.name,
+                value: d.revenus
             })))
 
             // Category sales distribution
             const catSales = {}
             sales.forEach(sale => {
-                if (sale.lignes) {
-                    sale.lignes.forEach(ligne => {
+                const lines = sale.lignes || sale.lignesVente || sale.items || []
+                if (lines.length > 0) {
+                    lines.forEach(ligne => {
                         const product = products.find(p => p.id === ligne.productId)
                         const catName = product?.categoryName || 'Autre'
                         catSales[catName] = (catSales[catName] || 0) + (ligne.lineTotal || 0)
@@ -89,8 +116,9 @@ export default function AdminAnalytics() {
             // Top products
             const productSales = {}
             sales.forEach(sale => {
-                if (sale.lignes) {
-                    sale.lignes.forEach(ligne => {
+                const lines = sale.lignes || sale.lignesVente || sale.items || []
+                if (lines.length > 0) {
+                    lines.forEach(ligne => {
                         const id = ligne.productId
                         if (!productSales[id]) {
                             productSales[id] = {
@@ -377,6 +405,94 @@ export default function AdminAnalytics() {
                     </div>
                 </Card>
             </motion.div>
-        </div>
+
+            {/* Advanced Analysis Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Slow Movers Widget */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 }}
+                >
+                    <SlowMoversWidget />
+                </motion.div>
+
+                {/* Basket Analysis */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.9 }}
+                    className="lg:col-span-2"
+                >
+                    <Card className="p-6 h-full">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
+                                    Analyse du Panier
+                                </h3>
+                                <p className="text-sm text-dark-500">Comportement d'achat</p>
+                            </div>
+                            <Badge variant="primary">
+                                <ShoppingCart className="w-3 h-3 mr-1" />
+                                Stats Avancées
+                            </Badge>
+                        </div>
+
+                        {basketStats ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800">
+                                    <p className="text-sm text-blue-600 dark:text-blue-400 mb-1">Taille moyenne</p>
+                                    <p className="text-2xl font-bold text-dark-900 dark:text-white">
+                                        {formatNumber(basketStats.averageItems)} <span className="text-sm font-normal text-dark-500">articles</span>
+                                    </p>
+                                </div>
+                                <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-800">
+                                    <p className="text-sm text-purple-600 dark:text-purple-400 mb-1">Valeur moyenne</p>
+                                    <p className="text-2xl font-bold text-dark-900 dark:text-white">
+                                        {formatCurrency(basketStats.averageBasketValue)}
+                                    </p>
+                                </div>
+                                <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800">
+                                    <p className="text-sm text-indigo-600 dark:text-indigo-400 mb-1">Total Articles</p>
+                                    <p className="text-2xl font-bold text-dark-900 dark:text-white">
+                                        {formatNumber(basketStats.totalItemsSold)}
+                                    </p>
+                                </div>
+
+                                {/* Association Rules / Top Pairs */}
+                                <div className="sm:col-span-3 mt-4">
+                                    <h4 className="font-medium text-dark-900 dark:text-white mb-3">Associations fréquentes</h4>
+                                    {basketStats.associations && basketStats.associations.length > 0 ? (
+                                        <div className="space-y-2">
+                                            {basketStats.associations.map((assoc, index) => (
+                                                <div key={index} className="flex items-center justify-between p-3 bg-dark-50 dark:bg-dark-800/50 rounded-lg">
+                                                    <div className="flex items-center gap-3">
+                                                        <Badge variant="secondary">{Math.round(assoc.confidence)}%</Badge>
+                                                        <span className="text-sm text-dark-700 dark:text-dark-300">
+                                                            {assoc.product1} + {assoc.product2}
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-xs text-dark-400 font-medium">
+                                                        {assoc.frequency} ventes
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-4 bg-dark-50 dark:bg-dark-800/30 rounded-lg border border-dashed border-gray-200 dark:border-dark-700">
+                                            <p className="text-sm text-dark-500">Pas assez de données pour les associations</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-center h-48 text-dark-500">
+                                Chargement des statistiques panier...
+                            </div>
+                        )}
+                    </Card>
+                </motion.div>
+            </div>
+        </div >
     )
 }

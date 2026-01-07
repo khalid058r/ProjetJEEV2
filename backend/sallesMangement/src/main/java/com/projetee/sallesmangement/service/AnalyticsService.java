@@ -1,6 +1,7 @@
 package com.projetee.sallesmangement.service;
 
 import com.projetee.sallesmangement.dto.analytics.*;
+import com.projetee.sallesmangement.dto.alert.AlertResponse;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -39,4 +40,9 @@ public interface AnalyticsService {
     KPIResponse getVendeurKPI(Long userId);
     List<TopProductResponse> getVendeurBestSellers(Long userId, int limit);
     List<DailySalesResponse> getVendeurDailySales(Long userId);
+
+    // Alerts
+    List<AlertResponse> getAlerts();
+
+    List<DailySalesResponse> getProductSalesStats(Long productId);
 }

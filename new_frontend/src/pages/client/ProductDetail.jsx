@@ -5,8 +5,9 @@ import {
     ShoppingCart, Heart, Share2, ChevronLeft, Plus, Minus,
     Star, Truck, Shield, RotateCcw, Package
 } from 'lucide-react'
-import { shopApi } from '../../api'
+import { shopApi, recommendationsApi } from '../../api'
 import { useCart } from '../../context/CartContext'
+import ProductCard from '../../components/shop/ProductCard'
 import toast from 'react-hot-toast'
 
 export default function ProductDetail() {
@@ -19,6 +20,10 @@ export default function ProductDetail() {
     const [quantity, setQuantity] = useState(1)
     const [selectedImage, setSelectedImage] = useState(0)
 
+    // Recommendations integration
+    const [recommendations, setRecommendations] = useState([])
+    const [loadingRecs, setLoadingRecs] = useState(false)
+
     useEffect(() => {
         loadProduct()
     }, [id])
@@ -28,12 +33,28 @@ export default function ProductDetail() {
             setLoading(true)
             const response = await shopApi.getProductById(id)
             setProduct(response.data)
+
+            // Trigger recommendations separately
+            loadRecommendations(id)
         } catch (error) {
             console.error('Error loading product:', error)
             toast.error('Produit non trouvé')
             navigate('/shop')
         } finally {
             setLoading(false)
+        }
+    }
+
+    const loadRecommendations = async (productId) => {
+        try {
+            setLoadingRecs(true)
+            // Use ML API for similar products
+            const res = await recommendationsApi.getSimilar(productId, 4)
+            setRecommendations(res.data?.results || res.data || [])
+        } catch (err) {
+            console.warn("Could not load recommendations", err)
+        } finally {
+            setLoadingRecs(false)
         }
     }
 
@@ -248,6 +269,27 @@ export default function ProductDetail() {
                         </div>
                     </motion.div>
                 </div>
+
+                {/* Recommendations Section */}
+                {recommendations.length > 0 && (
+                    <div className="mt-24 border-t border-gray-200 pt-12">
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg">
+                                <Package className="w-6 h-6 text-white" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900">
+                                Produits similaires recommmandés
+                            </h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {recommendations.map(p => (
+                                <ProductCard key={p.id} product={p} />
+                            ))}
+                        </div>
+                    </div>
+                )}
+
             </div>
         </div>
     )

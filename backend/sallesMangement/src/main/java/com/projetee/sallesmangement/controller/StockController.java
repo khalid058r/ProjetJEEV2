@@ -17,7 +17,6 @@ public class StockController {
 
     private final ProductRepository productRepository;
 
-    // DTO simple pour éviter les boucles de sérialisation
     @Data
     static class ProductStockDTO {
         private Long id;
@@ -106,7 +105,7 @@ public class StockController {
 
     @GetMapping("/movements")
     public ResponseEntity<List<Object>> getMovements() {
-        return ResponseEntity.ok(List.of()); // Empty list for now
+        return ResponseEntity.ok(List.of());
     }
 
     @PostMapping("/add")

@@ -1,5 +1,6 @@
 package com.projetee.sallesmangement.service.Impl;
 
+import com.projetee.sallesmangement.dto.alert.AlertResponse;
 import com.projetee.sallesmangement.dto.analytics.*;
 import com.projetee.sallesmangement.entity.*;
 import com.projetee.sallesmangement.exception.ResourceNotFoundException;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 // PDF & Charts
 import com.lowagie.text.Document;
@@ -936,20 +938,63 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
         int n = confirmedSales.size();
         if (n == 0) {
-            return new BasketStatsResponse(0.0, 0.0, 0.0);
+            return new BasketStatsResponse(0.0, 0.0, 0L, 0.0, 0.0, Collections.emptyList());
         }
 
         double[] amounts = confirmedSales.stream()
                 .mapToDouble(Sale::getTotalAmount)
                 .toArray();
 
-        double mean = Arrays.stream(amounts).average().orElse(0.0);
+        // 1. Average Value (Price)
+        double meanValue = Arrays.stream(amounts).average().orElse(0.0);
         double variance = Arrays.stream(amounts)
-                .map(x -> (x - mean) * (x - mean))
+                .map(x -> (x - meanValue) * (x - meanValue))
                 .sum() / n;
         double stdDev = Math.sqrt(variance);
 
-        return new BasketStatsResponse(mean, variance, stdDev);
+        // 2. Average Items (Quantity)
+        long totalItems = confirmedSales.stream()
+                .flatMap(s -> s.getLignesVente().stream())
+                .mapToLong(LigneVente::getQuantity)
+                .sum();
+        
+        double avgItems = (double) totalItems / n;
+
+        // 3. Associations (Simplified Apriori - Pairs only)
+        Map<String, Integer> pairCounts = new HashMap<>();
+        int totalSalesWithMultipleItems = 0;
+
+        for (Sale s : confirmedSales) {
+            List<LigneVente> items = s.getLignesVente();
+            if (items.size() > 1) {
+                totalSalesWithMultipleItems++;
+                List<String> productNames = items.stream()
+                    .map(lv -> lv.getProduct().getTitle())
+                    .sorted()
+                    .distinct()
+                    .collect(Collectors.toList());
+
+                for (int i = 0; i < productNames.size(); i++) {
+                    for (int j = i + 1; j < productNames.size(); j++) {
+                        String pair = productNames.get(i) + "||" + productNames.get(j);
+                        pairCounts.merge(pair, 1, Integer::sum);
+                    }
+                }
+            }
+        }
+
+        int finalTotal = totalSalesWithMultipleItems; // for lambda
+        List<ProductAssociation> associations = pairCounts.entrySet().stream()
+            .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+            .limit(3)
+            .map(e -> {
+                String[] parts = e.getKey().split("\\|\\|");
+                double confidence = finalTotal > 0 ? (double) e.getValue() / finalTotal * 100.0 : 0.0;
+                return new ProductAssociation(parts[0], parts[1], e.getValue(), confidence);
+            })
+            .collect(Collectors.toList());
+
+        return new BasketStatsResponse(meanValue, avgItems, totalItems, variance, stdDev, associations);
     }
 
     // ============ VENDEUR KPI ============
@@ -1018,4 +1063,59 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     }
 
 
+
+    @Override
+    public List<AlertResponse> getAlerts() {
+        List<AlertResponse> alerts = new ArrayList<>();
+        long idCounter = 1;
+
+        // 1. Low Stock Alerts
+        List<Product> lowStockProducts = productRepo.findAll().stream()
+                .filter(p -> p.getStock() <= 5)
+                .collect(Collectors.toList());
+
+        for (Product p : lowStockProducts) {
+            AlertResponse alert = new AlertResponse();
+            alert.setId(idCounter++);
+            alert.setType(AlertType.STOCK_LOW);
+            alert.setTitle("Stock Faible: " + p.getTitle());
+            alert.setMessage("Le stock est critique (" + p.getStock() + " unités restants). Pensez à réapprovisionner.");
+            alert.setPriority(p.getStock() == 0 ? AlertPriority.HIGH : AlertPriority.MEDIUM);
+            alert.setCreatedAt(java.time.LocalDateTime.now().toString());
+            alert.setRead(false);
+            alert.setProductId(p.getId());
+            alert.setProductTitle(p.getTitle());
+            alert.setCategoryId(p.getCategory().getId());
+            alert.setCategoryName(p.getCategory().getName());
+            alerts.add(alert);
+        }
+
+        return alerts;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DailySalesResponse> getProductSalesStats(Long productId) {
+        List<Sale> confirmedSales = saleRepo.findByStatus(SaleStatus.CONFIRMED);
+
+        Map<String, DailySalesResponse> salesByDate = new HashMap<>();
+
+        for (Sale sale : confirmedSales) {
+            if (sale.getLignesVente() == null) continue;
+            for (LigneVente lv : sale.getLignesVente()) {
+                if (lv.getProduct().getId().equals(productId)) {
+                    String date = sale.getSaleDate().toString();
+                    DailySalesResponse dt = salesByDate.getOrDefault(date, new DailySalesResponse());
+                    dt.setDate(date);
+                    dt.setRevenue(dt.getRevenue() + lv.getLineTotal());
+                    dt.setSalesCount((long) (dt.getSalesCount() + lv.getQuantity())); // Using salesCount for quantity here
+                    salesByDate.put(date, dt);
+                }
+            }
+        }
+
+        return salesByDate.values().stream()
+                .sorted(Comparator.comparing(DailySalesResponse::getDate))
+                .collect(Collectors.toList());
+    }
 }

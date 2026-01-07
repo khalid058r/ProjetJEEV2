@@ -1,6 +1,7 @@
 package com.projetee.sallesmangement.controller;
 
 import com.projetee.sallesmangement.dto.analytics.*;
+import com.projetee.sallesmangement.dto.alert.AlertResponse;
 import com.projetee.sallesmangement.service.AnalyticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -114,6 +115,11 @@ public class AnalyticsController {
                 .body(data);
     }
 
+    @GetMapping("/alerts")
+    public ResponseEntity<List<AlertResponse>> getAlerts() {
+        return ResponseEntity.ok(analyticsService.getAlerts());
+    }
+
     @GetMapping("/statistics")
     public ResponseEntity<GlobalStatisticsResponse> getStatistics() {
         return ResponseEntity.ok(analyticsService.getGlobalStatistics());
@@ -135,6 +141,11 @@ public class AnalyticsController {
     public ResponseEntity<List<TopProductResponse>> getBestSellers(
             @RequestParam(defaultValue = "10") int limit) {
         return ResponseEntity.ok(analyticsService.getBestSellers(limit));
+    }
+
+    @GetMapping("/products/{id}/sales")
+    public ResponseEntity<List<DailySalesResponse>> getProductSalesStats(@PathVariable Long id) {
+        return ResponseEntity.ok(analyticsService.getProductSalesStats(id));
     }
 
     @GetMapping("/products/slow-movers")

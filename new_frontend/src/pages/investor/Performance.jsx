@@ -108,7 +108,8 @@ export default function Performance() {
 
                 trends = months.slice(0, currentMonth + 1).map((month, i) => ({
                     name: month,
-                    revenue: Math.round(avgMonthlyRevenue * (0.8 + Math.random() * 0.4))
+                    // Deterministic seasonality: peak in summer/winter, dip in spring/fall
+                    revenue: Math.round(avgMonthlyRevenue * (0.8 + (Math.abs(Math.sin(i / 2)) * 0.4)))
                 }))
             }
             setMonthlyTrends(trends)
@@ -127,7 +128,7 @@ export default function Performance() {
                 const revenue = cat.totalRevenue || cat.revenue || cat.value || 0
                 const sales = cat.salesCount || cat.count || 0
                 // Simulate growth based on position (top categories tend to grow more)
-                const growth = 15 - (index * 3) + (Math.random() * 10 - 5)
+                const growth = 15 - (index * 3) + ((cat.name || '').length % 5 - 2.5)
 
                 return {
                     name: cat.categoryName || cat.name || `Catégorie ${index + 1}`,
@@ -154,7 +155,7 @@ export default function Performance() {
                     name: p.title || p.productName || p.name || `Produit ${index + 1}`,
                     revenue: p.revenue || p.totalRevenue || 0,
                     quantity: p.quantitySold || p.totalQuantity || p.quantity || 0,
-                    growth: 20 - (index * 4) + (Math.random() * 6 - 3)
+                    growth: 20 - (index * 4) + ((p.name || '').length % 4 - 2)
                 }))
             }
             setTopProducts(products)

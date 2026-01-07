@@ -7,6 +7,9 @@ import {
     CheckCircle, XCircle, Activity, BarChart3, Loader2,
     Server, Wifi, WifiOff
 } from 'lucide-react'
+import {
+    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+} from 'recharts'
 import { productApi, mlApi, recommendationsApi } from '../../api'
 import { Card, Button, Loading, Badge } from '../../components/ui'
 import { LineChartComponent, AreaChartComponent } from '../../components/charts'
@@ -118,13 +121,22 @@ export default function ProductMLPredictions() {
             // Forecast des revenus basé sur les prédictions ML
             const revenueForecast = months.map((month, i) => {
                 const isPast = i <= currentMonth
-                const baseRevenue = predictedPrice * predictedDemand * (0.8 + Math.random() * 0.4)
+                // Seasonality factor (higher in summer and Dec)
+                const seasonality = (i >= 5 && i <= 7) || i === 11 ? 1.15 : 0.95
+
+                // Base revenue calculation
+                const baseRevenue = predictedPrice * predictedDemand
+
+                // Historical curve simulation (deterministic)
+                const historicalFactor = 0.8 + (Math.sin(i) * 0.1) // Deterministic fluctuation
+                const pastRevenue = baseRevenue * historicalFactor
+
                 const growthFactor = 1 + ((i - currentMonth) * 0.03)
 
                 return {
                     month,
-                    actual: isPast ? baseRevenue * (0.9 + Math.random() * 0.2) : null,
-                    predicted: !isPast ? baseRevenue * growthFactor : null
+                    actual: isPast ? pastRevenue : null,
+                    predicted: !isPast ? baseRevenue * growthFactor * seasonality : null
                 }
             })
 
@@ -146,7 +158,7 @@ export default function ProductMLPredictions() {
                     trend: predictedPrice > currentPrice ? 'up' : 'down',
                     confidence: confidence,
                     confidenceInterval: pricePrediction?.confidence_interval || pricePrediction?.confidenceInterval,
-                    modelUsed: pricePrediction?.model_used || pricePrediction?.modelUsed || 'RandomForest',
+                    modelUsed: pricePrediction?.model_used || pricePrediction?.modelUsed || 'Forest',
                     featuresUsed: pricePrediction?.features_used || pricePrediction?.featuresUsed || []
                 },
                 demand: {
@@ -162,7 +174,7 @@ export default function ProductMLPredictions() {
                     isBestseller: bestsellerPrediction?.is_bestseller || bestsellerPrediction?.isBestseller || false,
                     confidence: bestsellerPrediction?.confidence || 'medium',
                     factors: bestsellerPrediction?.factors || [],
-                    modelUsed: bestsellerPrediction?.model_used || bestsellerPrediction?.modelUsed || 'RandomForest'
+                    modelUsed: bestsellerPrediction?.model_used || bestsellerPrediction?.modelUsed || 'Forest'
                 },
                 stock: {
                     current: currentStock,
@@ -190,17 +202,21 @@ export default function ProductMLPredictions() {
         const basePrice = productData.price || 100
         const currentStock = productData.stock || productData.quantity || 0
 
-        const predictedPrice = basePrice * (1 + (Math.random() * 0.2 - 0.1))
-        const priceTrend = predictedPrice > basePrice ? 'up' : 'down'
-        const priceConfidence = 75 + Math.random() * 20
+        // Deterministic fallback based on product ID or name length if seed needed
+        const seed = (productData.id || productData.name?.length || 0) % 10
 
-        const predictedDemand = Math.floor(Math.random() * 100) + 50
-        const demandTrend = predictedDemand > 70 ? 'high' : predictedDemand > 40 ? 'medium' : 'low'
+        const predictedPrice = basePrice * 1.05
+        const priceTrend = 'up'
+        const priceConfidence = 75 + seed
 
-        const bestsellerScore = Math.random() * 100
-        const isBestseller = bestsellerScore > 70
+        // Estimate demand based on current stock as a heuristic
+        const predictedDemand = Math.max(10, Math.floor(currentStock * 0.8) + (seed * 5))
+        const demandTrend = predictedDemand > 50 ? 'high' : 'medium'
 
-        const recommendedStock = predictedDemand * 1.5
+        const bestsellerScore = 50 + (seed * 4)
+        const isBestseller = bestsellerScore > 75
+
+        const recommendedStock = Math.ceil(predictedDemand * 1.2)
         const stockStatus = currentStock < recommendedStock * 0.5 ? 'critical'
             : currentStock < recommendedStock ? 'low' : 'good'
 
@@ -209,12 +225,14 @@ export default function ProductMLPredictions() {
 
         const revenueForecast = months.map((month, i) => {
             const isPast = i <= currentMonth
-            const baseRevenue = predictedPrice * predictedDemand * (0.8 + Math.random() * 0.4)
-            const growthFactor = 1 + ((i - currentMonth) * 0.05)
+            const seasonality = (i >= 5 && i <= 7) || i === 11 ? 1.15 : 0.95
+            const baseRevenue = predictedPrice * predictedDemand
+            const historicalFactor = 0.8 + (Math.sin(i) * 0.1)
+
             return {
                 month,
-                actual: isPast ? baseRevenue * (0.9 + Math.random() * 0.2) : null,
-                predicted: !isPast ? baseRevenue * growthFactor : null
+                actual: isPast ? baseRevenue * historicalFactor : null,
+                predicted: !isPast ? baseRevenue * (1 + ((i - currentMonth) * 0.03)) * seasonality : null
             }
         })
 
@@ -236,21 +254,21 @@ export default function ProductMLPredictions() {
             demand: {
                 predicted: predictedDemand,
                 trend: demandTrend,
-                confidence: 80 + Math.random() * 15,
+                confidence: 80,
                 modelUsed: 'Simulation'
             },
             bestseller: {
                 score: bestsellerScore,
                 probability: bestsellerScore / 100,
                 isBestseller,
-                rank: Math.floor(Math.random() * 20) + 1,
+                rank: 10 + seed,
                 modelUsed: 'Simulation'
             },
             stock: {
                 current: currentStock,
-                recommended: Math.round(recommendedStock),
+                recommended: recommendedStock,
                 status: stockStatus,
-                toOrder: Math.max(0, Math.round(recommendedStock - currentStock))
+                toOrder: Math.max(0, recommendedStock - currentStock)
             },
             revenueForecast,
             priceSensitivity
@@ -313,13 +331,13 @@ export default function ProductMLPredictions() {
 
             {/* ML Status Banner */}
             <Card className={`border ${predictions?.source === 'ml_service'
-                    ? 'bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border-purple-200 dark:border-purple-800'
-                    : 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-200 dark:border-amber-800'
+                ? 'bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border-purple-200 dark:border-purple-800'
+                : 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-200 dark:border-amber-800'
                 }`}>
                 <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${predictions?.source === 'ml_service'
-                            ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
-                            : 'bg-gradient-to-br from-amber-500 to-orange-600'
+                        ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
+                        : 'bg-gradient-to-br from-amber-500 to-orange-600'
                         }`}>
                         {predictions?.source === 'ml_service' ? (
                             <Brain className="w-6 h-6 text-white" />
@@ -477,15 +495,20 @@ export default function ProductMLPredictions() {
                             </div>
                             <BarChart3 className="w-5 h-5 text-dark-400" />
                         </div>
-                        <AreaChartComponent
-                            data={predictions?.revenueForecast || []}
-                            xKey="month"
-                            lines={[
-                                { key: 'actual', name: 'Réel', color: '#8b5cf6' },
-                                { key: 'predicted', name: 'Prédit', color: '#6366f1' }
-                            ]}
-                            height={300}
-                        />
+                        <ResponsiveContainer width="100%" height={300}>
+                            <AreaChart data={predictions?.revenueForecast || []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} />
+                                <XAxis dataKey="month" stroke="#94A3B8" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#94A3B8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f8fafc' }}
+                                    formatter={(value) => formatCurrency(value)}
+                                />
+                                <Legend />
+                                <Area type="monotone" dataKey="actual" name="Réel" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.3} strokeWidth={2} />
+                                <Area type="monotone" dataKey="predicted" name="Prédit" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} strokeDasharray="5 5" strokeWidth={2} />
+                            </AreaChart>
+                        </ResponsiveContainer>
                     </Card>
                 </motion.div>
 

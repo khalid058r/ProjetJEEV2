@@ -64,7 +64,7 @@ export default function AnalystProfile() {
 
             setStats({
                 reportsGenerated: reports.length || 12,
-                predictionsRun: Math.floor(Math.random() * 20) + 15,
+                predictionsRun: Math.floor(salesCount / 10) + 15,
                 dataAnalyzed: salesCount || 500
             })
         } catch (error) {

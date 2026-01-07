@@ -74,14 +74,50 @@ export default function AdminOrders() {
             order.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             order.id?.toString().includes(searchQuery)
 
-        const matchesStatus = statusFilter === 'all' || order.status === statusFilter
+        const status = order.status?.toUpperCase() || 'PENDING'
+        const matchesStatus = statusFilter === 'all' || status === statusFilter
 
         return matchesSearch && matchesStatus
     })
 
-    const pendingCount = orders.filter(o => o.status === 'PENDING').length
-    const readyCount = orders.filter(o => o.status === 'READY').length
-    const completedCount = orders.filter(o => o.status === 'COMPLETED').length
+    const pendingCount = orders.filter(o => (o.status?.toUpperCase() || 'PENDING') === 'PENDING').length
+    const readyCount = orders.filter(o => o.status?.toUpperCase() === 'READY').length
+    const completedCount = orders.filter(o => o.status?.toUpperCase() === 'COMPLETED').length
+
+    const handleExportCSV = () => {
+        if (filteredOrders.length === 0) {
+            toast.error('Aucune commande à exporter')
+            return
+        }
+
+        const headers = ['ID', 'Date', 'Client', 'Téléphone', 'Code Retrait', 'Statut', 'Total', 'Articles']
+        const csvContent = [
+            headers.join(','),
+            ...filteredOrders.map(order => {
+                const date = new Date(order.orderDate).toLocaleDateString('fr-FR')
+                const articles = order.items?.map(i => `${i.productTitle} (${i.quantity})`).join('; ') || ''
+                return [
+                    order.id,
+                    date,
+                    `"${order.customerName || 'Client'}"`,
+                    `"${order.customerPhone || ''}"`,
+                    `"${order.pickupCode || ''}"`,
+                    ORDER_STATUSES[order.status]?.label || order.status,
+                    order.totalAmount,
+                    `"${articles}"`
+                ].join(',')
+            })
+        ].join('\n')
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.setAttribute('href', url)
+        link.setAttribute('download', `commandes_${new Date().toISOString().split('T')[0]}.csv`)
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+    }
 
     if (loading) return <Loading />
 
@@ -102,8 +138,8 @@ export default function AdminOrders() {
                     <Button onClick={fetchOrders} variant="outline" icon={RefreshCw}>
                         Actualiser
                     </Button>
-                    <Button variant="outline" icon={Download}>
-                        Exporter
+                    <Button variant="outline" icon={Download} onClick={handleExportCSV}>
+                        Exporter CSV
                     </Button>
                 </div>
             </div>
@@ -192,7 +228,7 @@ export default function AdminOrders() {
                 <div className="grid gap-4">
                     <AnimatePresence>
                         {filteredOrders.map((order, index) => {
-                            const statusInfo = ORDER_STATUSES[order.status] || ORDER_STATUSES.PENDING
+                            const statusInfo = ORDER_STATUSES[order.status?.toUpperCase()] || ORDER_STATUSES.PENDING
                             const StatusIcon = statusInfo.icon
 
                             return (

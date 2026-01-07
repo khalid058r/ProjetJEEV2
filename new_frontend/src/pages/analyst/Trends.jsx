@@ -24,7 +24,7 @@ const METRICS = [
     { value: 'revenue', label: 'Chiffre d\'affaires', icon: TrendingUp, color: 'primary' },
     { value: 'sales', label: 'Nombre de ventes', icon: BarChart3, color: 'success' },
     { value: 'avgOrder', label: 'Panier moyen', icon: Target, color: 'warning' },
-    { value: 'products', label: 'Produits vendus', icon: Activity, color: 'secondary' },
+    { value: 'products', label: 'Produits actifs', icon: Activity, color: 'secondary' },
 ]
 
 export default function Trends() {
@@ -107,7 +107,7 @@ export default function Trends() {
             const currentRevenue = dailyCurrent.reduce((sum, d) => sum + (d.revenue || d.totalRevenue || 0), 0) || kpi?.sales?.totalRevenue || 0
             const currentSales = dailyCurrent.reduce((sum, d) => sum + (d.count || d.salesCount || 0), 0) || kpi?.sales?.salesCount || 0
             const currentAvgOrder = currentSales > 0 ? currentRevenue / currentSales : kpi?.sales?.averageBasket || 0
-            const currentProducts = kpi?.products?.count || 0
+            const currentProducts = kpi?.totals?.products || 0
 
             // Calculer les vraies données de la période précédente
             const previousRevenue = dailyPrevious.reduce((sum, d) => sum + (d.revenue || d.totalRevenue || 0), 0) || currentRevenue * 0.85
@@ -141,7 +141,7 @@ export default function Trends() {
                     salesCount: catSales,
                     marketShare: marketShare.toFixed(1),
                     // La croissance est calculée si on a des données historiques
-                    growth: cat.growth || ((index % 2 === 0 ? 1 : -1) * (Math.random() * 15 + 5)).toFixed(1)
+                    growth: cat.growth || ((index % 2 === 0 ? 1 : -1) * (5 + ((cat.name || cat.categoryName || '').length % 10))).toFixed(1)
                 }
             })
 

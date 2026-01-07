@@ -60,10 +60,11 @@ class FallbackResponder:
     
     def _fallback_greeting(self, message: str, entities: Dict) -> Dict[str, Any]:
         """Réponse de salutation"""
-        import random
+        # Deterministic: always pick the first one or rotate based on message length
+        idx = len(message) % len(self.greeting_responses)
         return {
             'success': True,
-            'message': random.choice(self.greeting_responses),
+            'message': self.greeting_responses[idx],
             'fallback': True
         }
     
@@ -425,10 +426,11 @@ _Mode hors-ligne_"""
     
     def _fallback_generic(self, message: str, entities: Dict) -> Dict[str, Any]:
         """Réponse générique quand l'intention n'est pas gérée"""
-        import random
+        # Deterministic: rotate based on message length
+        idx = len(message) % len(self.error_responses)
         return {
             'success': True,
-            'message': random.choice(self.error_responses),
+            'message': self.error_responses[idx],
             'fallback': True
         }
 

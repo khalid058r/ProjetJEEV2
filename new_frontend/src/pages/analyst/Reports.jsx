@@ -54,9 +54,48 @@ export default function Reports() {
         setGenerating(true)
 
         try {
-            // Simulate report generation
-            await new Promise(resolve => setTimeout(resolve, 2000))
+            // Prepare filter data
+            const filterData = {
+                // startDate: formData.dateFrom,
+                // endDate: formData.dateTo
+                // Add other filters as needed by ProductFilterRequest
+            }
 
+            let response;
+            switch (formData.type) {
+                case 'sales':
+                    response = await analyticsApi.exportSalesPDF(filterData);
+                    break;
+                case 'products':
+                    response = await analyticsApi.exportProductsPDF(filterData);
+                    break;
+                case 'performance':
+                    // Map 'performance' logic to relevant endpoint, e.g., Sellers or Global Stats Report
+                    // For now mapping to exportSellersPDF as it fits 'performance' context best
+                    response = await analyticsApi.exportSellersPDF(filterData);
+                    break;
+                case 'trends':
+                    // If no specific trends PDF exists, maybe use Global or fallback to Sales
+                    response = await analyticsApi.exportSalesPDF(filterData);
+                    break;
+                default:
+                    // Global Report
+                    response = await analyticsApi.exportPDF(filterData);
+            }
+
+            // Create Blob from response data
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            // Use user provided name for filename
+            link.setAttribute('download', `${formData.name.replace(/\s+/g, '_')}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+
+            // Save record of generation (client-side only history for now)
             const newReport = {
                 id: Date.now(),
                 name: formData.name,
@@ -66,44 +105,35 @@ export default function Reports() {
                 format: formData.format,
                 createdAt: new Date().toISOString(),
                 status: 'completed',
-                size: `${Math.floor(Math.random() * 500) + 100} KB`
+                size: 'Unknown' // Size unknown until blob creation, could calc from blob.size
             }
 
             saveReports([newReport, ...reports])
             setShowModal(false)
             setFormData({ name: '', type: 'sales', dateFrom: '', dateTo: '', format: 'pdf' })
-            toast.success('Rapport généré avec succès')
+            toast.success('Rapport généré et téléchargé avec succès')
         } catch (error) {
-            toast.error('Erreur lors de la génération')
+            console.error('Generation Error:', error);
+            toast.error('Erreur lors de la génération du rapport')
         } finally {
             setGenerating(false)
         }
     }
 
-    const handleDownloadReport = (report) => {
-        // Generate PDF
-        const doc = new jsPDF()
-
-        doc.setFontSize(20)
-        doc.text(report.name, 20, 30)
-
-        doc.setFontSize(12)
-        doc.text(`Type: ${reportTypes.find(t => t.value === report.type)?.label}`, 20, 50)
-        doc.text(`Généré le: ${formatDateTime(report.createdAt)}`, 20, 60)
-
-        if (report.dateFrom && report.dateTo) {
-            doc.text(`Période: ${formatDate(report.dateFrom)} - ${formatDate(report.dateTo)}`, 20, 70)
-        }
-
-        doc.setFontSize(14)
-        doc.text('Résumé', 20, 90)
-
-        doc.setFontSize(10)
-        doc.text('Ce rapport contient une analyse détaillée basée sur les données disponibles.', 20, 100)
-        doc.text('Les graphiques et tableaux de données sont inclus dans les pages suivantes.', 20, 110)
-
-        doc.save(`${report.name.replace(/\s+/g, '_')}.pdf`)
-        toast.success('Rapport téléchargé')
+    const handleDownloadReport = async (report) => {
+        // Re-download logic would require refetching from backend since we don't store PDFs
+        // For this demo context, we trigger regeneration or warn user
+        // Ideally, backend returns a URL or ID to download existing report.
+        // As a quick fix, re-trigger the generation logic:
+        setFormData({ ...formData, name: report.name, type: report.type, dateFrom: report.dateFrom, dateTo: report.dateTo });
+        toast.promise(
+            handleGenerateReport(),
+            {
+                loading: 'Téléchargement...',
+                success: 'Téléchargement lancé',
+                error: 'Erreur de téléchargement'
+            }
+        );
     }
 
     const handleDeleteReport = () => {
@@ -261,16 +291,16 @@ export default function Reports() {
                                     type="button"
                                     onClick={() => setFormData(prev => ({ ...prev, type: type.value }))}
                                     className={`p-3 rounded-xl border-2 text-left transition-all ${formData.type === type.value
-                                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                                            : 'border-gray-200 dark:border-dark-700 hover:border-gray-300'
+                                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                                        : 'border-gray-200 dark:border-dark-700 hover:border-gray-300'
                                         }`}
                                 >
                                     <div className="flex items-center gap-2">
                                         <type.icon className={`w-5 h-5 ${formData.type === type.value ? 'text-primary-600' : 'text-dark-400'
                                             }`} />
                                         <span className={`text-sm font-medium ${formData.type === type.value
-                                                ? 'text-primary-700 dark:text-primary-300'
-                                                : 'text-dark-700 dark:text-dark-300'
+                                            ? 'text-primary-700 dark:text-primary-300'
+                                            : 'text-dark-700 dark:text-dark-300'
                                             }`}>
                                             {type.label}
                                         </span>

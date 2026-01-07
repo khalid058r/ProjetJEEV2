@@ -119,7 +119,7 @@ export default function SemanticSearch({
         if (onResultSelect) {
             onResultSelect(result)
         } else {
-            navigate(`/analyst/products/${result.id}`)
+            navigate(`/shop/${result.id}`)
         }
     }
 

@@ -82,10 +82,15 @@ export default function AnalystDashboard() {
                 const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
                 const currentMonth = new Date().getMonth()
                 const avgMonthly = totalRevenue / (currentMonth + 1)
-                monthly = months.slice(0, currentMonth + 1).map(name => ({
-                    name,
-                    revenue: Math.round(avgMonthly * (0.7 + Math.random() * 0.6))
-                }))
+                monthly = months.slice(0, currentMonth + 1).map((name, i) => {
+                    // Simple deterministic seasonality (higher in summer/winter)
+                    const seasonality = (i === 6 || i === 7 || i === 11) ? 1.2 : 0.9
+                    const historicalFactor = 0.8 + (Math.sin(i) * 0.1)
+                    return {
+                        name,
+                        revenue: Math.round(avgMonthly * historicalFactor * seasonality)
+                    }
+                })
             }
             setSalesByMonth(monthly)
 
@@ -319,7 +324,10 @@ export default function AnalystDashboard() {
                                     {salesByCategory.slice(0, 8).map((cat, index) => {
                                         const totalRev = salesByCategory.reduce((s, c) => s + c.value, 0)
                                         const share = totalRev > 0 ? ((cat.value / totalRev) * 100) : 0
-                                        const trend = 15 - (index * 3) + (Math.random() * 6 - 3)
+                                        // Deterministic trend based on category name length or index
+                                        const baseTrend = 15 - (index * 3)
+                                        const variation = (cat.name.length % 5) - 2
+                                        const trend = baseTrend + variation
 
                                         return (
                                             <motion.tr

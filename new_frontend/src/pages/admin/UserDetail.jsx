@@ -256,7 +256,9 @@ export default function UserDetail() {
                                     <ShoppingCart className="w-6 h-6 text-primary-600" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-dark-500">Ventes</p>
+                                    <p className="text-sm text-dark-500">
+                                        {user.role === 'ACHETEUR' ? 'Commandes' : 'Ventes'}
+                                    </p>
                                     <p className="text-xl font-bold text-dark-900 dark:text-white">{formatNumber(userStats.totalSales)}</p>
                                 </div>
                             </div>
@@ -268,7 +270,9 @@ export default function UserDetail() {
                                     <DollarSign className="w-6 h-6 text-success-600" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-dark-500">Revenus générés</p>
+                                    <p className="text-sm text-dark-500">
+                                        {user.role === 'ACHETEUR' ? 'Total dépensé' : 'Revenus générés'}
+                                    </p>
                                     <p className="text-xl font-bold text-success-600">{formatCurrency(userStats.totalRevenue)}</p>
                                 </div>
                             </div>
@@ -287,12 +291,12 @@ export default function UserDetail() {
                         </Card>
                     </div>
 
-                    {/* Monthly Sales Chart */}
-                    {user.role === 'VENDEUR' && (
+                    {/* Monthly Sales/Purchases Chart */}
+                    {(user.role === 'VENDEUR' || user.role === 'ACHETEUR') && (
                         <Card className="p-6">
                             <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-4 flex items-center gap-2">
                                 <BarChart3 className="w-5 h-5 text-primary-500" />
-                                Performance mensuelle
+                                {user.role === 'ACHETEUR' ? 'Historique des achats' : 'Performance mensuelle'}
                             </h3>
                             {userStats.monthlySales.length > 0 ? (
                                 <div className="h-64">
@@ -315,11 +319,11 @@ export default function UserDetail() {
             </motion.div>
 
             {/* Top Products */}
-            {user.role === 'VENDEUR' && userStats.topProducts.length > 0 && (
+            {(user.role === 'VENDEUR' || user.role === 'ACHETEUR') && userStats.topProducts.length > 0 && (
                 <Card className="p-6">
                     <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-4 flex items-center gap-2">
                         <Award className="w-5 h-5 text-warning-500" />
-                        Top produits vendus
+                        {user.role === 'ACHETEUR' ? 'Produits préférés' : 'Top produits vendus'}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         {userStats.topProducts.map((product, index) => (
@@ -335,7 +339,7 @@ export default function UserDetail() {
                                     <span className="text-xs text-dark-500">#{index + 1}</span>
                                 </div>
                                 <p className="font-medium text-dark-900 dark:text-white text-sm truncate">{product.title || product.name}</p>
-                                <p className="text-xs text-dark-500 mt-1">{product.quantity} vendus</p>
+                                <p className="text-xs text-dark-500 mt-1">{product.quantity} {user.role === 'ACHETEUR' ? 'achetés' : 'vendus'}</p>
                                 <p className="text-sm font-bold text-success-600 mt-1">{formatCurrency(product.revenue)}</p>
                             </div>
                         ))}
@@ -343,12 +347,12 @@ export default function UserDetail() {
                 </Card>
             )}
 
-            {/* Recent Sales */}
-            {user.role === 'VENDEUR' && (
+            {/* Recent Sales/Orders */}
+            {(user.role === 'VENDEUR' || user.role === 'ACHETEUR') && (
                 <Card className="p-6">
                     <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-4 flex items-center gap-2">
                         <Clock className="w-5 h-5 text-primary-500" />
-                        Dernières ventes
+                        {user.role === 'ACHETEUR' ? 'Dernières commandes' : 'Dernières ventes'}
                     </h3>
                     {userSales.length > 0 ? (
                         <div className="overflow-x-auto">
@@ -389,7 +393,7 @@ export default function UserDetail() {
                         </div>
                     ) : (
                         <div className="text-center py-8 text-dark-500">
-                            Aucune vente enregistrée
+                            Aucune donnée disponible
                         </div>
                     )}
                 </Card>

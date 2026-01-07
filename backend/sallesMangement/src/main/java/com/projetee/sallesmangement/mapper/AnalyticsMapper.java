@@ -22,6 +22,7 @@ public class AnalyticsMapper {
         dto.setRating(product.getRating() != null ? product.getRating() : 0.0);
         dto.setQuantitySold(quantitySold);
         dto.setRevenue(revenue);
+        dto.setStock(product.getStock());
         return dto;
     }
 

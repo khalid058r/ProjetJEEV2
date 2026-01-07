@@ -28,10 +28,9 @@ public class ShopController {
 
     @GetMapping("/products")
     public ResponseEntity<List<ProductResponse>> getAvailableProducts() {
-        // Réutilise le service existant
         List<ProductResponse> products = productService.getAll();
 
-        // Filtrer les produits avec stock > 0
+
         List<ProductResponse> available = products.stream()
                 .filter(p -> p.getStock() != null && p.getStock() > 0)
                 .toList();
@@ -60,8 +59,6 @@ public class ShopController {
             throw new BadRequestException("Only customers can access profile");
         }
 
-        // Pour l'instant on retourne juste l'ID
-        // L'implémentation complète nécessiterait un service dédié
         CustomerProfileResponse response = new CustomerProfileResponse();
         response.setUserId(userId);
         response.setMessage("Profile endpoint - to be enhanced");

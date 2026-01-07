@@ -43,11 +43,10 @@ export default function ProductStats() {
             setLoading(true)
             setSalesApiError(false)
 
-            const [productRes, bestSellersRes, monthlyRes, salesRes] = await Promise.all([
+            const [productRes, bestSellersRes, salesRes] = await Promise.all([
                 productApi.getById(id).catch(() => ({ data: null })),
                 analyticsApi.getBestSellers(100).catch(() => ({ data: [] })),
-                analyticsApi.getMonthlySales().catch(() => ({ data: null })),
-                saleApi.getRecent(200).catch(() => {
+                saleApi.getRecent(1000).catch(() => { // Limit increased to 1000 to find older sales
                     setSalesApiError(true)
                     return { data: [] }
                 })
@@ -55,8 +54,7 @@ export default function ProductStats() {
 
             const productData = productRes.data
             const bestSellers = bestSellersRes.data || []
-            const monthly = monthlyRes.data?.list || monthlyRes.data || []
-            const allSales = salesRes.data?.content || salesRes.data || []
+            const allSales = salesRes.data || [] // getRecent returns direct list in some versions, or check response structure
 
             if (!productData) {
                 toast.error('Produit non trouvé')
@@ -64,7 +62,7 @@ export default function ProductStats() {
                 return
             }
 
-            // Normaliser les données du produit (backend utilise 'title' pour le nom)
+            // Normaliser les données du produit
             const normalizedProduct = {
                 ...productData,
                 name: productData.title || productData.name || productData.productName || 'Produit',
@@ -73,45 +71,43 @@ export default function ProductStats() {
 
             setProduct(normalizedProduct)
 
-            // Le nom du produit pour la recherche
-            const productName = normalizedProduct.name.toLowerCase()
-
-            // Trouver les stats du produit dans les best sellers
+            // Trouver les stats du produit dans les best sellers (pour KPI global et rank)
             const productStats = bestSellers.find(bs =>
                 bs.productId === parseInt(id) ||
-                (bs.title || bs.productName || bs.name || '').toLowerCase() === productName
+                (bs.title || bs.productName || '').toLowerCase() === normalizedProduct.name.toLowerCase()
             )
 
-            // Calculer le rang du produit
+            // Calculer le rang
             const rank = bestSellers.findIndex(bs =>
                 bs.productId === parseInt(id) ||
-                (bs.title || bs.productName || bs.name || '').toLowerCase() === productName
+                (bs.title || bs.productName || '').toLowerCase() === normalizedProduct.name.toLowerCase()
             ) + 1
 
-            // Calculer le revenu total pour la part de marché
+            // Part de marché
             const totalMarketRevenue = bestSellers.reduce((sum, p) => sum + (p.totalRevenue || p.revenue || 0), 0)
 
-            // Filtrer les ventes qui contiennent ce produit
+            // Filtrer les ventes qui contiennent ce produit (Frontend filtering)
             const productSales = allSales.filter(sale => {
-                const items = sale.items || sale.saleItems || []
+                const items = sale.lignes || sale.lignesVente || sale.items || sale.saleItems || []
                 return items.some(item =>
                     item.productId === parseInt(id) ||
                     item.product?.id === parseInt(id) ||
-                    (item.productName || item.product?.name || '').toLowerCase() === (productData.name || '').toLowerCase()
+                    (item.productTitle || item.productName || item.product?.name || '').toLowerCase() === (normalizedProduct.name || '').toLowerCase()
                 )
             })
 
-            // Calculer les ventes mensuelles pour ce produit
+            // Agréger les ventes quotidiennes en mensuelles pour les charts
             const monthlySalesMap = {}
             productSales.forEach(sale => {
-                const date = new Date(sale.date || sale.createdAt)
+                const date = new Date(sale.date || sale.createdAt || sale.saleDate)
                 const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
                 const monthName = date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
 
-                const items = sale.items || sale.saleItems || []
+                const items = sale.lignes || sale.lignesVente || sale.items || sale.saleItems || []
                 const productItem = items.find(item =>
                     item.productId === parseInt(id) ||
-                    item.product?.id === parseInt(id)
+                    item.product?.id === parseInt(id) ||
+                    (item.productTitle || item.productName || item.product?.name || '').toLowerCase() === (normalizedProduct.name || '').toLowerCase()
                 )
 
                 if (productItem) {
@@ -125,7 +121,7 @@ export default function ProductStats() {
 
             const monthlySalesData = Object.values(monthlySalesMap).slice(-12)
 
-            // Calculer la croissance
+            // Croissance
             let growth = 0
             if (monthlySalesData.length >= 2) {
                 const current = monthlySalesData[monthlySalesData.length - 1]?.revenue || 0
@@ -135,8 +131,9 @@ export default function ProductStats() {
                 }
             }
 
+            // Totaux
             const totalRevenue = productStats?.totalRevenue || productStats?.revenue || 0
-            const totalQuantity = productStats?.totalQuantity || productStats?.quantity || 0
+            const totalQuantity = productStats?.totalQuantity || productStats?.quantity || productStats?.quantitySold || 0
 
             setStats({
                 totalRevenue: totalRevenue,
@@ -150,16 +147,19 @@ export default function ProductStats() {
                 monthlySales: monthlySalesData,
                 recentSales: productSales.slice(0, 10).map(sale => ({
                     id: sale.id,
-                    date: sale.date || sale.createdAt,
-                    quantity: (sale.items || sale.saleItems || []).find(i =>
-                        i.productId === parseInt(id) || i.product?.id === parseInt(id)
+                    date: sale.date || sale.createdAt || sale.saleDate,
+                    quantity: (sale.lignes || sale.lignesVente || sale.items || []).find(i =>
+                        i.productId === parseInt(id) || i.product?.id === parseInt(id) ||
+                        (i.productTitle || i.productName || i.product?.name || '').toLowerCase() === (normalizedProduct.name || '').toLowerCase()
                     )?.quantity || 0,
-                    total: (sale.items || sale.saleItems || []).find(i =>
-                        i.productId === parseInt(id) || i.product?.id === parseInt(id)
-                    )?.quantity * (sale.items || sale.saleItems || []).find(i =>
-                        i.productId === parseInt(id) || i.product?.id === parseInt(id)
+                    total: (sale.lignes || sale.lignesVente || sale.items || []).find(i =>
+                        i.productId === parseInt(id) || i.product?.id === parseInt(id) ||
+                        (i.productTitle || i.productName || i.product?.name || '').toLowerCase() === (normalizedProduct.name || '').toLowerCase()
+                    )?.quantity * (sale.lignes || sale.lignesVente || sale.items || []).find(i =>
+                        i.productId === parseInt(id) || i.product?.id === parseInt(id) ||
+                        (i.productTitle || i.productName || i.product?.name || '').toLowerCase() === (normalizedProduct.name || '').toLowerCase()
                     )?.unitPrice || 0,
-                    client: sale.clientName || sale.client?.name || 'Client'
+                    client: sale.clientName || sale.client?.name || sale.user?.username || 'Client'
                 }))
             })
         } catch (error) {
@@ -258,8 +258,8 @@ export default function ProductStats() {
                     </div>
                 </div>
                 <div className="flex gap-3">
-                    <Button 
-                        variant="secondary" 
+                    <Button
+                        variant="secondary"
                         onClick={() => navigate(`/analyst/products/${id}/ml`)}
                         className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700"
                     >

@@ -109,17 +109,20 @@ export default function Predictions() {
             const salesForecast = months.map((name, i) => {
                 const isPast = i <= currentMonth
                 const historicalValue = monthlyTrends.find(m => m.name === name)?.revenue
-                const baseValue = historicalValue || avgMonthlyRevenue * (0.8 + Math.random() * 0.4)
-                const growthFactor = 1 + ((i - currentMonth) * 0.03)
+                // Use historical value if available, or average if not
+                const baseValue = historicalValue || avgMonthlyRevenue
+                // Simple seasonality curve: Higher in summer (Jun-Aug) and December
+                const seasonality = (i === 5 || i === 6 || i === 7 || i === 11) ? 1.1 : 0.95
+                const growthFactor = 1 + ((i - currentMonth) * 0.02) // 2% growth per month projection
 
                 return {
                     name,
                     actual: isPast ? baseValue : null,
-                    predicted: isPast ? null : baseValue * growthFactor * (0.95 + Math.random() * 0.1)
+                    predicted: isPast ? null : baseValue * growthFactor * seasonality
                 }
             })
 
-            // Category predictions (Simulated for now as ML model focuses on products)
+            // Category predictions
             let categories = []
             if (Array.isArray(categoryData)) {
                 categories = categoryData
@@ -129,8 +132,11 @@ export default function Predictions() {
 
             const categoryPredictions = categories.slice(0, 8).map((cat, index) => {
                 const revenue = cat.totalRevenue || cat.revenue || cat.value || 0
-                const trend = Math.random() > 0.3 ? 'up' : 'down' // Replace with logic if historical data available
-                const changePercent = Math.floor(Math.random() * 20) + 2
+                // Simple projection: Assume categories with higher current revenue grow slightly slower (saturation)
+                // This is a heuristic, but better than arbitrary values.
+                const growthPotential = Math.max(2, 10 - (revenue / totalRevenue * 5))
+                const trend = revenue > avgMonthlyRevenue * 0.5 ? 'up' : 'down'
+                const changePercent = parseFloat(growthPotential.toFixed(1))
 
                 return {
                     name: cat.categoryName || cat.name || `Catégorie ${index + 1}`,
@@ -147,26 +153,31 @@ export default function Predictions() {
             if (Array.isArray(bestSellersData)) {
                 productPredictions = bestSellersData.slice(0, 8).map((product, index) => {
                     const revenue = product.revenue || product.totalRevenue || 0
-                    const quantity = product.quantitySold || product.totalQuantity || product.quantity || 0
+                    const quantitySold = product.quantitySold || product.totalQuantity || product.quantity || 0
+                    // Fix: Use actual stock if available, else 0 (don't default to sales quantity)
+                    // Note: backend DTO now includes 'stock', so it should be present.
+                    const stock = product.stock !== undefined ? product.stock : 0
 
                     // Use ML data if available, else fallback
                     const mlData = product.mlPrediction
-                    const predictedDemand = mlData?.predicted_demand || mlData?.predictedDemand || Math.ceil(quantity * 1.1)
+                    const predictedDemand = mlData?.predicted_demand || mlData?.predictedDemand || Math.ceil(quantitySold * 1.1)
                     const confidence = mlData?.confidence || 75
-                    const trend = predictedDemand > quantity ? 'up' : 'down'
+                    const trend = predictedDemand > quantitySold ? 'up' : 'down'
 
                     // Logic for recommendations based on ML output
                     let recommendation = 'maintain'
                     if (trend === 'up' && confidence > 80) recommendation = 'increase_stock'
                     else if (trend === 'down' && confidence > 80) recommendation = 'reduce_stock'
 
-                    const predictedChange = quantity > 0 ? ((predictedDemand - quantity) / quantity * 100) : 0
+                    const predictedChange = quantitySold > 0 ? ((predictedDemand - quantitySold) / quantitySold * 100) : 0
 
                     return {
                         id: product.productId || index,
                         name: product.title || product.productName || product.name,
                         currentRevenue: revenue,
-                        currentQuantity: quantity,
+                        currentQuantity: stock, // Use Inventory Stock
+                        salesQuantity: quantitySold, // Keep track of sales
+                        predictedDemand: predictedDemand,
                         predictedDemand: predictedDemand,
                         trend,
                         changePercent: Math.abs(Math.round(predictedChange)) || 5,
@@ -178,7 +189,10 @@ export default function Predictions() {
 
             // Generate stock alerts based on REAL ML predictions
             const stockAlerts = productPredictions
-                .filter(p => p.trend === 'up' && p.confidence >= 80)
+                .filter(p => {
+                    const daysUntilStockout = p.predictedDemand > 0 ? (p.currentQuantity / (p.predictedDemand / 30)) : 30
+                    return (p.currentQuantity < p.predictedDemand || daysUntilStockout < 15) && p.predictedDemand > 0
+                })
                 .slice(0, 5)
                 .map(p => ({
                     product: p.name,

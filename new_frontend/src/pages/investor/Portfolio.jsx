@@ -48,21 +48,28 @@ export default function Portfolio() {
 
             // Category allocation for pie chart
             const categoryArray = Array.isArray(categories) ? categories : []
-            const allocation = categoryArray.map(cat => ({
-                name: cat.categoryName || cat.name || 'Catégorie',
-                value: cat.totalRevenue || cat.revenue || Math.floor(Math.random() * 50000) + 10000,
-                productCount: cat.productCount || 0,
-                growth: Math.floor(Math.random() * 30) - 5
-            }))
+            const allocation = categoryArray.map((cat, index) => {
+                const revenue = cat.totalRevenue || cat.revenue || 10000 + (index * 5000)
+                return {
+                    name: cat.categoryName || cat.name || 'Catégorie',
+                    value: revenue,
+                    productCount: cat.productCount || 0,
+                    growth: Math.floor((revenue % 30)) - 5
+                }
+            })
 
             // Category performance with trend
-            const categoryPerformance = categoryArray.map(cat => ({
-                name: cat.categoryName || cat.name || 'Catégorie',
-                revenue: cat.totalRevenue || cat.revenue || 0,
-                margin: Math.floor(Math.random() * 20) + 15,
-                growth: Math.floor(Math.random() * 40) - 10,
-                risk: ['Faible', 'Moyen', 'Élevé'][Math.floor(Math.random() * 3)]
-            }))
+            const categoryPerformance = categoryArray.map((cat, index) => {
+                const revenue = cat.totalRevenue || cat.revenue || 0
+                const nameLength = (cat.categoryName || cat.name || '').length
+                return {
+                    name: cat.categoryName || cat.name || 'Catégorie',
+                    revenue: revenue,
+                    margin: 15 + (nameLength % 20),
+                    growth: Math.floor((revenue % 40)) - 10,
+                    risk: ['Faible', 'Moyen', 'Élevé'][nameLength % 3]
+                }
+            })
 
             // Risk metrics
             const riskMetrics = {
@@ -74,13 +81,14 @@ export default function Portfolio() {
             }
 
             // Top investments (categories ordered by performance)
+            // Top investments (categories ordered by performance)
             const topInvestments = [...categoryPerformance]
                 .sort((a, b) => b.revenue - a.revenue)
                 .slice(0, 5)
                 .map((cat, i) => ({
                     ...cat,
                     rank: i + 1,
-                    allocation: Math.floor(Math.random() * 30) + 10
+                    allocation: 30 - (i * 5) // Deterministic allocation based on rank
                 }))
 
             setPortfolioData({
@@ -284,9 +292,9 @@ export default function Portfolio() {
                                 >
                                     <td className="py-4 px-4">
                                         <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${index === 0 ? 'bg-yellow-100 text-yellow-700' :
-                                                index === 1 ? 'bg-gray-100 text-gray-700' :
-                                                    index === 2 ? 'bg-amber-100 text-amber-700' :
-                                                        'bg-dark-100 text-dark-500'
+                                            index === 1 ? 'bg-gray-100 text-gray-700' :
+                                                index === 2 ? 'bg-amber-100 text-amber-700' :
+                                                    'bg-dark-100 text-dark-500'
                                             }`}>
                                             {investment.rank}
                                         </span>

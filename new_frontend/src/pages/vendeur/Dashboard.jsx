@@ -4,12 +4,12 @@ import { motion } from 'framer-motion'
 import {
     ShoppingCart, TrendingUp, Target, Award, Calendar,
     ArrowUpRight, DollarSign, Package, Crown, Medal, Trophy,
-    Zap, Clock, ChevronRight, Star, Users
+    Zap, Clock, ChevronRight, Star, Users, Hand
 } from 'lucide-react'
 import { saleApi, productApi, analyticsApi, userApi } from '../../api'
 import { useAuth } from '../../context/AuthContext'
 import { StatCard, Card, Loading, EmptyState, Badge } from '../../components/ui'
-import { AreaChartComponent, BarChartComponent } from '../../components/charts'
+import { AreaChartComponent, BarChartComponent, PieChartComponent } from '../../components/charts'
 import { formatCurrency, formatNumber, formatDate } from '../../utils/formatters'
 
 export default function VendeurDashboard() {
@@ -25,6 +25,7 @@ export default function VendeurDashboard() {
     })
     const [recentSales, setRecentSales] = useState([])
     const [topProducts, setTopProducts] = useState([])
+    const [topCategories, setTopCategories] = useState([])
     const [salesTrend, setSalesTrend] = useState([])
     const [ranking, setRanking] = useState({ position: 0, total: 0 })
     const [objectives, setObjectives] = useState({
@@ -34,24 +35,26 @@ export default function VendeurDashboard() {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        fetchData()
-    }, [])
+        if (user) {
+            fetchData()
+        }
+    }, [user])
 
     const fetchData = async () => {
         try {
             setLoading(true)
 
             // Charger toutes les données nécessaires
-            const [salesRes, usersRes] = await Promise.all([
+            const [salesRes, usersRes, productsRes] = await Promise.all([
                 saleApi.getAll().catch(() => ({ data: [] })),
-                userApi.getAll().catch(() => ({ data: [] }))
+                userApi.getAll().catch(() => ({ data: [] })),
+                productApi.getAll().catch(() => ({ data: [] }))
             ])
 
-            const allSales = salesRes.data || []
+            // Le backend filtre déjà les ventes pour le vendeur connecté
+            const mySales = salesRes.data || []
             const allUsers = usersRes.data || []
-
-            // Filtrer les ventes de l'utilisateur courant
-            const mySales = allSales.filter(s => s.userId === user?.id)
+            const allProducts = productsRes.data || []
 
             // Calculer les stats
             const today = new Date()
@@ -90,17 +93,32 @@ export default function VendeurDashboard() {
 
             // Produits les plus vendus
             const productSales = {}
+            const categoryStats = {}
+
             mySales.forEach(sale => {
                 if (sale.lignes && Array.isArray(sale.lignes)) {
                     sale.lignes.forEach(ligne => {
                         const name = ligne.productTitle || 'Produit'
                         const qty = ligne.quantity || 1
                         productSales[name] = (productSales[name] || 0) + qty
+
+                        // Catégories
+                        const product = allProducts.find(p => p.id === ligne.productId)
+                        const catName = product?.categoryName || 'Autres'
+                        categoryStats[catName] = (categoryStats[catName] || 0) + qty
                     })
                 }
             })
+
             setTopProducts(
                 Object.entries(productSales)
+                    .map(([name, value]) => ({ name, value }))
+                    .sort((a, b) => b.value - a.value)
+                    .slice(0, 5)
+            )
+
+            setTopCategories(
+                Object.entries(categoryStats)
                     .map(([name, value]) => ({ name, value }))
                     .sort((a, b) => b.value - a.value)
                     .slice(0, 5)
@@ -120,14 +138,19 @@ export default function VendeurDashboard() {
             }
             setSalesTrend(days)
 
-            // Calculer le classement parmi les vendeurs
+            // Calculer le classement (Limité aux données visibles)
+            // Note: Avec l'isolation des données, on ne voit que ses propres ventes
             const vendeurs = allUsers.filter(u => u.role === 'VENDEUR')
             const vendeurStats = vendeurs.map(v => {
-                const vSales = allSales.filter(s => s.userId === v.id)
+                // On ne peut voir que nos propres ventes
+                const isMe = v.id === user?.id
+                const vSales = isMe ? mySales : []
+
                 const vMonthSales = vSales.filter(s => {
                     const d = new Date(s.saleDate)
                     return d.getMonth() === thisMonth && d.getFullYear() === thisYear
                 })
+
                 return {
                     id: v.id,
                     name: v.username,
@@ -137,8 +160,8 @@ export default function VendeurDashboard() {
 
             const myPosition = vendeurStats.findIndex(v => v.id === user?.id) + 1
             setRanking({
-                position: myPosition || vendeurStats.length,
-                total: vendeurStats.length
+                position: myPosition || 1,
+                total: vendeurs.length // On affiche quand même le nombre total de vendeurs
             })
 
         } catch (error) {
@@ -159,8 +182,8 @@ export default function VendeurDashboard() {
             {/* Header avec bienvenue et classement */}
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-dark-900 dark:text-white">
-                        Bonjour, {user?.username?.split(' ')[0] || 'Vendeur'} 👋
+                    <h1 className="text-2xl font-bold text-dark-900 dark:text-white flex items-center gap-2">
+                        Bonjour, {user?.username?.split(' ')[0] || 'Vendeur'} <Hand className="w-6 h-6 text-yellow-500 animate-pulse" />
                     </h1>
                     <p className="text-dark-500">Voici un aperçu de vos performances</p>
                 </div>
@@ -267,9 +290,10 @@ export default function VendeurDashboard() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="lg:col-span-1"
+                    transition={{ delay: 0.4 }}
+                    className="lg:col-span-1 h-full"
                 >
-                    <Card className="p-6 h-full">
+                    <Card className="p-6 h-full flex flex-col justify-between">
                         <div className="flex items-center gap-2 mb-6">
                             <Target className="w-5 h-5 text-primary-500" />
                             <h3 className="font-semibold text-dark-900 dark:text-white">Objectifs du mois</h3>
@@ -333,9 +357,10 @@ export default function VendeurDashboard() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="lg:col-span-2"
+                    transition={{ delay: 0.5 }}
+                    className="lg:col-span-2 h-full"
                 >
-                    <Card className="p-6">
+                    <Card className="p-6 h-full">
                         <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-4">
                             Performance des 7 derniers jours
                         </h3>
@@ -349,15 +374,17 @@ export default function VendeurDashboard() {
                 </motion.div>
             </div>
 
-            {/* Top Products & Recent Sales */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Top Products & Categories & Recent Sales */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Top Products */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 }}
+                    className="h-full"
                 >
-                    <Card className="p-6">
+                    <Card className="p-6 h-full">
                         <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-4">
                             Mes Produits les Plus Vendus
                         </h3>
@@ -378,13 +405,43 @@ export default function VendeurDashboard() {
                     </Card>
                 </motion.div>
 
+                {/* Top Categories */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.65 }}
+                    className="h-full"
+                >
+                    <Card className="p-6 h-full">
+                        <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-4">
+                            Performance par Catégorie
+                        </h3>
+                        {topCategories.length > 0 ? (
+                            <PieChartComponent
+                                data={topCategories}
+                                dataKey="value"
+                                height={250}
+                                showLegend={true}
+                            />
+                        ) : (
+                            <EmptyState
+                                icon={Package}
+                                title="Pas de données"
+                                description="Les catégories apparaîtront ici après vos ventes"
+                            />
+                        )}
+                    </Card>
+                </motion.div>
+
                 {/* Recent Sales */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.7 }}
+                    className="h-full"
                 >
-                    <Card className="p-6">
+                    <Card className="p-6 h-full">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
                                 Mes Ventes Récentes
