@@ -1212,6 +1212,6 @@ Ce projet est sous licence **MIT**. Voir le fichier [LICENSE](LICENSE) pour plus
 
 **⭐ Si ce projet vous a aidé, n'hésitez pas à lui donner une étoile ! ⭐**
 
-Made with ❤️ by [Votre Nom]
+Made with ❤️ by [Khalid abouelfaraj]
 
 </div>
