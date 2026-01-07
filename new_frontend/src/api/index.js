@@ -124,9 +124,9 @@ export const mlApi = {
     predictBestseller: (productData) => api.post('/ml/predict/bestseller', productData),
 
     // Prédictions par ID produit
-    predictPriceById: (productId) => api.post(`/ml/predict/price/${productId}`),
-    predictDemandById: (productId) => api.post(`/ml/predict/demand/${productId}`),
-    predictBestsellerById: (productId) => api.post(`/ml/predict/bestseller/${productId}`),
+    predictPriceById: (productId) => api.get(`/ml/predict/price/${productId}`),
+    predictDemandById: (productId) => api.get(`/ml/predict/demand/${productId}`),
+    predictBestsellerById: (productId) => api.get(`/ml/predict/bestseller/${productId}`),
 
     // Analyse complète
     analyzeProduct: (productId) => api.get(`/ml/analyze/${productId}`),

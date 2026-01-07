@@ -2,6 +2,7 @@ package com.projetee.sallesmangement.service;
 
 import com.projetee.sallesmangement.dto.user.UserRequest;
 import com.projetee.sallesmangement.dto.user.UserResponse;
+import com.projetee.sallesmangement.entity.User;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -25,4 +26,7 @@ public interface UserService {
     void delete(Long id);
 
     UserResponse updatePassword(Long id, String currentPassword, String newPassword);
+
+    // La méthode nécessaire pour la recherche et l'historique
+    User getCurrentUser();
 }

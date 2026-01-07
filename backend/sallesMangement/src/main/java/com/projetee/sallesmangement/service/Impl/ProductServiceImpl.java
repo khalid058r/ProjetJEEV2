@@ -151,41 +151,80 @@ public class ProductServiceImpl implements ProductService {
 
         try (java.io.Reader reader = new java.io.InputStreamReader(file.getInputStream());
              org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader,
-                     org.apache.commons.csv.CSVFormat.DEFAULT.withFirstRecordAsHeader().withIgnoreHeaderCase().withTrim())) {
+                     org.apache.commons.csv.CSVFormat.DEFAULT
+                             .withFirstRecordAsHeader()
+                             .withIgnoreHeaderCase()
+                             .withTrim())) {
 
             for (org.apache.commons.csv.CSVRecord record : csvParser) {
                 try {
-                    String title = record.get("title");
-                    String priceStr = record.get("price");
-                    String stockStr = record.get("stock");
-                    String categoryName = record.get("category");
-                    String imageUrl = record.isMapped("imageUrl") ? record.get("imageUrl") : "https://via.placeholder.com/150";
-
-                    if (title == null || title.isBlank() || priceStr == null || stockStr == null || categoryName == null) {
-                        throw new BadRequestException("Missing required fields (title, price, stock, category)");
+                    // 1. Récupération intelligente des champs (Gestion des noms de colonnes du CSV Amazon)
+                    
+                    // TITRE : Cherche 'title', sinon utilise l'ASIN ou une valeur par défaut
+                    String title = "Produit sans nom";
+                    if (record.isMapped("title")) title = record.get("title");
+                    else if (record.isMapped("ASIN")) title = "Produit " + record.get("ASIN");
+                    
+                    // PRIX : Cherche 'price', nettoie le '$' et ','
+                    double price = 0.0;
+                    if (record.isMapped("price") || record.isMapped("Price")) {
+                        String pStr = record.isMapped("price") ? record.get("price") : record.get("Price");
+                        pStr = pStr.replace("$", "").replace(",", ""); // Nettoyage "$39.99" -> "39.99"
+                        if (!pStr.isEmpty()) price = Double.parseDouble(pStr);
                     }
 
-                    double price = Double.parseDouble(priceStr);
-                    int stock = Integer.parseInt(stockStr);
+                    // STOCK : Cherche 'stock', sinon valeur par défaut (ex: 50)
+                    int stock = 50; 
+                    if (record.isMapped("stock")) {
+                        try {
+                            stock = Integer.parseInt(record.get("stock"));
+                        } catch (NumberFormatException ignored) {}
+                    }
 
-                    // Find or create category
-                    Category category = categoryRepo.findByNameIgnoreCase(categoryName)
-                            .orElseGet(() -> categoryRepo.save(Category.builder().name(categoryName).build()));
+                    // CATÉGORIE
+                    final String categoryNameFinal = record.isMapped("category") ? record.get("category") : 
+                            (record.isMapped("Category") ? record.get("Category") : "Général");
 
-                    // Check if product exists (by Title for simplicity in import)
-                    if (repo.existsByTitleIgnoreCase(title)) {
+                    // ASIN
+                    String asin = record.isMapped("ASIN") ? record.get("ASIN") : "ASIN-" + System.currentTimeMillis();
+
+                    // RATING & REVIEWS (Optionnel mais présent dans le CSV)
+                    double rating = 0.0;
+                    if (record.isMapped("Rating")) {
+                        try { rating = Double.parseDouble(record.get("Rating")); } catch (Exception e) {}
+                    }
+                    
+                    int reviews = 0;
+                    if (record.isMapped("Reviews Count")) {
+                        try { 
+                            String rStr = record.get("Reviews Count").replace(",", "").replace("\"", "");
+                            reviews = Integer.parseInt(rStr); 
+                        } catch (Exception e) {}
+                    }
+
+                    // 2. Logique Métier
+                    
+                    // Recherche ou création de la catégorie
+                    Category category = categoryRepo.findByNameIgnoreCase(categoryNameFinal)
+                            .orElseGet(() -> categoryRepo.save(Category.builder().name(categoryNameFinal).build()));
+
+                    // Vérification doublon
+                    if (repo.existsByTitleIgnoreCase(title) || (record.isMapped("ASIN") && repo.existsByAsinIgnoreCase(asin))) {
                         failureCount++;
-                        errors.add("Row " + record.getRecordNumber() + ": Product '" + title + "' already exists");
-                        continue;
+                        // On continue sans ajouter à la liste d'erreurs pour ne pas spammer si on réimporte le même fichier
+                        continue; 
                     }
 
+                    // Création du produit
                     Product product = Product.builder()
                             .title(title)
                             .price(price)
                             .stock(stock)
                             .category(category)
-                            .imageUrl(imageUrl)
-                            .asin("ASIN-" + System.currentTimeMillis() + "-" + record.getRecordNumber()) // Generate ASIN
+                            .rating(rating)
+                            .reviewCount(reviews)
+                            .imageUrl("https://via.placeholder.com/150") // Image par défaut
+                            .asin(asin)
                             .build();
 
                     repo.save(product);
@@ -193,12 +232,12 @@ public class ProductServiceImpl implements ProductService {
 
                 } catch (Exception e) {
                     failureCount++;
-                    errors.add("Row " + record.getRecordNumber() + ": " + e.getMessage());
+                    errors.add("Ligne " + record.getRecordNumber() + ": " + e.getMessage());
                 }
             }
 
         } catch (java.io.IOException e) {
-            throw new RuntimeException("Failed to parse CSV file: " + e.getMessage());
+            throw new RuntimeException("Échec de l'analyse du fichier CSV : " + e.getMessage());
         }
 
         java.util.Map<String, Object> summary = new java.util.HashMap<>();

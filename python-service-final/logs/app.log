@@ -75,3 +75,61 @@
 2026-01-06 03:43:59,921 - app.main - INFO - [LLM] Ollama: mistral
 2026-01-06 03:43:59,921 - app.main - INFO - [LLM] HuggingFace: TinyLlama/TinyLlama-1.1B-Chat-v1.0
 2026-01-06 03:43:59,922 - app.main - INFO - ======================================================================
+2026-01-06 17:49:37,499 - app.services.search_service - INFO - [OK] Sentence Transformers disponible
+2026-01-06 17:49:37,508 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2026-01-06 17:49:38,369 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2026-01-06 17:49:38,392 - app.services.search_service - INFO - [OK] FAISS disponible
+2026-01-06 17:49:38,393 - app.services.search_service - INFO - [LOADING] Chargement du modele sentence-transformers/all-MiniLM-L6-v2...
+2026-01-06 17:49:39,479 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2026-01-06 17:49:39,480 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-01-06 17:49:43,060 - huggingface_hub.file_download - WARNING - Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet`
+2026-01-06 17:49:55,647 - app.services.search_service - INFO - [OK] Modele d'embeddings charge
+2026-01-06 17:49:56,393 - app.services.llm_service - INFO - [OK] Transformers disponible
+2026-01-06 17:49:57,026 - app.main - INFO - ======================================================================
+2026-01-06 17:49:57,027 - app.main - INFO - [START] DEMARRAGE SERVICE PYTHON ML & ETL
+2026-01-06 17:49:57,027 - app.main - INFO - ======================================================================
+2026-01-06 17:49:57,028 - app.main - INFO - [DOCS] Documentation: http://localhost:5000/docs
+2026-01-06 17:49:57,028 - app.main - INFO - [JAVA] Backend Java: http://localhost:8080
+2026-01-06 17:49:57,029 - app.main - INFO - [EMB] Embeddings: sentence-transformers/all-MiniLM-L6-v2
+2026-01-06 17:49:57,029 - app.main - INFO - [LLM] Ollama: mistral
+2026-01-06 17:49:57,029 - app.main - INFO - [LLM] HuggingFace: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+2026-01-06 17:49:57,030 - app.main - INFO - ======================================================================
+2026-01-06 17:54:49,251 - app.main - INFO - [STOP] ARRET DU SERVICE
+2026-01-06 17:55:19,549 - app.services.search_service - INFO - [OK] Sentence Transformers disponible
+2026-01-06 17:55:19,556 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2026-01-06 17:55:19,622 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2026-01-06 17:55:19,643 - app.services.search_service - INFO - [OK] FAISS disponible
+2026-01-06 17:55:19,644 - app.services.search_service - INFO - [LOADING] Chargement du modele sentence-transformers/all-MiniLM-L6-v2...
+2026-01-06 17:55:20,218 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2026-01-06 17:55:20,218 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-01-06 17:55:23,831 - app.services.search_service - INFO - [OK] Modele d'embeddings charge
+2026-01-06 17:55:24,066 - app.services.llm_service - INFO - [OK] Transformers disponible
+2026-01-06 17:55:24,303 - app.main - INFO - ======================================================================
+2026-01-06 17:55:24,303 - app.main - INFO - [START] DEMARRAGE SERVICE PYTHON ML & ETL
+2026-01-06 17:55:24,303 - app.main - INFO - ======================================================================
+2026-01-06 17:55:24,304 - app.main - INFO - [DOCS] Documentation: http://localhost:5000/docs
+2026-01-06 17:55:24,304 - app.main - INFO - [JAVA] Backend Java: http://localhost:8080
+2026-01-06 17:55:24,305 - app.main - INFO - [EMB] Embeddings: sentence-transformers/all-MiniLM-L6-v2
+2026-01-06 17:55:24,305 - app.main - INFO - [LLM] Ollama: mistral
+2026-01-06 17:55:24,305 - app.main - INFO - [LLM] HuggingFace: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+2026-01-06 17:55:24,306 - app.main - INFO - ======================================================================
+2026-01-06 17:56:32,448 - app.main - INFO - [STOP] ARRET DU SERVICE
+2026-01-06 17:58:32,975 - app.services.search_service - INFO - [OK] Sentence Transformers disponible
+2026-01-06 17:58:32,983 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2026-01-06 17:58:33,038 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2026-01-06 17:58:33,057 - app.services.search_service - INFO - [OK] FAISS disponible
+2026-01-06 17:58:33,057 - app.services.search_service - INFO - [LOADING] Chargement du modele sentence-transformers/all-MiniLM-L6-v2...
+2026-01-06 17:58:33,571 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2026-01-06 17:58:33,571 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-01-06 17:58:37,079 - app.services.search_service - INFO - [OK] Modele d'embeddings charge
+2026-01-06 17:58:37,285 - app.services.llm_service - INFO - [OK] Transformers disponible
+2026-01-06 17:58:37,504 - app.main - INFO - ======================================================================
+2026-01-06 17:58:37,504 - app.main - INFO - [START] DEMARRAGE SERVICE PYTHON ML & ETL
+2026-01-06 17:58:37,505 - app.main - INFO - ======================================================================
+2026-01-06 17:58:37,505 - app.main - INFO - [DOCS] Documentation: http://localhost:5000/docs
+2026-01-06 17:58:37,505 - app.main - INFO - [JAVA] Backend Java: http://localhost:8080
+2026-01-06 17:58:37,506 - app.main - INFO - [EMB] Embeddings: sentence-transformers/all-MiniLM-L6-v2
+2026-01-06 17:58:37,506 - app.main - INFO - [LLM] Ollama: mistral
+2026-01-06 17:58:37,506 - app.main - INFO - [LLM] HuggingFace: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+2026-01-06 17:58:37,507 - app.main - INFO - ======================================================================
+2026-01-06 17:58:48,119 - app.main - INFO - [STOP] ARRET DU SERVICE

@@ -10,6 +10,9 @@ import com.projetee.sallesmangement.mapper.UserMapper;
 import com.projetee.sallesmangement.repository.UserRepository;
 import com.projetee.sallesmangement.service.UserService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 
 import lombok.RequiredArgsConstructor;
@@ -130,5 +133,16 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         repo.delete(user);
+    }
+
+    @Override
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+        // Utilise "repo" au lieu de "userRepository"
+        return repo.findByUsername(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 }

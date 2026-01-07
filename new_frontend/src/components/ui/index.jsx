@@ -565,15 +565,15 @@ export function ConfirmDialog({
 
 // ============ STAT CARD ============
 export function StatCard({
-    title,
-    value,
-    subtitle,
-    icon: Icon,
-    trend,
-    trendLabel,
-    color = 'primary',
-    className = '',
-}) {
+                             title,
+                             value,
+                             subtitle,
+                             icon: Icon,
+                             trend,
+                             trendLabel,
+                             color = 'primary',
+                             className = '',
+                         }) {
     const colors = {
         primary: 'from-primary-500 to-primary-600',
         secondary: 'from-secondary-500 to-secondary-600',

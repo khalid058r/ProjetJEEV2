@@ -27,6 +27,7 @@ const AdminReports = lazy(() => import('../pages/admin/Reports'))
 const AdminOrders = lazy(() => import('../pages/admin/Orders'))
 const AdminAnalytics = lazy(() => import('../pages/admin/Analytics'))
 const AdminProfile = lazy(() => import('../pages/admin/Profile'))
+const AdminSettings = lazy(() => import('../pages/admin/Settings'))
 
 // Vendeur Pages
 const VendeurDashboard = lazy(() => import('../pages/vendeur/Dashboard'))
@@ -223,6 +224,7 @@ export default function AppRouter() {
                 <Route path="orders" element={<SuspenseWrapper><AdminOrders /></SuspenseWrapper>} />
                 <Route path="analytics" element={<SuspenseWrapper><AdminAnalytics /></SuspenseWrapper>} />
                 <Route path="profile" element={<SuspenseWrapper><AdminProfile /></SuspenseWrapper>} />
+                <Route path="settings" element={<SuspenseWrapper><AdminSettings /></SuspenseWrapper>} />
             </Route>
 
             {/* Vendeur routes */}

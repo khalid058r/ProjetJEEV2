@@ -106,10 +106,11 @@ export default function ProductCard({ product }) {
                 </div>
 
                 {/* Price & Action */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <span className="text-xl font-bold text-gray-900">
-                            {product.price?.toFixed(2)} MAD
+                <div className="flex items-center justify-between gap-2"> {/* Ajout de gap-2 */}
+                    <div className="min-w-0 flex-1"> {/* min-w-0 et flex-1 permettent de gérer l'overflow flex */}
+                        <span className="text-lg font-bold text-gray-900 block truncate" title={`${product.price?.toFixed(2)} MAD`}>
+                            {/* On réduit text-xl à text-lg. 'truncate' ajoute "..." si c'est trop long. 'title' affiche tout au survol */}
+                            {product.price?.toFixed(2)} <span className="text-sm">MAD</span>
                         </span>
                     </div>
 
@@ -117,7 +118,7 @@ export default function ProductCard({ product }) {
                         onClick={handleAddToCart}
                         disabled={isOutOfStock || loading}
                         className={`
-                            p-3 rounded-xl transition-all duration-200
+                            shrink-0 p-3 rounded-xl transition-all duration-200
                             ${isOutOfStock
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                 : 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200'}

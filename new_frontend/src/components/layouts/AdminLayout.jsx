@@ -65,7 +65,7 @@ export default function AdminLayout() {
             {/* Sidebar */}
             <aside className={`
         fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-dark-900 border-r border-gray-200 dark:border-dark-800
-        transform transition-transform duration-300 ease-in-out lg:translate-x-0
+        transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col overflow-y-auto
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
                 {/* Logo */}

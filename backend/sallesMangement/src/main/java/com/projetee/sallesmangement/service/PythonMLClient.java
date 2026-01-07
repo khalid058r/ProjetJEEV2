@@ -277,6 +277,35 @@ public class PythonMLClient {
                     "service_url", pythonMlServiceUrl);
         }
     }
+    public List<Long> searchProductIds(String query) {
+        // Appelle le Python pour avoir les IDs des produits pertinents
+        String url = pythonMlServiceUrl + "/api/search/semantic?q=" + query;
+        try {
+            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            if (response.getBody() != null && response.getBody().containsKey("results")) {
+                List<Map<String, Object>> results = (List<Map<String, Object>>) response.getBody().get("results");
+                return results.stream()
+                        .map(r -> ((Number) r.get("id")).longValue())
+                        .toList();
+            }
+        } catch (Exception e) {
+            log.error("Erreur recherche Python: {}", e.getMessage());
+        }
+        return List.of();
+    }
+
+    public List<String> getSuggestions(String query) {
+        String url = pythonMlServiceUrl + "/api/search/suggestions?q=" + query;
+        try {
+            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            if (response.getBody() != null && response.getBody().containsKey("suggestions")) {
+                return (List<String>) response.getBody().get("suggestions");
+            }
+        } catch (Exception e) {
+            log.warn("Pas de suggestions: {}", e.getMessage());
+        }
+        return List.of();
+    }
 
 
     private RecommendedProduct mapToRecommendedProduct(Map<String, Object> map) {

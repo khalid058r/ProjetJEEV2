@@ -34,7 +34,8 @@ export default function ProductMLPredictions() {
             // Vérifier le service ML
             try {
                 const healthRes = await mlApi.getHealth()
-                setMlServiceStatus(healthRes.data?.available ? 'online' : 'offline')
+                // Le backend Java renvoie { mlServiceAvailable: true, details: { ... } }
+                setMlServiceStatus(healthRes.data?.mlServiceAvailable ? 'online' : 'offline')
             } catch {
                 setMlServiceStatus('offline')
             }

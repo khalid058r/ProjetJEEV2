@@ -2,10 +2,10 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-    Plus, Search, Filter, MoreVertical, Edit2, Trash2, Eye,
-    Package, AlertTriangle, Upload, X, Image as ImageIcon, Star, RefreshCw,
-    SlidersHorizontal, ChevronDown, TrendingUp, TrendingDown, DollarSign,
-    ShoppingCart, BarChart3, Layers, AlertCircle, CheckCircle, FileText, Cloud, Check
+    Plus, Search, Filter, Edit2, Trash2, Eye,
+    Package, AlertTriangle, Upload, X, Star, RefreshCw,
+    SlidersHorizontal, ChevronDown, TrendingUp, DollarSign,
+    ShoppingCart, BarChart3, Layers, AlertCircle, CheckCircle, FileText, Cloud
 } from 'lucide-react'
 import { productApi, categoryApi, saleApi } from '../../api'
 import { Button, Card, Modal, Input, Badge, Loading, EmptyState, ConfirmDialog, SearchInput, ImageUpload, Pagination } from '../../components/ui'

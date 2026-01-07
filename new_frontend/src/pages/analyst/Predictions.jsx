@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
+import api from '../../api/axios'
 import { motion } from 'framer-motion'
 import {
     Brain, TrendingUp, TrendingDown, Zap, RefreshCw,
     Target, AlertTriangle, CheckCircle, Package, BarChart3,
-    ArrowUpRight, ArrowDownRight, Activity, Sparkles
+    ArrowUpRight, ArrowDownRight, Activity, Sparkles, DollarSign
 } from 'lucide-react'
 import { analyticsApi, mlApi } from '../../api'
 import { Card, Button, Loading, EmptyState, Badge } from '../../components/ui'
@@ -15,10 +16,36 @@ export default function Predictions() {
     const [predictions, setPredictions] = useState(null)
     const [loading, setLoading] = useState(true)
     const [generating, setGenerating] = useState(false)
+    const [simulatorAsin, setSimulatorAsin] = useState('')
+    const [pricePrediction, setPricePrediction] = useState(null)
+    const [simulating, setSimulating] = useState(false)
 
     useEffect(() => {
         fetchData()
     }, [])
+
+    const predictPrice = async () => {
+        setSimulating(true)
+        try {
+            // Appel au Backend Java qui appelle Python
+            const res = await api.post('/ml/predict/price', { 
+                name: simulatorAsin || "Produit Test", 
+                category: "Electronics",
+                rating: 4.5,
+                reviewCount: 100,
+                price: 50.0,
+                stock: 10,
+                rank: 1
+            }); 
+            setPricePrediction(res.data);
+            toast.success('Simulation terminée');
+        } catch (error) {
+            console.error('Error predicting price:', error);
+            toast.error('Erreur lors de la simulation');
+        } finally {
+            setSimulating(false)
+        }
+    };
 
     const fetchData = async () => {
         try {
@@ -259,6 +286,68 @@ export default function Predictions() {
                     </Button>
                 </div>
             </div>
+
+            {/* Simulateur de Prix IA */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+                <Card className="p-6 bg-gradient-to-br from-white to-purple-50 border-purple-100">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                            <Sparkles className="w-6 h-6 text-purple-600" />
+                        </div>
+                        <h2 className="text-xl font-bold text-dark-900">🔮 Simulateur de Prix IA</h2>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                        <div className="flex-1">
+                            <input 
+                                type="text"
+                                placeholder="Nom du produit ou ASIN..."
+                                value={simulatorAsin}
+                                onChange={(e) => setSimulatorAsin(e.target.value)}
+                                className="w-full px-4 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                            />
+                        </div>
+                        <Button 
+                            onClick={predictPrice}
+                            loading={simulating}
+                            className="bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-200"
+                        >
+                            Lancer la simulation
+                        </Button>
+                    </div>
+                    
+                    {pricePrediction && (
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="p-4 bg-white rounded-xl border border-purple-100 shadow-sm"
+                        >
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-sm text-dark-500 mb-1">Prix optimal estimé</p>
+                                    <p className="text-2xl font-bold text-purple-600">
+                                        {formatCurrency(pricePrediction.predicted_price || pricePrediction.predictedPrice)}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-dark-500 mb-1">Confiance du modèle</p>
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                            <div 
+                                                className="h-full bg-purple-500"
+                                                style={{ width: `${(pricePrediction.confidence_score || pricePrediction.confidence || 0.85) * 100}%` }}
+                                            />
+                                        </div>
+                                        <span className="font-bold text-dark-700">
+                                            {Math.round((pricePrediction.confidence_score || pricePrediction.confidence || 0.85) * 100)}%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </Card>
+            </motion.div>
 
             {/* Summary Cards */}
             {predictions && (

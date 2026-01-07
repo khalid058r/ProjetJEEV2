@@ -10,29 +10,29 @@ pydantic-settings==2.6.1
 python-multipart==0.0.6
 
 # === Data Processing ===
-pandas==2.1.4
-numpy==1.26.4
+pandas
+numpy
 
 # === Database ===
-mysql-connector-python==8.3.0
-pymysql==1.1.0
-sqlalchemy==2.0.23
+mysql-connector-python
+pymysql
+sqlalchemy
 
 # === HTTP Client ===
-requests==2.31.0
-httpx==0.26.0
-aiohttp==3.9.1
+requests
+httpx
+aiohttp
 
 # === Machine Learning ===
-scikit-learn==1.4.0
-joblib==1.3.2
+scikit-learn
+joblib
 
 # === NLP & Embeddings ===
-sentence-transformers==2.3.1
-transformers==4.36.2
+sentence-transformers
+transformers
 
 # === Vector Search ===
-faiss-cpu==1.7.4
+faiss-cpu
 
 # === Monitoring & Metrics ===
 psutil==5.9.8
